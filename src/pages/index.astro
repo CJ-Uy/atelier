@@ -1,11 +1,32 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+// src/pages/index.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HeroText from '../components/home/HeroText.svelte';
+import DotIndicator from '../components/home/DotIndicator.svelte';
+import ScrollHint from '../components/home/ScrollHint.svelte';
+import { SECTIONS } from '../components/home/sections';
 ---
 
-<Layout>
-	<Welcome />
-</Layout>
+<BaseLayout title="Atelier — Charles" description="Portfolio of Charles — developer, musician, builder, and creative.">
+  <!--
+    client:only="svelte" — skips SSR (required: these use window / onMount).
+    They are position:fixed overlays communicating via window CustomEvents.
+  -->
+  <HeroText client:only="svelte" />
+  <DotIndicator client:only="svelte" />
+  <ScrollHint client:only="svelte" />
+
+  <!--
+    Invisible scroll container — the ONLY scrollable element.
+    z-index:2, drives GSAP ScrollTrigger snap events.
+  -->
+  <div class="scroll-container" aria-hidden="true">
+    {SECTIONS.map((s) => (
+      <div
+        class="scroll-section"
+        data-section-id={String(s.id)}
+        data-grid-state={s.gridState}
+      />
+    ))}
+  </div>
+</BaseLayout>
