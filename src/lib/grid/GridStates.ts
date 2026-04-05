@@ -45,10 +45,11 @@ export const developerSetup: GridStateFunction = (cols, rows) => {
   const gapTop = kbTopRow + 2;
   const monStart = gapTop + 1;
 
-  // Monitor: 16:9 on a 16:9 viewport means equal NDC width & height.
-  // Centered at viewport center (NDC 0,0) so hero text sits inside.
+  // Monitor: shifted UP so hero text (at viewport center / NDC 0,0) sits near monitor bottom.
+  // NDC width = height (1.16) → visually 16:9 on a 16:9 viewport.
+  // On portrait/mobile the grid stretches uniformly so the shape stays consistent.
   const monL = -0.58, monR = 0.58;
-  const monB = -0.55, monT = 0.55; // NDC W=H=1.16 → visually 16:9
+  const monT = 0.96, monB = monT - 1.16; // -0.20; text at y=0 is near bottom
   // Keyboard: half the monitor width, centered
   const kbL = -0.34, kbR = 0.34;
 
@@ -85,9 +86,9 @@ export const developerSetup: GridStateFunction = (cols, rows) => {
 
   // Keyboard box bounds (NDC) — compact at bottom
   const kbBot = -0.98, kbTop = -0.62;
-  const bezelW = 0.04;
-  const scrL = monL + bezelW, scrR = monR - bezelW;
-  const scrB = monB + bezelW, scrT = monT - bezelW;
+  const bezelX = 0.05, bezelY = 0.06; // slightly thicker vertically to compensate for row spacing
+  const scrL = monL + bezelX, scrR = monR - bezelX;
+  const scrB = monB + bezelY, scrT = monT - bezelY;
 
   // Helper: is vertex on the keyboard border?
   const isKbBorder = (x: number, y: number) => {
