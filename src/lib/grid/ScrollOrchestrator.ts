@@ -22,23 +22,27 @@ export class ScrollOrchestrator {
 
   get currentIndex(): number { return this._currentIndex; }
 
-  async init(scrollContainer: HTMLElement): Promise<void> {
-    const [{ default: gsap }, { ScrollTrigger }] = await Promise.all([
-      import('gsap'),
-      import('gsap/ScrollTrigger'),
-    ]);
-    gsap.registerPlugin(ScrollTrigger);
+  init(scrollContainer: HTMLElement): void {
+    // CSS scroll-snap handles the actual snapping.
+    // We just read scrollTop after the snap settles to know which section is active.
+    // `scrollend` fires once snap is done; fall back to a debounced `scroll` for
+    // browsers that don't support scrollend yet (Safari <17.4).
+    const onSnap = () => {
+      const sectionHeight = scrollContainer.clientHeight;
+      if (sectionHeight === 0) return;
+      const index = Math.round(scrollContainer.scrollTop / sectionHeight);
+      this.goToSection(index);
+    };
 
-    Array.from(scrollContainer.children).forEach((el, i) => {
-      ScrollTrigger.create({
-        trigger: el as HTMLElement,
-        scroller: scrollContainer,
-        start: 'top top',
-        end: 'bottom top',
-        onEnter:     () => this.goToSection(i),
-        onEnterBack: () => this.goToSection(i),
+    if ('onscrollend' in window) {
+      scrollContainer.addEventListener('scrollend', onSnap);
+    } else {
+      let timer: ReturnType<typeof setTimeout>;
+      scrollContainer.addEventListener('scroll', () => {
+        clearTimeout(timer);
+        timer = setTimeout(onSnap, 80);
       });
-    });
+    }
   }
 
   goToSection(index: number): void {

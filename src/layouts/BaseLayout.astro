@@ -78,7 +78,7 @@ const {
         ambient.start();
 
         const scrollContainer = document.querySelector('.scroll-container') as HTMLElement | null;
-        if (scrollContainer) orchestrator.init(scrollContainer);
+        if (scrollContainer) orchestrator.init(scrollContainer);  // synchronous now
 
         document.addEventListener('mousemove', (e) => {
           engine.setCursor(

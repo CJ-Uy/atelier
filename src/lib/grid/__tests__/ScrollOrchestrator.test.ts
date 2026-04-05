@@ -3,8 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ScrollOrchestrator } from '../ScrollOrchestrator';
 import type { GridStateName } from '../types';
 
-vi.mock('gsap', () => ({ default: { to: vi.fn(), registerPlugin: vi.fn() } }));
-vi.mock('gsap/ScrollTrigger', () => ({ ScrollTrigger: { create: vi.fn(), getAll: vi.fn(() => []) } }));
+vi.mock('gsap', () => ({ default: { to: vi.fn() } }));
 
 const mockEngine = () => ({
   setTargetState: vi.fn(),
