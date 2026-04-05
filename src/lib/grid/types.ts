@@ -1,5 +1,10 @@
 // src/lib/grid/types.ts
 
+export interface GridState {
+  positions: Float32Array; // 2 floats per vertex (x, y)
+  alphas: Float32Array;    // 1 float per vertex (0 = hidden, 1 = visible)
+}
+
 export type GridStateName =
   | 'graphPaper'
   | 'keyboard'
@@ -8,13 +13,16 @@ export type GridStateName =
   | 'chartsData'
   | 'dreamCatcher'
   | 'bassGuitar'
+  | 'musicProduction'
   | 'volleyball'
   | 'topographic'
   | 'pixelGrid'
   | 'mangaPanels'
   | 'filmComposition'
   | 'banigWeaving'
-  | 'mondrian';
+  | 'mondrian'
+  | 'developerSetup'
+  | 'cityscape';
 
 export interface GridConfig {
   cols: number;
@@ -32,4 +40,4 @@ export interface SectionChangedEvent {
   stateName: GridStateName;
 }
 
-export type GridStateFunction = (cols: number, rows: number) => Float32Array;
+export type GridStateFunction = (cols: number, rows: number) => GridState;

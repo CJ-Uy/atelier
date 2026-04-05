@@ -6,14 +6,20 @@ interface SectionDef {
   gridState: GridStateName;
 }
 
+function easeInOut(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
 export class ScrollOrchestrator {
   private engine: GridEngine;
   private sections: SectionDef[];
   private _currentIndex = 0;
-  private isMorphing = false;
+  private _currentStateName: GridStateName = 'graphPaper';
+  private morphRafId = 0;            // >0 while animating
+  private morphPhase: 'idle' | 'reverse' | 'forward' = 'idle';
 
-  static readonly PAUSE_MS = 200;
-  static readonly MORPH_S = 0.8;
+  static readonly REVERSE_MS = 500;  // unmorph back to grid
+  static readonly FORWARD_MS = 700;  // morph into new shape
 
   constructor(engine: GridEngine, sections: SectionDef[]) {
     this.engine = engine;
@@ -23,14 +29,10 @@ export class ScrollOrchestrator {
   get currentIndex(): number { return this._currentIndex; }
 
   init(scrollContainer: HTMLElement): void {
-    // CSS scroll-snap handles the actual snapping.
-    // We just read scrollTop after the snap settles to know which section is active.
-    // `scrollend` fires once snap is done; fall back to a debounced `scroll` for
-    // browsers that don't support scrollend yet (Safari <17.4).
     const onSnap = () => {
-      const sectionHeight = scrollContainer.clientHeight;
-      if (sectionHeight === 0) return;
-      const index = Math.round(scrollContainer.scrollTop / sectionHeight);
+      const h = scrollContainer.clientHeight;
+      if (h === 0) return;
+      const index = Math.round(scrollContainer.scrollTop / h);
       this.goToSection(index);
     };
 
@@ -48,40 +50,62 @@ export class ScrollOrchestrator {
   goToSection(index: number): void {
     const clamped = Math.max(0, Math.min(index, this.sections.length - 1));
     if (clamped === this._currentIndex) return;
-    if (this.isMorphing) return;
 
-    this._currentIndex = clamped;
-    const stateName = this.sections[clamped]?.gridState ?? 'graphPaper';
-
-    const detail: SectionChangedEvent = { index: clamped, stateName };
-    window.dispatchEvent(new CustomEvent('atelier:section-change', { detail }));
-
-    this.engine.resetToBase();
-    this.engine.setTargetState(stateName);
-    this._animateMorph();
-  }
-
-  private async _animateMorph(): Promise<void> {
-    this.isMorphing = true;
-    let gsap: typeof import('gsap').default;
-    try {
-      gsap = (await import('gsap')).default;
-    } catch {
-      this.isMorphing = false;
-      return;
+    // If already animating, cancel and start fresh from wherever we are
+    if (this.morphRafId) {
+      cancelAnimationFrame(this.morphRafId);
+      this.morphRafId = 0;
+      // Snap the engine to wherever the interrupted morph left off
+      this.engine.promoteTargetToCurrent();
+      this.engine.setProgress(0);
     }
 
-    await new Promise<void>((r) => setTimeout(r, ScrollOrchestrator.PAUSE_MS));
+    const prevState = this._currentStateName;
+    this._currentIndex = clamped;
+    const newState = this.sections[clamped]?.gridState ?? 'graphPaper';
+    this._currentStateName = newState;
 
-    const proxy = { progress: 0 };
-    await new Promise<void>((resolve) => {
-      gsap.to(proxy, {
-        progress: 1,
-        duration: ScrollOrchestrator.MORPH_S,
-        ease: 'power2.inOut',
-        onUpdate:   () => this.engine.setProgress(proxy.progress),
-        onComplete: () => { this.isMorphing = false; resolve(); },
-      });
-    });
+    // Dispatch UI event
+    const detail: SectionChangedEvent = { index: clamped, stateName: newState };
+    window.dispatchEvent(new CustomEvent('atelier:section-change', { detail }));
+
+    // ── Phase 1: reverse current shape back to graphPaper ──
+    // Set current = the shape we're showing, target = graphPaper
+    this.engine.setCurrent(prevState);
+    this.engine.setTarget('graphPaper');
+    this.engine.setProgress(0);
+    this.morphPhase = 'reverse';
+
+    const reverseStart = performance.now();
+
+    const tickReverse = (now: number) => {
+      const t = Math.min((now - reverseStart) / ScrollOrchestrator.REVERSE_MS, 1);
+      this.engine.setProgress(easeInOut(t));
+      if (t < 1) {
+        this.morphRafId = requestAnimationFrame(tickReverse);
+      } else {
+        // ── Phase 2: morph graphPaper into the new shape ──
+        this.engine.setCurrent('graphPaper');
+        this.engine.setTarget(newState);
+        this.engine.setProgress(0);
+        this.morphPhase = 'forward';
+
+        const forwardStart = performance.now();
+
+        const tickForward = (now2: number) => {
+          const t2 = Math.min((now2 - forwardStart) / ScrollOrchestrator.FORWARD_MS, 1);
+          this.engine.setProgress(easeInOut(t2));
+          if (t2 < 1) {
+            this.morphRafId = requestAnimationFrame(tickForward);
+          } else {
+            this.morphRafId = 0;
+            this.morphPhase = 'idle';
+          }
+        };
+        this.morphRafId = requestAnimationFrame(tickForward);
+      }
+    };
+
+    this.morphRafId = requestAnimationFrame(tickReverse);
   }
 }

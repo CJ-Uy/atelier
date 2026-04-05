@@ -16,7 +16,25 @@
 <button
   onclick={toggle}
   aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-  style="background:none;border:1px solid color-mix(in srgb, var(--color-on-surface) 30%, transparent);border-radius:6px;padding:0.4rem 0.75rem;cursor:pointer;color:var(--color-on-surface);font-size:0.75rem;font-family:'JetBrains Mono',monospace;letter-spacing:0.05em;pointer-events:auto;transition:border-color 0.2s;"
+  class="theme-toggle"
 >
-  {isDark ? 'light' : 'dark'}
+  {isDark ? '☀' : '☾'}
 </button>
+
+<style>
+  .theme-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-on-surface);
+    font-size: 1.25rem;
+    line-height: 1;
+    padding: 0.3rem;
+    pointer-events: auto;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  .theme-toggle:hover {
+    opacity: 1;
+  }
+</style>

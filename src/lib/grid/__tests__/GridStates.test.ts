@@ -5,11 +5,11 @@ import { getGridState, GRID_STATE_NAMES, graphPaper } from '../GridStates';
 
 const COLS = 12;
 const ROWS = 8;
-const FLOAT_COUNT = (COLS + 1) * (ROWS + 1) * 2; // 117 vertices × 2 = 234
+const VERT_COUNT = (COLS + 1) * (ROWS + 1); // 117
 
 describe('GRID_STATE_NAMES', () => {
-  it('has exactly 14 entries', () => {
-    expect(GRID_STATE_NAMES).toHaveLength(14);
+  it('has exactly 17 entries', () => {
+    expect(GRID_STATE_NAMES).toHaveLength(17);
   });
 
   it('contains no duplicates', () => {
@@ -18,29 +18,44 @@ describe('GRID_STATE_NAMES', () => {
 });
 
 describe('graphPaper', () => {
-  it('produces FLOAT_COUNT floats', () => {
-    expect(graphPaper(COLS, ROWS).length).toBe(FLOAT_COUNT);
+  it('produces correct number of position floats', () => {
+    const r = graphPaper(COLS, ROWS);
+    expect(r.positions.length).toBe(VERT_COUNT * 2);
+  });
+
+  it('produces correct number of alpha floats', () => {
+    const r = graphPaper(COLS, ROWS);
+    expect(r.alphas.length).toBe(VERT_COUNT);
   });
 
   it('first vertex is at (-1, -1) in NDC', () => {
     const r = graphPaper(COLS, ROWS);
-    expect(r[0]).toBeCloseTo(-1, 5);
-    expect(r[1]).toBeCloseTo(-1, 5);
+    expect(r.positions[0]).toBeCloseTo(-1, 5);
+    expect(r.positions[1]).toBeCloseTo(-1, 5);
   });
 
   it('last vertex is at (1, 1) in NDC', () => {
     const r = graphPaper(COLS, ROWS);
-    expect(r[FLOAT_COUNT - 2]).toBeCloseTo(1, 5);
-    expect(r[FLOAT_COUNT - 1]).toBeCloseTo(1, 5);
+    expect(r.positions[VERT_COUNT * 2 - 2]).toBeCloseTo(1, 5);
+    expect(r.positions[VERT_COUNT * 2 - 1]).toBeCloseTo(1, 5);
+  });
+
+  it('all alphas are 1', () => {
+    const r = graphPaper(COLS, ROWS);
+    for (let i = 0; i < r.alphas.length; i++) {
+      expect(r.alphas[i]).toBe(1);
+    }
   });
 });
 
 describe('getGridState', () => {
-  it('returns Float32Array of correct length for every state', () => {
+  it('returns GridState with correct lengths for every state', () => {
     GRID_STATE_NAMES.forEach((name) => {
       const result = getGridState(name as GridStateName, COLS, ROWS);
-      expect(result).toBeInstanceOf(Float32Array);
-      expect(result.length).toBe(FLOAT_COUNT);
+      expect(result.positions).toBeInstanceOf(Float32Array);
+      expect(result.positions.length).toBe(VERT_COUNT * 2);
+      expect(result.alphas).toBeInstanceOf(Float32Array);
+      expect(result.alphas.length).toBe(VERT_COUNT);
     });
   });
 
@@ -48,19 +63,22 @@ describe('getGridState', () => {
     expect(() => getGridState('nonexistent' as GridStateName, COLS, ROWS)).toThrow();
   });
 
-  it('volleyball: mid-row y < top-row y (net sags)', () => {
+  it('volleyball: net center sags below net edge (center col y < edge col y in same row)', () => {
     const result = getGridState('volleyball', COLS, ROWS);
-    const midCol = Math.floor(COLS / 2);
-    const topRowY = result[midCol * 2 + 1];
-    const midRow = Math.floor(ROWS / 2);
-    const midRowY = result[(midRow * (COLS + 1) + midCol) * 2 + 1];
-    expect(midRowY).toBeLessThan(topRowY);
+    // Pick a net row (roughly middle of the grid)
+    const netRow = Math.round(ROWS * 0.6);
+    const centerCol = Math.floor(COLS / 2);
+    const edgeCol = 1;
+    const centerY = result.positions[(netRow * (COLS + 1) + centerCol) * 2 + 1];
+    const edgeY   = result.positions[(netRow * (COLS + 1) + edgeCol) * 2 + 1];
+    // Center should sag lower than edges
+    expect(centerY).toBeLessThan(edgeY);
   });
 
   it('spacetimeWarp: differs from graphPaper', () => {
     const base = graphPaper(COLS, ROWS);
     const warped = getGridState('spacetimeWarp', COLS, ROWS);
-    const hasDiff = Array.from(base).some((v, i) => Math.abs(v - warped[i]) > 0.01);
+    const hasDiff = Array.from(base.positions).some((v, i) => Math.abs(v - warped.positions[i]) > 0.01);
     expect(hasDiff).toBe(true);
   });
 });

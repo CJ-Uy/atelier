@@ -78,7 +78,7 @@ const {
         ambient.start();
 
         const scrollContainer = document.querySelector('.scroll-container') as HTMLElement | null;
-        if (scrollContainer) orchestrator.init(scrollContainer);  // synchronous now
+        if (scrollContainer) orchestrator.init(scrollContainer);
 
         document.addEventListener('mousemove', (e) => {
           engine.setCursor(
@@ -88,9 +88,9 @@ const {
         });
 
         window.addEventListener('atelier:jump-to-section', (e) => {
-          const { index } = (e as CustomEvent<{ index: number }>).detail;
-          orchestrator.goToSection(index);
-          const target = scrollContainer?.children[index] as HTMLElement | undefined;
+          const detail = (e as CustomEvent<{ index: number }>).detail;
+          orchestrator.goToSection(detail.index);
+          const target = scrollContainer?.children[detail.index] as HTMLElement | undefined;
           target?.scrollIntoView({ behavior: 'smooth' });
         });
       }

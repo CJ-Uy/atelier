@@ -3,13 +3,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ScrollOrchestrator } from '../ScrollOrchestrator';
 import type { GridStateName } from '../types';
 
-vi.mock('gsap', () => ({ default: { to: vi.fn() } }));
-
 const mockEngine = () => ({
-  setTargetState: vi.fn(),
-  setCurrentState: vi.fn(),
+  setTarget: vi.fn(),
+  setCurrent: vi.fn(),
   setProgress: vi.fn(),
   resetToBase: vi.fn(),
+  promoteTargetToCurrent: vi.fn(),
+  // legacy aliases
+  setTargetState: vi.fn(),
+  setCurrentState: vi.fn(),
 });
 
 const sections = (states: GridStateName[]) => states.map((gridState, id) => ({ id, gridState }));
@@ -42,12 +44,13 @@ describe('ScrollOrchestrator', () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
-  it('calls resetToBase then setTargetState before morph', () => {
+  it('calls setCurrent and setTarget for two-phase morph', () => {
     const eng = mockEngine();
     const o = new ScrollOrchestrator(eng as any, sections(['graphPaper', 'volleyball']));
     o.goToSection(1);
-    expect(eng.resetToBase).toHaveBeenCalled();
-    expect(eng.setTargetState).toHaveBeenCalledWith('volleyball');
+    // Phase 1: reverse — setCurrent(prev), setTarget(graphPaper)
+    expect(eng.setCurrent).toHaveBeenCalledWith('graphPaper');
+    expect(eng.setTarget).toHaveBeenCalledWith('graphPaper');
   });
 
   it('clamps negative index to 0', () => {
