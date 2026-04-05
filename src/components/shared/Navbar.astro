@@ -1,0 +1,19 @@
+---
+// src/components/shared/Navbar.astro
+import ThemeToggle from './ThemeToggle.svelte';
+---
+<nav
+  aria-label="Main navigation"
+  style="position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.25rem 2rem;pointer-events:auto;"
+>
+  <a
+    href="/"
+    style="font-family:'Host Grotesk',sans-serif;font-size:1.125rem;font-weight:700;color:var(--color-on-surface);text-decoration:none;letter-spacing:-0.02em;"
+    aria-label="Atelier home"
+  >
+    atelier
+  </a>
+  <div style="display:flex;align-items:center;gap:1.5rem;">
+    <ThemeToggle client:load />
+  </div>
+</nav>
