@@ -1,0 +1,86 @@
+/* src/styles/global.css */
+@import "tailwindcss";
+
+/* ── Design Tokens (Tailwind v4 CSS-first config) ─────────────── */
+@theme {
+  /* Backgrounds */
+  --color-bg-dark:  #161618;
+  --color-bg-light: #F5F2ED;
+
+  /* Brand */
+  --color-primary:   #DC3522;   /* vermillion — grid lines, accents */
+  --color-secondary: #E8805A;   /* ember — prefix text, subtitles */
+
+  /* Text */
+  --color-text-dark:           #EEEBE6;   /* warm cream — dark mode body */
+  --color-text-light:          #1A1A1A;   /* near-black — light mode body */
+  --color-text-secondary-light:#8B6B5A;   /* warm brown — light mode secondary */
+  --color-muted:               #7A7876;   /* slate — timestamps, hints */
+
+  /* Fonts */
+  --font-sans: "Host Grotesk", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* ── Semantic Aliases ─────────────────────────────────────────── */
+:root {
+  --color-surface:    var(--color-bg-dark);
+  --color-on-surface: var(--color-text-dark);
+}
+
+[data-theme="light"] {
+  --color-surface:    var(--color-bg-light);
+  --color-on-surface: var(--color-text-light);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --color-surface:    var(--color-bg-light);
+    --color-on-surface: var(--color-text-light);
+  }
+}
+
+/* ── Base Reset ───────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+  font-family: var(--font-sans);
+  overflow: hidden;   /* only .scroll-container scrolls */
+  width: 100vw;
+  height: 100vh;
+}
+
+/* ── Scroll Architecture ──────────────────────────────────────── */
+.scroll-container {
+  position: fixed;
+  inset: 0;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  z-index: 2;
+}
+
+.scroll-container::-webkit-scrollbar { display: none; }
+
+.scroll-section {
+  height: 100vh;
+  scroll-snap-align: start;
+  pointer-events: none;
+}
+
+/* ── Focus ────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
