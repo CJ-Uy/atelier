@@ -2,6 +2,7 @@
 // src/layouts/BaseLayout.astro
 import '../styles/global.css';
 import Navbar from '../components/shared/Navbar.astro';
+import { SECTIONS } from '../components/home/sections';
 
 interface Props {
   title?: string;
@@ -41,9 +42,25 @@ const {
     <Navbar />
 
     <!-- z-index 1: Page content slot (Svelte islands live here) -->
+    <!-- pointer-events:none here — interactive children set pointer-events:auto themselves -->
     <main style="position:fixed;inset:0;z-index:1;pointer-events:none;">
       <slot />
     </main>
+
+    <!--
+      z-index 2: Scroll container — direct child of body so pointer-events:none
+      on <main> cannot interfere with wheel/scroll events.
+      This is the ONLY scrollable element. CSS scroll-snap drives section snapping.
+    -->
+    <div class="scroll-container" aria-hidden="true">
+      {SECTIONS.map((s) => (
+        <div
+          class="scroll-section"
+          data-section-id={String(s.id)}
+          data-grid-state={s.gridState}
+        />
+      ))}
+    </div>
 
     <!-- Grid engine bootstrap (runs client-side only) -->
     <script>

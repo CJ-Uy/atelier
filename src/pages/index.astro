@@ -4,7 +4,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroText from '../components/home/HeroText.svelte';
 import DotIndicator from '../components/home/DotIndicator.svelte';
 import ScrollHint from '../components/home/ScrollHint.svelte';
-import { SECTIONS } from '../components/home/sections';
 ---
 
 <BaseLayout title="Atelier — Charles" description="Portfolio of Charles — developer, musician, builder, and creative.">
@@ -16,17 +15,5 @@ import { SECTIONS } from '../components/home/sections';
   <DotIndicator client:only="svelte" />
   <ScrollHint client:only="svelte" />
 
-  <!--
-    Invisible scroll container — the ONLY scrollable element.
-    z-index:2, drives GSAP ScrollTrigger snap events.
-  -->
-  <div class="scroll-container" aria-hidden="true">
-    {SECTIONS.map((s) => (
-      <div
-        class="scroll-section"
-        data-section-id={String(s.id)}
-        data-grid-state={s.gridState}
-      />
-    ))}
-  </div>
+  <!-- scroll-container is now rendered in BaseLayout directly as a body sibling -->
 </BaseLayout>
