@@ -12,7 +12,10 @@
 		"astro": "astro",
 		"generate-types": "wrangler types",
 		"deploy": "astro build && wrangler deploy",
-		"cf-typegen": "wrangler types"
+		"cf-typegen": "wrangler types",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:e2e": "playwright test"
 	},
 	"dependencies": {
 		"@astrojs/cloudflare": "^13.1.4",
