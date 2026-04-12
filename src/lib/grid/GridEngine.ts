@@ -267,8 +267,8 @@ export class GridEngine {
     this._bindAttribs();
 
     const isLight = document.documentElement.dataset.theme === 'light';
-    const lineAlpha  = isLight ? 0.90 : 0.20;
-    const pointAlpha = isLight ? 1.0 : 0.35;
+    const lineAlpha  = isLight ? 0.90 : 0.32;
+    const pointAlpha = isLight ? 1.0 : 0.50;
 
     gl.uniform4f(this.uColor, 0.863, 0.208, 0.133, lineAlpha);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.iboLines);

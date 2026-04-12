@@ -1,0 +1,65 @@
+---
+// src/pages/works.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MangaGrid from '../components/works/MangaGrid.svelte';
+
+// Project data — big projects get 'large', small get 'small'
+const projects = [
+  {
+    title: 'Atelier',
+    description: 'Personal portfolio with WebGL grid morphing engine and scroll-mapped animations.',
+    tags: ['Astro', 'WebGL', 'Svelte'],
+    size: 'large' as const,
+    href: '/',
+  },
+  {
+    title: 'Hackfest 26',
+    description: 'Ad Multo — hackathon project with scroll-based paper/PDF reader.',
+    tags: ['Next.js', 'API', 'Research'],
+    size: 'large' as const,
+    href: '#',
+  },
+  {
+    title: 'Blank Board',
+    description: 'Collaborative whiteboard with real-time drops API.',
+    tags: ['SvelteKit', 'API', 'Real-time'],
+    size: 'medium' as const,
+    href: '#',
+  },
+  {
+    title: 'Music Production',
+    description: 'Bass guitar compositions and recording experiments.',
+    tags: ['Audio', 'Creative'],
+    size: 'medium' as const,
+    href: '#',
+  },
+  {
+    title: 'Research Notes',
+    description: 'Explorations in spacetime physics and wormhole geometry.',
+    tags: ['Physics', 'Writing'],
+    size: 'small' as const,
+    href: '#',
+  },
+  {
+    title: 'CLI Tools',
+    description: 'Small developer utilities and automation scripts.',
+    tags: ['Rust', 'CLI'],
+    size: 'small' as const,
+    href: '#',
+  },
+];
+---
+
+<BaseLayout title="Works — Atelier" description="Projects and works by Charles.">
+  <div style="position:relative;z-index:1;pointer-events:auto;min-height:100vh;">
+    <header style="text-align:center;padding:6rem 1.5rem 2rem;">
+      <h1 style="font-family:'Host Grotesk',sans-serif;font-size:clamp(2rem,5vw,3.5rem);font-weight:700;color:var(--color-on-surface);letter-spacing:-0.03em;">
+        Works
+      </h1>
+      <p style="color:var(--color-muted);font-size:clamp(0.85rem,1.5vw,1rem);margin-top:0.5rem;">
+        Projects, experiments, and things I've built.
+      </p>
+    </header>
+    <MangaGrid projects={projects} client:load />
+  </div>
+</BaseLayout>

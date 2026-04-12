@@ -15,7 +15,7 @@
   --color-text-dark:           #EEEBE6;   /* warm cream — dark mode body */
   --color-text-light:          #1A1A1A;   /* near-black — light mode body */
   --color-text-secondary-light:#8B6B5A;   /* warm brown — light mode secondary */
-  --color-muted:               #7A7876;   /* slate — timestamps, hints */
+  --color-muted:               #9A9896;   /* slate — timestamps, hints (boosted for WCAG AA on dark bg) */
 
   /* Fonts */
   --font-sans: "Host Grotesk", system-ui, sans-serif;
@@ -65,18 +65,29 @@ body {
   position: fixed;
   inset: 0;
   overflow-y: scroll;
-  scroll-snap-type: y mandatory;
   scrollbar-width: none;
   -ms-overflow-style: none;
   z-index: 2;
+  /* No CSS scroll-snap — JS handles drift-to-nearest on scroll end.
+     This eliminates directional resistance that causes up-scroll dead zones. */
 }
 
 .scroll-container::-webkit-scrollbar { display: none; }
 
 .scroll-section {
   height: 100vh;
-  scroll-snap-align: start;
   pointer-events: none;
+}
+
+/* ── Page Content (non-home pages) ────────────────────────────── */
+.page-content {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+body:not(.page-home) {
+  overflow-y: auto;
 }
 
 /* ── Focus ────────────────────────────────────────────────────── */

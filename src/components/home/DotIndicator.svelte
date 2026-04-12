@@ -18,7 +18,8 @@
 
 <nav
   aria-label="Section navigation"
-  style="position:fixed;right:1.5rem;top:50%;transform:translateY(-50%);z-index:10;display:flex;flex-direction:column;gap:0.6rem;pointer-events:auto;"
+  class="dot-nav"
+  style="position:fixed;top:50%;transform:translateY(-50%);z-index:50;display:flex;flex-direction:column;gap:0.6rem;pointer-events:auto;"
 >
   {#each SECTIONS as section, i}
     <button
@@ -41,4 +42,11 @@
   .dot.active { background: #DC3522; transform: scale(1.25); }
   .dot:hover:not(.active) { background: color-mix(in srgb, #DC3522 50%, transparent); }
   .dot:focus-visible { outline: 2px solid #DC3522; outline-offset: 3px; }
+
+  .dot-nav { right: 1.5rem; }
+
+  @media (max-width: 640px) {
+    .dot-nav { right: 0.75rem; gap: 0.4rem; }
+    .dot { width: 6px; height: 6px; }
+  }
 </style>

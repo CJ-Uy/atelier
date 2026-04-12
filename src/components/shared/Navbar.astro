@@ -4,7 +4,7 @@ import ThemeToggle from './ThemeToggle.svelte';
 ---
 <nav
   aria-label="Main navigation"
-  style="position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.25rem 2rem;pointer-events:auto;"
+  class="navbar"
 >
   <a
     href="/"
@@ -13,7 +13,15 @@ import ThemeToggle from './ThemeToggle.svelte';
   >
     atelier
   </a>
-  <div style="display:flex;align-items:center;gap:1.75rem;">
+
+  <!-- Hamburger button (mobile only) -->
+  <button class="hamburger" aria-label="Toggle menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
+  <div class="nav-links">
     <a href="/" class="nav-link">Home</a>
     <a href="/works" class="nav-link">Works</a>
     <a href="/skills" class="nav-link">Skills</a>
@@ -22,18 +30,74 @@ import ThemeToggle from './ThemeToggle.svelte';
   </div>
 </nav>
 
+<script>
+  const hamburger = document.querySelector('.hamburger');
+  const navLinks = document.querySelector('.nav-links');
+  if (hamburger && navLinks) {
+    hamburger.addEventListener('click', () => {
+      const expanded = hamburger.getAttribute('aria-expanded') === 'true';
+      hamburger.setAttribute('aria-expanded', String(!expanded));
+      navLinks.classList.toggle('open');
+      hamburger.classList.toggle('open');
+    });
+  }
+</script>
+
 <style>
+  .navbar {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem 2rem;
+    pointer-events: auto;
+  }
+
+  .nav-links {
+    display: flex; align-items: center; gap: 1.75rem;
+  }
+
   .nav-link {
     font-family: 'Host Grotesk', sans-serif;
     font-size: 0.85rem;
     font-weight: 500;
     color: var(--color-on-surface);
     text-decoration: none;
-    opacity: 0.6;
+    opacity: 0.75;
     transition: opacity 0.2s;
     letter-spacing: 0.01em;
   }
-  .nav-link:hover {
-    opacity: 1;
+  .nav-link:hover { opacity: 1; }
+
+  /* Hamburger: hidden on desktop */
+  .hamburger {
+    display: none;
+    flex-direction: column; gap: 4px;
+    background: none; border: none; padding: 6px; cursor: pointer;
+  }
+  .hamburger-line {
+    width: 20px; height: 2px;
+    background: var(--color-on-surface);
+    transition: transform 0.3s, opacity 0.3s;
+  }
+  .hamburger.open .hamburger-line:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .hamburger.open .hamburger-line:nth-child(2) { opacity: 0; }
+  .hamburger.open .hamburger-line:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+  /* Mobile: ≤640px */
+  @media (max-width: 640px) {
+    .navbar { padding: 1rem 1.25rem; }
+    .hamburger { display: flex; }
+    .nav-links {
+      position: fixed; top: 0; right: 0;
+      width: 60vw; max-width: 280px; height: 100vh;
+      flex-direction: column; align-items: flex-start;
+      gap: 1.5rem; padding: 5rem 2rem 2rem;
+      background: var(--color-surface);
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 99;
+    }
+    .nav-links.open { transform: translateX(0); }
+    .nav-link { font-size: 1rem; opacity: 0.85; }
   }
 </style>

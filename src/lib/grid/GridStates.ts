@@ -154,33 +154,46 @@ export const developerSetup: GridStateFunction = (cols, rows) => {
 };
 
 // ═══════════════════════════════════════════════════════════════
-//  3. spacetimeWarp — wormhole center + surrounding data charts
-//     Strong radial pull toward center creates a funnel/vortex.
-//     Outer edges form chart-like rectangular patterns.
+//  3. spacetimeWarp — 3D wormhole portal (front view)
+//     Looking INTO the wormhole mouth. Rectangular grid warps to
+//     polar coords: horizontal lines → concentric rings,
+//     vertical lines → radial spokes. Power-curve radial mapping
+//     compresses center → depth/tunnel illusion.
 // ═══════════════════════════════════════════════════════════════
 export const spacetimeWarp: GridStateFunction = (cols, rows) =>
   buildGrid(cols, rows,
     (_c, _r, cx, cy) => {
-      // Einstein-Rosen bridge: two funnel mouths connected by a narrow throat.
-      // Side view: x = position along the bridge, y = radial displacement.
-      // Profile R(x) = throat + (mouth - throat) * (cosh(k*x) - 1) / (cosh(k) - 1)
-      const k = 2.8;
-      const throat = 0.07;
-      const mouth = 0.96;
-      const coshK = Math.cosh(k);
-      const R = throat + (mouth - throat) * (Math.cosh(k * cx) - 1) / (coshK - 1);
+      const r = Math.sqrt(cx * cx + cy * cy);
+      if (r < 0.001) return [0, 0];
+      const theta = Math.atan2(cy, cx);
 
-      // y scaled by profile: wide at mouths (x=±1), narrow at throat (x=0)
-      return [cx, cy * R];
+      const maxR = Math.SQRT2; // diagonal corner distance
+      const t = Math.min(r / maxR, 1); // normalize 0→1
+
+      // Wormhole radial profile: power curve compresses center (depth illusion)
+      // throat = small central circle, mouth = outer ring
+      const throat = 0.06;
+      const mouth = 0.95;
+      const mapped = throat + (mouth - throat) * Math.pow(t, 1.8);
+
+      return [Math.cos(theta) * mapped, Math.sin(theta) * mapped];
     },
     (_c, _r, cx, cy) => {
-      // Throat center line (the tunnel axis) — faint
-      const k = 2.8;
-      const R = 0.07 + 0.89 * (Math.cosh(k * cx) - 1) / (Math.cosh(k) - 1);
-      const absY = Math.abs(cy * R);
-      if (absY < 0.025) return 0.08;
-      if (absY < 0.06) return 0.3;
-      return 1;
+      const r = Math.sqrt(cx * cx + cy * cy);
+      const maxR = Math.SQRT2;
+      const t = r / maxR;
+
+      // Throat center: dark void
+      if (t < 0.04) return 0.05;
+      if (t < 0.10) return 0.2;
+
+      // Depth-based brightness: brighter at mouth, dimmer deep in tunnel
+      const depthAlpha = 0.35 + 0.65 * Math.pow(t, 0.6);
+
+      // Concentric ring emphasis (grid horizontal lines naturally form these)
+      // Radial spoke emphasis (grid vertical lines naturally form these)
+      // Both come for free from the grid topology — alpha just controls brightness
+      return depthAlpha;
     },
   );
 
@@ -222,86 +235,89 @@ export const dreamCatcher: GridStateFunction = (cols, rows) =>
   );
 
 // ═══════════════════════════════════════════════════════════════
-//  5. musicProduction — DAW timeline (top) + music staff (bottom)
-//     Top: horizontal tracks with varying-length clip blocks (like a DAW).
-//     Bottom: 5-line music staff with note positions.
+//  5. musicProduction — bass fretboard (12 frets)
+//     Position fn: clean rectangle map — no clustering.
+//     Alpha fn: fret bars + circular dots (2D Gaussian in NDC) + blank gaps.
+//     Dots at 3,5,7,9; double-dot at 12. Non-dot zones = alpha 0.
 // ═══════════════════════════════════════════════════════════════
 export const musicProduction: GridStateFunction = (cols, rows) => {
-  // Layout: staff takes bottom ~40%, DAW tracks take top ~55%, gap between.
-  const staffTop = Math.round(rows * 0.38);
-  const dawBot = Math.round(rows * 0.45);
+  const yBot = -0.94, yTop = 0.92;
+  const hw = 0.15; // half-width: fretboard = 15% screen width (total 0.30 NDC of 2.0)
 
-  // ── Staff: 5 lines evenly spaced in the bottom region ──
-  const staffLines = [0.08, 0.16, 0.24, 0.32, 0.40]; // fractions of staffTop
-  const staffLineRows = staffLines.map(f => Math.round(f * staffTop));
+  // Nut at top (t=0.97). fret 12 = half scale → fretSpan = 0.94/0.5 = 1.88
+  const nutT = 0.97;
+  const fretSpan = 0.94 / (1 - Math.pow(2, -12 / 12)); // 1.88
 
-  // ── DAW: 6 horizontal tracks with clip blocks ──
-  const trackCount = 6;
-  const dawRows = rows - dawBot;
+  // fretTs[n-1] = t-position of fret bar n (bars 1–12)
+  const fretTs: number[] = [];
+  for (let n = 1; n <= 12; n++) {
+    fretTs.push(nutT - (1 - Math.pow(2, -n / 12)) * fretSpan);
+  }
 
-  // Deterministic "clips" per track: [startCol, endCol] pairs
-  const clips: [number, number][][] = [
-    [[2, Math.round(cols * 0.35)], [Math.round(cols * 0.40), Math.round(cols * 0.72)]],
-    [[0, Math.round(cols * 0.18)], [Math.round(cols * 0.22), Math.round(cols * 0.55)], [Math.round(cols * 0.60), Math.round(cols * 0.88)]],
-    [[Math.round(cols * 0.10), Math.round(cols * 0.48)], [Math.round(cols * 0.55), cols - 2]],
-    [[0, Math.round(cols * 0.28)], [Math.round(cols * 0.65), cols]],
-    [[Math.round(cols * 0.05), Math.round(cols * 0.42)], [Math.round(cols * 0.48), Math.round(cols * 0.78)]],
-    [[Math.round(cols * 0.15), Math.round(cols * 0.60)], [Math.round(cols * 0.68), cols - 1]],
-  ];
+  const DOT_FRETS = new Set([3, 5, 7, 9, 12]);
 
-  // "Notes" on the staff — column positions where notes appear
-  const notePositions = [3, 7, 10, 14, 18, 21, 25, 28, 32, 36, 40, 44].filter(n => n <= cols);
+  // Zone n+1 = space between fret bar n and fret bar n+1 (where you press to play fret n+1)
+  const getZone = (t: number) => {
+    for (let n = 0; n < 12; n++) {
+      const top = n === 0 ? nutT : fretTs[n - 1];
+      const bot = fretTs[n];
+      if (t <= top && t > bot) {
+        const fretNum = n + 1;
+        return { hasDot: DOT_FRETS.has(fretNum), isDouble: fretNum === 12, top, bot };
+      }
+    }
+    return null;
+  };
+
+  // Dot Gaussian: aspect-corrected for round dots on ~16:9 screen
+  // sigX in NDC ≈ 15px on 1280w;  sigY = sigX * (16/9) for circular appearance
+  const sigX = 0.022;
+  const sigY = sigX * (16 / 9); // ≈ 0.039
 
   return buildGrid(cols, rows,
+    // ── Position: clean rectangle. No clustering needed. ──
     (c, r, cx, cy) => {
-      // ── Staff region (bottom) ──
-      if (r <= staffTop) {
-        // Compress staff lines tighter for cleaner look
-        const staffT = r / staffTop;
-        const y = -0.95 + staffT * 0.72;
-        return [cx, y];
-      }
-      // ── Gap between staff and DAW ──
-      if (r > staffTop && r < dawBot) {
-        return [cx, -0.15];
-      }
-      // ── DAW region (top) ──
-      const dawT = (r - dawBot) / dawRows;
-      const y = -0.05 + dawT * 0.98;
-      return [cx, y];
+      const targetX = -hw + (c / cols) * 2 * hw;
+      const targetY = yBot + (r / rows) * (yTop - yBot);
+      const blend = 0.95;
+      return [cx * (1 - blend) + targetX * blend, cy * (1 - blend) + targetY * blend];
     },
+    // ── Alpha: fret bars + round dot Gaussians + blank gaps ──
     (c, r) => {
-      // ── Staff region ──
-      if (r <= staffTop) {
-        // Staff lines: 5 horizontal lines
-        const isStaffLine = staffLineRows.some(sr => Math.abs(r - sr) <= 0);
-        // Notes: bright dots at note positions on staff lines
-        const isNote = notePositions.some(nc => Math.abs(c - nc) <= 1) && isStaffLine;
-        if (isNote) return 1;
-        if (isStaffLine) return 0.8;
-        // Between staff lines: faint
-        if (r >= staffLineRows[0] && r <= staffLineRows[4]) return 0.15;
-        return 0;
+      const t = r / rows;
+      const cFrac = c / cols;
+
+      // Fretboard left/right edges (2 columns each side for bold outline)
+      if (c <= 1 || c >= cols - 1) return 1;
+
+      // Nut — thick line at top of fretboard
+      if (Math.abs(t - nutT) < 1.5 / rows) return 1;
+
+      // Fret bars — 1 row thick each
+      if (fretTs.some(ft => Math.abs(t - ft) < 1.0 / rows)) return 1;
+
+      // Outside fretboard bounds → invisible
+      if (t >= nutT || t <= fretTs[11]) return 0;
+
+      // Inside fretboard: check zone
+      const zone = getZone(t);
+      if (!zone || !zone.hasDot) return 0; // blank gap between non-dot frets
+
+      // Map vertex to fretboard NDC for Gaussian evaluation
+      const vx = -hw + cFrac * 2 * hw;
+      const vy = yBot + t * (yTop - yBot);
+      const dotY = yBot + ((zone.top + zone.bot) / 2) * (yTop - yBot);
+      const dy = vy - dotY;
+
+      if (zone.isDouble) {
+        // Two dots symmetrically placed at ±42% of half-width
+        const xl = -hw * 0.42, xr = hw * 0.42;
+        const gL = Math.exp(-((vx - xl) ** 2) / (2 * sigX * sigX) - (dy * dy) / (2 * sigY * sigY));
+        const gR = Math.exp(-((vx - xr) ** 2) / (2 * sigX * sigX) - (dy * dy) / (2 * sigY * sigY));
+        return Math.max(gL, gR);
       }
-      // ── Gap ──
-      if (r > staffTop && r < dawBot) return 0;
-      // ── DAW tracks ──
-      const dawT = (r - dawBot) / dawRows;
-      const trackIdx = Math.min(Math.floor(dawT * trackCount), trackCount - 1);
-      const trackFrac = (dawT * trackCount) - trackIdx;
-      const isTrackEdge = trackFrac < 0.08 || trackFrac > 0.92;
-      // Check if column is inside a clip
-      const trackClips = clips[trackIdx] || [];
-      const inClip = trackClips.some(([s, e]) => c >= s && c <= e);
-      if (inClip) {
-        // Clip border: left/right column edges OR top/bottom track edges
-        const isClipLR = trackClips.some(([s, e]) => c === s || c === e);
-        if (isClipLR || isTrackEdge) return 1; // border
-        return 0.55; // clip interior fill
-      }
-      // Track separator outside clips: faint
-      if (isTrackEdge) return 0.2;
-      return 0.05; // empty track space
+      // Single dot at center x=0
+      return Math.exp(-(vx * vx) / (2 * sigX * sigX) - (dy * dy) / (2 * sigY * sigY));
     },
   );
 };
@@ -492,109 +508,102 @@ export const banigWeaving: GridStateFunction = (cols, rows) => {
 };
 
 // ═══════════════════════════════════════════════════════════════
-//  9. cityscape — building silhouettes + construction crane
-//     Buildings of varying heights with clear street gaps.
-//     Crane tower with horizontal jib.
+//  9. cityscape — tall buildings skyline + construction crane
+//     Clean city silhouette: varied-height buildings with clear
+//     outlines, one tower crane on the right. Simple and readable.
 // ═══════════════════════════════════════════════════════════════
 export const cityscape: GridStateFunction = (cols, rows) => {
-  // Buildings of varying heights with street gaps + construction crane on the right.
+  // Building definitions: [leftFrac, rightFrac, heightFrac]
+  // Fraction of cols / rows. Heights create a recognizable skyline.
+  const buildings: [number, number, number][] = [
+    [0.02, 0.10, 0.38],  // A: short wide
+    [0.12, 0.20, 0.62],  // B: medium
+    [0.22, 0.28, 0.48],  // C: short narrow
+    [0.30, 0.42, 0.82],  // D: tallest skyscraper (wide)
+    [0.44, 0.52, 0.55],  // E: medium
+    [0.54, 0.60, 0.70],  // F: tall narrow
+    [0.62, 0.72, 0.45],  // G: short wide
+  ];
 
-  // Building profile: maps column fraction (0..1) to building height fraction (0..1).
-  // 0 = street gap.
-  const profile = (ct: number): number => {
-    if (ct < 0.04) return 0;           // left margin
-    if (ct < 0.15) return 0.50;       // building A (short)
-    if (ct < 0.19) return 0;           // street
-    if (ct < 0.36) return 0.78;       // building B (tall, wide)
-    if (ct < 0.40) return 0;           // street
-    if (ct < 0.52) return 0.60;       // building C
-    if (ct < 0.56) return 0;           // street
-    if (ct < 0.65) return 0.42;       // building D (short)
-    if (ct < 0.69) return 0;           // street
-    if (ct < 0.78) return 0.68;       // building E
-    if (ct < 0.82) return 0;           // street (crane base gap)
-    return 0;                          // crane zone (handled separately)
-  };
+  // Crane: tower at right side, jib extends left over buildings
+  const craneTL = 0.78, craneTR = 0.82; // tower column range
+  const craneH = 0.92;                   // tower height
+  const jibLeft = 0.50, jibRight = 0.95; // jib horizontal extent
+  const cableX = 0.52;                   // cable hangs from near jib left end
+  const cableBot = 0.40;                 // cable bottom
 
-  // Crane geometry: tower + jib + counter-jib + cable
-  const craneTowerL = 0.86, craneTowerR = 0.90; // tower column range (fraction)
-  const craneH = 0.92;          // tower height (fraction of rows)
-  const jibL = 0.44;            // jib extends left to here
-  const jibR = craneTowerR;     // jib right = tower right
-  const counterJibR = 0.98;     // counter-jib extends right
-  const jibRowFrac = craneH;    // jib is at the top of the tower
-  // Cable: hangs from jib tip down
-  const cableTipX = 0.46;       // cable hangs from left end of jib
-  const cableBottomH = 0.35;    // cable drops to this height
-
-  const isCraneTower = (ct: number) => ct >= craneTowerL && ct <= craneTowerR;
-  const isCraneJib = (ct: number, rt: number) => {
-    const jibRow = Math.abs(rt - jibRowFrac) < 0.03;
-    return jibRow && ct >= jibL && ct <= counterJibR;
-  };
-  const isCraneCable = (ct: number, rt: number) => {
-    // Diagonal cable from jib tip to lower point
-    if (ct < cableTipX - 0.02 || ct > cableTipX + 0.02) return false;
-    return rt >= cableBottomH && rt <= jibRowFrac;
+  // Which building is the column in? Returns height or 0.
+  const getBuildingHeight = (ct: number): number => {
+    for (const [l, r, h] of buildings) {
+      if (ct >= l && ct <= r) return h;
+    }
+    return 0;
   };
 
   return buildGrid(cols, rows,
     (c, r, cx, cy) => {
-      const t = r / rows;
+      const t = r / rows; // 0=bottom, 1=top
       const ct = c / cols;
 
-      // Crane tower: tall narrow vertical
-      if (isCraneTower(ct)) {
-        const towerX = -1 + (craneTowerL + craneTowerR) / 2 * 2;
-        const towerW = (craneTowerR - craneTowerL) * 2;
-        const x = towerX + ((ct - craneTowerL) / (craneTowerR - craneTowerL) - 0.5) * towerW;
-        if (t <= craneH) return [x, cy];
-        return [x, -1 + craneH * 2]; // snap above tower to roof
+      // ── Crane tower ──
+      if (ct >= craneTL && ct <= craneTR) {
+        const towerX = -1 + (craneTL + craneTR);
+        const localX = ((ct - craneTL) / (craneTR - craneTL) - 0.5) * (craneTR - craneTL) * 2;
+        if (t <= craneH) return [towerX + localX, cy];
+        return [towerX + localX, -1 + craneH * 2]; // above tower → snap to top
       }
 
-      // Crane jib + counter-jib: horizontal bar at tower top
-      if (isCraneJib(ct, t)) {
-        const jibY = -1 + jibRowFrac * 2;
-        return [cx, jibY];
+      // ── Crane jib: horizontal bar at tower top ──
+      if (ct >= jibLeft && ct <= jibRight && Math.abs(t - craneH) < 0.03) {
+        return [cx, -1 + craneH * 2];
       }
 
-      // Cable: vertical line from jib down
-      if (isCraneCable(ct, t)) {
-        const cableX = -1 + cableTipX * 2;
-        return [cableX, cy];
+      // ── Cable: vertical line from jib tip down ──
+      if (Math.abs(ct - cableX) < 0.015 && t >= cableBot && t <= craneH) {
+        return [-1 + cableX * 2, cy];
       }
 
-      // Building zone
-      const bh = profile(ct);
+      // ── Buildings ──
+      const bh = getBuildingHeight(ct);
       if (bh === 0) {
-        // Street: compress to ground level
-        return [cx, -1 + t * 0.15];
+        // Street / gap: compress vertices to ground
+        return [cx, -1 + t * 0.08];
       }
-      if (t <= bh) return [cx, cy]; // building face
-      return [cx, -1 + bh * 2];     // above roof: snap to rooftop
+      if (t <= bh) return [cx, cy]; // within building
+      return [cx, -1 + bh * 2];     // above roof: snap to roofline
     },
     (c, r) => {
       const t = r / rows;
       const ct = c / cols;
 
-      // Crane tower
-      if (isCraneTower(ct)) {
-        if (t <= craneH) return 1;
-        return 0; // above tower
+      // ── Crane tower ──
+      if (ct >= craneTL && ct <= craneTR) {
+        return t <= craneH ? 1 : 0;
       }
-      // Crane jib
-      if (isCraneJib(ct, t)) return 0.9;
-      // Cable
-      if (isCraneCable(ct, t)) return 0.7;
+      // ── Crane jib ──
+      if (ct >= jibLeft && ct <= jibRight && Math.abs(t - craneH) < 0.03) return 0.85;
+      // ── Cable ──
+      if (Math.abs(ct - cableX) < 0.015 && t >= cableBot && t <= craneH) return 0.6;
 
-      // Buildings
-      const bh = profile(ct);
+      // ── Buildings ──
+      const bh = getBuildingHeight(ct);
       if (bh === 0) {
-        if (t <= 0.04) return 0.35; // ground line
-        return 0; // street sky: invisible
+        return t <= 0.025 ? 0.35 : 0; // ground line or empty
       }
-      if (t <= bh) return 1; // building face
-      return 0; // above roof: invisible
+      if (t > bh) return 0; // above roof
+
+      // Building outline: left/right edges + rooftop
+      const isLeftEdge = buildings.some(([l]) => Math.abs(ct - l) < 0.015);
+      const isRightEdge = buildings.some(([, r2]) => Math.abs(ct - r2) < 0.015);
+      const isRoof = Math.abs(t - bh) < 0.03;
+      if (isLeftEdge || isRightEdge || isRoof) return 1;
+
+      // Windows: grid pattern inside buildings
+      const winRow = r % 3 === 1;
+      const winCol = c % 3 === 1;
+      if (winRow && winCol && t > 0.06 && t < bh - 0.04) return 0.7;
+
+      return 0.25; // building face fill
     },
   );
 };

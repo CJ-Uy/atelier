@@ -2,15 +2,19 @@
 // src/layouts/BaseLayout.astro
 import '../styles/global.css';
 import Navbar from '../components/shared/Navbar.astro';
+import DotIndicator from '../components/home/DotIndicator.svelte';
 import { SECTIONS } from '../components/home/sections';
 
 interface Props {
   title?: string;
   description?: string;
+  /** Set to true for the home page (enables scroll-container, dot indicator, grid morphing) */
+  isHome?: boolean;
 }
 const {
   title = 'Atelier — Charles',
   description = 'Portfolio of Charles — developer, musician, and creative.',
+  isHome = false,
 } = Astro.props;
 ---
 <!doctype html>
@@ -30,8 +34,8 @@ const {
       rel="stylesheet"
     />
   </head>
-  <body>
-    <!-- z-index 0: WebGL grid canvas -->
+  <body class:list={[{ 'page-home': isHome }]}>
+    <!-- z-index 0: WebGL grid canvas (background on all pages) -->
     <canvas
       id="grid-canvas"
       style="position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;"
@@ -41,26 +45,31 @@ const {
     <!-- z-index 100: Navbar -->
     <Navbar />
 
-    <!-- z-index 1: Page content slot (Svelte islands live here) -->
-    <!-- pointer-events:none here — interactive children set pointer-events:auto themselves -->
-    <main style="position:fixed;inset:0;z-index:1;pointer-events:none;">
-      <slot />
-    </main>
+    {isHome && (
+      <main style="position:fixed;inset:0;z-index:1;pointer-events:none;">
+        <slot />
+      </main>
+    )}
 
-    <!--
-      z-index 2: Scroll container — direct child of body so pointer-events:none
-      on <main> cannot interfere with wheel/scroll events.
-      This is the ONLY scrollable element. CSS scroll-snap drives section snapping.
-    -->
-    <div class="scroll-container" aria-hidden="true">
-      {SECTIONS.map((s) => (
-        <div
-          class="scroll-section"
-          data-section-id={String(s.id)}
-          data-grid-state={s.gridState}
-        />
-      ))}
-    </div>
+    {isHome && <DotIndicator client:only="svelte" />}
+
+    {isHome && (
+      <div class="scroll-container" aria-hidden="true">
+        {SECTIONS.map((s) => (
+          <div
+            class="scroll-section"
+            data-section-id={String(s.id)}
+            data-grid-state={s.gridState}
+          />
+        ))}
+      </div>
+    )}
+
+    {!isHome && (
+      <main class="page-content">
+        <slot />
+      </main>
+    )}
 
     <!-- Grid engine bootstrap (runs client-side only) -->
     <script>
@@ -73,25 +82,26 @@ const {
       if (canvas) {
         const engine = new GridEngine(canvas);
         const ambient = new AmbientAnimation(engine);
-        const orchestrator = new ScrollOrchestrator(engine, SECTIONS);
 
         ambient.start();
 
+        // Home page: scroll-mapped morphing
         const scrollContainer = document.querySelector('.scroll-container') as HTMLElement | null;
-        if (scrollContainer) orchestrator.init(scrollContainer);
+        if (scrollContainer) {
+          const orchestrator = new ScrollOrchestrator(engine, SECTIONS);
+          orchestrator.init(scrollContainer);
+
+          window.addEventListener('atelier:jump-to-section', (e) => {
+            const detail = (e as CustomEvent<{ index: number }>).detail;
+            orchestrator.goToSection(detail.index);
+          });
+        }
 
         document.addEventListener('mousemove', (e) => {
           engine.setCursor(
             (e.clientX / window.innerWidth) * 2 - 1,
             -((e.clientY / window.innerHeight) * 2 - 1),
           );
-        });
-
-        window.addEventListener('atelier:jump-to-section', (e) => {
-          const detail = (e as CustomEvent<{ index: number }>).detail;
-          orchestrator.goToSection(detail.index);
-          const target = scrollContainer?.children[detail.index] as HTMLElement | undefined;
-          target?.scrollIntoView({ behavior: 'smooth' });
         });
       }
     </script>

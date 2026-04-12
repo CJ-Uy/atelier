@@ -9,7 +9,6 @@ const mockEngine = () => ({
   setProgress: vi.fn(),
   resetToBase: vi.fn(),
   promoteTargetToCurrent: vi.fn(),
-  // legacy aliases
   setTargetState: vi.fn(),
   setCurrentState: vi.fn(),
 });
@@ -19,6 +18,10 @@ const sections = (states: GridStateName[]) => states.map((gridState, id) => ({ i
 describe('ScrollOrchestrator', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    // Mock scroll-container for goToSection
+    const mockContainer = document.createElement('div');
+    mockContainer.className = 'scroll-container';
+    document.body.appendChild(mockContainer);
   });
 
   it('starts at index 0', () => {
@@ -26,40 +29,40 @@ describe('ScrollOrchestrator', () => {
     expect(o.currentIndex).toBe(0);
   });
 
-  it('dispatches atelier:section-change with correct detail', () => {
-    const spy = vi.spyOn(window, 'dispatchEvent');
+  it('goToSection scrolls the container (does not throw)', () => {
     const o = new ScrollOrchestrator(mockEngine() as any, sections(['graphPaper', 'keyboard']));
-    o.goToSection(1);
-    expect(spy).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'atelier:section-change' })
-    );
-    const evt = spy.mock.calls[0][0] as CustomEvent;
-    expect(evt.detail).toEqual({ index: 1, stateName: 'keyboard' });
+    // goToSection now delegates to scrollIntoView — should not throw
+    expect(() => o.goToSection(1)).not.toThrow();
   });
 
-  it('does not dispatch if already on that section', () => {
-    const spy = vi.spyOn(window, 'dispatchEvent');
-    const o = new ScrollOrchestrator(mockEngine() as any, sections(['graphPaper']));
-    o.goToSection(0);
-    expect(spy).not.toHaveBeenCalled();
-  });
-
-  it('calls setCurrent and setTarget for two-phase morph', () => {
-    const eng = mockEngine();
-    const o = new ScrollOrchestrator(eng as any, sections(['graphPaper', 'volleyball']));
-    o.goToSection(1);
-    // Phase 1: reverse — setCurrent(prev), setTarget(graphPaper)
-    expect(eng.setCurrent).toHaveBeenCalledWith('graphPaper');
-    expect(eng.setTarget).toHaveBeenCalledWith('graphPaper');
-  });
-
-  it('clamps negative index to 0', () => {
+  it('handles negative index gracefully', () => {
     const o = new ScrollOrchestrator(mockEngine() as any, sections(['graphPaper', 'keyboard']));
     expect(() => o.goToSection(-5)).not.toThrow();
   });
 
-  it('clamps over-range index to last section', () => {
+  it('handles over-range index gracefully', () => {
     const o = new ScrollOrchestrator(mockEngine() as any, sections(['graphPaper', 'keyboard']));
     expect(() => o.goToSection(99)).not.toThrow();
+  });
+
+  it('init attaches scroll listener without error', () => {
+    const eng = mockEngine();
+    const o = new ScrollOrchestrator(eng as any, sections(['graphPaper', 'keyboard']));
+    const container = document.createElement('div');
+    Object.defineProperty(container, 'clientHeight', { value: 800 });
+    Object.defineProperty(container, 'scrollTop', { value: 0 });
+    expect(() => o.init(container)).not.toThrow();
+  });
+
+  it('sets engine state on scroll event (settled at section 0)', () => {
+    const eng = mockEngine();
+    const o = new ScrollOrchestrator(eng as any, sections(['graphPaper', 'keyboard']));
+    const container = document.createElement('div');
+    Object.defineProperty(container, 'clientHeight', { value: 800 });
+    Object.defineProperty(container, 'scrollTop', { value: 0 });
+    o.init(container);
+    // Simulate scroll event at position 0 (settled on section 0)
+    container.dispatchEvent(new Event('scroll'));
+    expect(eng.setCurrent).toHaveBeenCalledWith('graphPaper');
   });
 });

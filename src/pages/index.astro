@@ -2,18 +2,16 @@
 // src/pages/index.astro
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroText from '../components/home/HeroText.svelte';
-import DotIndicator from '../components/home/DotIndicator.svelte';
 import ScrollHint from '../components/home/ScrollHint.svelte';
 ---
 
-<BaseLayout title="Atelier — Charles" description="Portfolio of Charles — developer, musician, builder, and creative.">
+<BaseLayout title="Atelier — Charles" description="Portfolio of Charles — developer, musician, builder, and creative." isHome>
   <!--
     client:only="svelte" — skips SSR (required: these use window / onMount).
-    They are position:fixed overlays communicating via window CustomEvents.
+    HeroText + ScrollHint live inside <main> (z-index:1, pointer-events:none).
+    DotIndicator is rendered directly in BaseLayout OUTSIDE main so it sits
+    above the scroll-container and receives click events.
   -->
   <HeroText client:only="svelte" />
-  <DotIndicator client:only="svelte" />
   <ScrollHint client:only="svelte" />
-
-  <!-- scroll-container is now rendered in BaseLayout directly as a body sibling -->
 </BaseLayout>
