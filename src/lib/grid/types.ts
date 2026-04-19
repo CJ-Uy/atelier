@@ -22,7 +22,8 @@ export type GridStateName =
   | 'banigWeaving'
   | 'mondrian'
   | 'developerSetup'
-  | 'cityscape';
+  | 'cityscape'
+  | 'headphones';
 
 export interface GridConfig {
   cols: number;

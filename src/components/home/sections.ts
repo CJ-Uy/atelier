@@ -43,7 +43,7 @@ export const SECTIONS: Section[] = [
     prefix: "Heyo! I'm into",
     descriptor: 'music',
     subtitle: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt.',
-    gridState: 'musicProduction',
+    gridState: 'headphones',
   },
   {
     id: 5,

@@ -325,6 +325,77 @@ export const musicProduction: GridStateFunction = (cols, rows) => {
 export const bassGuitar = musicProduction; // legacy alias
 
 // ═══════════════════════════════════════════════════════════════
+//  5b. headphones — two elliptical ear cups (taller than wide,
+//      like cups viewed side-on) + a tall headband arc overhead.
+//      Ellipse semi-axes a_x/b_y replace the old aspect-circle so
+//      rings snap onto true concentric ovals in NDC space.
+// ═══════════════════════════════════════════════════════════════
+export const headphones: GridStateFunction = (cols, rows) => {
+  const lcx = -0.55, cupY = 0.0;
+  const rcx =  0.55;
+  // Ellipse semi-axes: narrow width (sideways cup look), taller height
+  const a_x = 0.14;   // NDC x half-width
+  const b_y = 0.36;   // NDC y half-height  (≈ 2.6:1 tall ratio on 16:9)
+  const innerNorm = 0.20;  // normalized inner-hole cutoff (0 = centre, 1 = edge)
+  const ringCount  = 3;
+  const spokeCount = 16;
+  const ringBlend  = 0.88;
+
+  // Headband: circular arc from cup tops (±lcx, b_y) arching to peak (0, ~0.90)
+  // Arc circle centre (0, hbCY), outer radius hbR_outer — solved analytically
+  const hbCY      = 0.35;
+  const hbR_outer = 0.55;   // connects exactly to cup tops
+  const hbR_inner = 0.41;   // inner edge of band (creates band thickness)
+  const hbAngleL  = Math.atan2(b_y - hbCY, lcx);   // ≈ 177° (nearly horizontal left)
+  const hbAngleR  = Math.atan2(b_y - hbCY, rcx);   // ≈   3° (nearly horizontal right)
+
+  // Headband zone: top-centre strip above the cups
+  const inBand = (cx: number, cy: number) => cy > 0.33 && Math.abs(cx) < 0.55;
+
+  return buildGrid(cols, rows,
+    (_c, _r, cx, cy) => {
+      if (inBand(cx, cy)) {
+        const t     = (cx + 0.55) / 1.10;
+        const angle = hbAngleL + t * (hbAngleR - hbAngleL);
+        const cy_t  = (cy - 0.33) / 0.67;
+        const r     = hbR_inner + cy_t * (hbR_outer - hbR_inner);
+        return [Math.cos(angle) * r, hbCY + Math.sin(angle) * r];
+      }
+
+      // Elliptical cup — work in normalised (circular) coordinate space
+      const [ccx, ccy] = cx < 0 ? [lcx, cupY] : [rcx, cupY];
+      const nx = (cx - ccx) / a_x;
+      const ny = (cy - ccy) / b_y;
+      const ell  = Math.sqrt(nx * nx + ny * ny);
+      const angle = Math.atan2(ny, nx);
+
+      // Ring snap in normalised space → maps back to concentric ellipses in NDC
+      const targetNorm = Math.round(ell * ringCount) / ringCount;
+      const snapAngle  = Math.round(angle / (Math.PI * 2 / spokeCount)) * (Math.PI * 2 / spokeCount);
+      const spokeBlend = ell < 0.15 ? 0.9 : 0.20;
+      const finalAngle = angle * (1 - spokeBlend) + snapAngle * spokeBlend;
+      const finalNorm  = ell * (1 - ringBlend) + targetNorm * ringBlend;
+
+      return [
+        ccx + Math.cos(finalAngle) * finalNorm * a_x,
+        ccy + Math.sin(finalAngle) * finalNorm * b_y,
+      ];
+    },
+    (_c, _r, cx, cy) => {
+      if (inBand(cx, cy)) return 1;
+
+      const [ccx, ccy] = cx < 0 ? [lcx, cupY] : [rcx, cupY];
+      const nx   = (cx - ccx) / a_x;
+      const ny   = (cy - ccy) / b_y;
+      const ell  = Math.sqrt(nx * nx + ny * ny);
+
+      if (ell < innerNorm || ell > 1.0) return 0;
+      return 1;
+    },
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
 //  6. volleyball — net mesh (top half) + empty court (bottom)
 //     Net sags at center, hung between two posts.
 // ═══════════════════════════════════════════════════════════════
@@ -655,14 +726,14 @@ export const mondrian: GridStateFunction = (cols, rows) => {
 // ─── Registry ───────────────────────────────────────────────────
 export const GRID_STATE_NAMES: GridStateName[] = [
   'graphPaper', 'keyboard', 'terminal', 'spacetimeWarp', 'chartsData',
-  'dreamCatcher', 'bassGuitar', 'musicProduction', 'volleyball', 'topographic', 'pixelGrid',
+  'dreamCatcher', 'bassGuitar', 'musicProduction', 'headphones', 'volleyball', 'topographic', 'pixelGrid',
   'mangaPanels', 'filmComposition', 'banigWeaving', 'mondrian',
   'developerSetup', 'cityscape',
 ];
 
 const STATE_MAP: Record<GridStateName, GridStateFunction> = {
   graphPaper, keyboard, terminal, spacetimeWarp, chartsData,
-  dreamCatcher, bassGuitar, musicProduction, volleyball, topographic, pixelGrid,
+  dreamCatcher, bassGuitar, musicProduction, headphones, volleyball, topographic, pixelGrid,
   mangaPanels, filmComposition, banigWeaving, mondrian,
   developerSetup, cityscape,
 };
