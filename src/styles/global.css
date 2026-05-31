@@ -45,11 +45,14 @@ body {
   background-color: var(--paper);
   color: var(--ink);
   font-family: "IBM Plex Mono", ui-monospace, monospace;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.page-home {
   overflow: hidden;
   width: 100vw;
   height: 100vh;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
 }
 
 /* ── Scroll Architecture ──────────────────────────────────────── */
@@ -68,15 +71,35 @@ body {
   pointer-events: none;
 }
 
-/* ── Page Content (non-home pages) ────────────────────────────── */
-.page-content {
-  position: relative;
-  z-index: 1;
+/* Non-home pages scroll naturally */
+body:not(.page-home) {
+  overflow-y: auto;
   min-height: 100vh;
 }
 
-body:not(.page-home) {
-  overflow-y: auto;
+/* ── Non-home page backgrounds (paper grain + graph paper) ───── */
+/* Matches the Works/Contact HTML design exactly */
+body:not(.page-home)::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.5'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  opacity: 0.4;
+  mix-blend-mode: multiply;
+}
+body:not(.page-home)::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(10,10,10,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(10,10,10,0.035) 1px, transparent 1px);
+  background-size: 34px 34px;
 }
 
 /* ── Ink texture overlay ──────────────────────────────────────── */

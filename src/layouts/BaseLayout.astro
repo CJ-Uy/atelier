@@ -34,20 +34,24 @@ const {
       rel="stylesheet"
     />
   </head>
-  <body class:list={[{ 'page-home': isHome }]}>
-    <!-- Ink texture + radial vignette (z-index 1, above canvas) -->
-    <div class="ink-texture" aria-hidden="true"></div>
-    <div class="grid-vignette" aria-hidden="true"></div>
+  <body class:list={[{ 'page-home': isHome }]}
+    style={!isHome ? 'display:flex;flex-direction:column;min-height:100vh;' : ''}>
+    {isHome && (
+      <>
+        <!-- Ink texture + radial vignette: home only -->
+        <div class="ink-texture" aria-hidden="true"></div>
+        <div class="grid-vignette" aria-hidden="true"></div>
+        <!-- Grid canvas: home only (non-home uses CSS graph paper) -->
+        <canvas
+          id="grid-canvas"
+          style="position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;"
+          aria-hidden="true"
+        ></canvas>
+      </>
+    )}
 
-    <!-- z-index 0: grid canvas (background on all pages) -->
-    <canvas
-      id="grid-canvas"
-      style="position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;"
-      aria-hidden="true"
-    ></canvas>
-
-    <!-- z-index 100: Navbar -->
-    <Navbar />
+    <!-- z-index 100: Navbar (hidden on non-home — pages render their own .wp-nav) -->
+    {isHome && <Navbar />}
 
     {isHome && (
       <main style="position:fixed;inset:0;z-index:1;pointer-events:none;">
@@ -69,13 +73,9 @@ const {
       </div>
     )}
 
-    {!isHome && (
-      <main class="page-content">
-        <slot />
-      </main>
-    )}
+    {!isHome && <slot />}
 
-    <!-- Grid engine bootstrap (runs client-side only) -->
+    <!-- Grid engine bootstrap: home only (canvas doesn't exist on other pages) -->
     <script>
       import { GridEngine } from '../lib/grid/GridEngine';
       import { AmbientAnimation } from '../lib/grid/AmbientAnimation';

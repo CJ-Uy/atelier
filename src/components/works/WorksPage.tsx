@@ -1,7 +1,6 @@
 /**
- * WorksPage — "The Grimoire". Filterable project index.
- * Ink-on-paper, crosshair corners, magic circle per card.
- * Framework: React (complex state: filters, per-card reveal, modal).
+ * WorksPage — faithful port of works-page.jsx + works-modal.jsx from the design bundle.
+ * CSS classes (.wp-*, .ph-*, .pm-*) are defined in works.astro <style is:global>.
  */
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
@@ -12,7 +11,7 @@ const PAPER = '#faf9f6';
 const VERMILION = '#dc3522';
 
 // ── Categories ────────────────────────────────────────────────────
-const CATEGORIES = [
+const WP_CATEGORIES = [
   { id: 'all',      label: 'All Works',       glyph: '✦' },
   { id: 'web',      label: 'Web & Interface', glyph: '{ }' },
   { id: 'research', label: 'Research',        glyph: '†' },
@@ -22,91 +21,95 @@ const CATEGORIES = [
 ];
 
 // ── Projects ──────────────────────────────────────────────────────
-const PROJECTS = [
-  {
-    n: 'I', slug: 'atelier', circle: 'summoning' as const,
-    title: 'Atelier', year: '2026', cat: 'web', featured: true,
-    blurb: 'The site you\'re on. A canvas grid of ~2,300 points morphs into magic circles — and a portrait — as you scroll.',
+const WP_PROJECTS = [
+  { n: 'I', slug: 'atelier', circle: 'summoning' as const, title: 'Atelier', year: '2026', cat: 'web', featured: true,
+    blurb: "The site you're on. A canvas grid of ~2,300 points morphs into magic circles — and a portrait — as you scroll.",
     tags: ['Astro', 'Canvas', 'React'], spell: 'self-summoning', accent: true,
     role: 'Design & build', period: 'Jan–Mar 2026', status: 'live' as const,
     links: [{ label: 'Live', href: '/' }, { label: 'Repo', href: 'https://github.com/CJ-Uy' }],
     casting: [
-      'A portfolio cast rather than coded — where the same grid of points becomes my face, a spider web, an astrolabe, a blueprint.',
-      'The hardest part was registration — getting SVG annotations to land pixel-perfect on a canvas that scales with the viewport.',
+      "I wanted a portfolio that felt cast rather than coded — where the same grid of points could become my face, a spider web, an astrolabe, a blueprint. The whole site runs on one idea: a field of ~2,300 vertices that I morph between target shapes on scroll, with an annotation layer that inks labels exactly onto the geometry.",
+      "The hardest part was registration — getting the SVG annotations to land pixel-perfect on a canvas grid that scales with the viewport. The trick was measuring the canvas's real rendered width rather than the window's.",
     ],
-  },
-  {
-    n: 'II', slug: 'ad-multo', circle: 'hexagram' as const,
-    title: 'Ad Multo', year: '2026', cat: 'research', featured: false,
+    plates: 3, video: true,
+    coven: [{ name: 'Charles J. Uy', role: 'Everything' }] },
+
+  { n: 'II', slug: 'ad-multo', circle: 'hexagram' as const, title: 'Ad Multo', year: '2026', cat: 'research',
     blurb: 'A scroll-driven reader for academic papers, conjured in 48 hours. Citations bloom in the margin.',
     tags: ['Next.js', 'Reader', 'API'], spell: 'haste', accent: false,
     role: 'Frontend & UX', period: 'Hackathon · 48h', status: 'archived' as const,
     links: [{ label: 'Devpost', href: '#' }, { label: 'Repo', href: '#' }],
     casting: [
-      'Built at a 48-hour hackathon. The premise: reading papers shouldn\'t mean ten open tabs.',
-      'We didn\'t win, but two professors asked to use it — which felt better than a trophy.',
+      "Built at a 48-hour hackathon. The premise: reading papers shouldn't mean ten open tabs. Citations expand inline as marginalia, and a focus mode dims everything but the current claim.",
+      "We didn't win, but two professors asked to use it — which felt better than a trophy.",
     ],
-  },
-  {
-    n: 'III', slug: 'blank-board', circle: 'wheel' as const,
-    title: 'Blank Board', year: '2025', cat: 'web', featured: false,
+    plates: 2, video: false,
+    coven: [{ name: 'A. Reyes', role: 'Backend' }, { name: 'M. Santos', role: 'ML / parsing' }, { name: 'Charles J. Uy', role: 'Frontend' }] },
+
+  { n: 'III', slug: 'blank-board', circle: 'wheel' as const, title: 'Blank Board', year: '2025', cat: 'web',
     blurb: 'Collaborative whiteboard with a tiny drops API. Stickies land on every client in under 40ms.',
     tags: ['SvelteKit', 'CRDT', 'WS'], spell: 'telepathy', accent: false,
     role: 'Full-stack', period: 'Side project', status: 'live' as const,
     links: [{ label: 'Live', href: '#' }, { label: 'Repo', href: '#' }],
     casting: [
-      'A whiteboard where presence feels instant. I wrote a minimal CRDT so two cursors never fight over the same sticky.',
-      'It started as an excuse to understand conflict-free replicated data types.',
+      "A whiteboard where presence feels instant. I wrote a minimal CRDT so two cursors never fight over the same sticky, and a websocket layer that keeps round-trips under 40ms on a cheap VPS.",
+      "It started as an excuse to understand conflict-free replicated data types. It ended as the tool my study group actually uses.",
     ],
-  },
-  {
-    n: 'IV', slug: 'marginalia', circle: 'eye' as const,
-    title: 'Marginalia', year: '2025', cat: 'research', featured: false,
-    blurb: 'A lay-physicist\'s commonplace book — wormhole metrics, embedding diagrams, light around mass.',
+    plates: 3, video: true,
+    coven: [{ name: 'Charles J. Uy', role: 'Everything' }] },
+
+  { n: 'IV', slug: 'marginalia', circle: 'eye' as const, title: 'Marginalia', year: '2025', cat: 'research',
+    blurb: "A lay-physicist's commonplace book — wormhole metrics, embedding diagrams, light around mass.",
     tags: ['Physics', 'LaTeX', 'Writing'], spell: 'scrying', accent: false,
     role: 'Author', period: 'Ongoing', status: 'in-progress' as const,
     links: [{ label: 'Read', href: '#' }],
     casting: [
-      'Not software — a notebook. I keep working through general relativity the slow way, by re-deriving things and drawing them.',
+      "Not software — a notebook. I keep working through general relativity the slow way, by re-deriving things and drawing them until they make sense. Embedding diagrams, the Schwarzschild metric, why light bends.",
+      "I publish the cleaned-up pages here. It's the most personal thing I make.",
     ],
-  },
-  {
-    n: 'V', slug: 'loopline', circle: 'pentagram' as const,
-    title: 'Loopline', year: '2025', cat: 'audio', featured: false,
+    plates: 2, video: false,
+    coven: [] },
+
+  { n: 'V', slug: 'loopline', circle: 'pentagram' as const, title: 'Loopline', year: '2025', cat: 'audio',
     blurb: 'A browser looper for bass guitar. Four strings, infinite layers, one big record button.',
     tags: ['Web Audio', 'Canvas'], spell: 'echo', accent: false,
     role: 'Design & build', period: 'Weekend build', status: 'live' as const,
     links: [{ label: 'Live', href: '#' }, { label: 'Repo', href: '#' }],
     casting: [
-      'I play bass, and I wanted to stack loops without booting a DAW.',
-      'Latency was the whole battle — I ended up pre-scheduling everything against the audio clock.',
+      "I play bass, and I wanted to stack loops without booting a DAW. Loopline is one giant record button and a waveform that grows as you layer. Web Audio for the engine, canvas for the visual.",
+      "Latency was the whole battle — I ended up pre-scheduling everything against the audio clock instead of trusting setTimeout.",
     ],
-  },
-  {
-    n: 'VI', slug: 'cli-grimoire', circle: 'binding' as const,
-    title: 'CLI Grimoire', year: '2024', cat: 'tools', featured: false,
+    plates: 2, video: true,
+    coven: [{ name: 'Charles J. Uy', role: 'Everything' }] },
+
+  { n: 'VI', slug: 'cli-grimoire', circle: 'binding' as const, title: 'CLI Grimoire', year: '2024', cat: 'tools',
     blurb: 'Small Rust utilities that earned their keep — a fuzzy mover, a md linter, a dotfile diff.',
     tags: ['Rust', 'CLI'], spell: 'binding', accent: false,
     role: 'Author', period: '2024–', status: 'live' as const,
     links: [{ label: 'crates.io', href: '#' }, { label: 'Repo', href: '#' }],
     casting: [
-      'A growing collection of tiny Rust tools I reach for daily.',
-      'Writing CLIs in Rust is how I learned the language.',
+      "A growing collection of tiny Rust tools I reach for daily. Nothing flashy — a fuzzy file mover, a markdown linter tuned to my taste, a dotfile diff that respects symlinks.",
+      "Writing CLIs in Rust is how I learned the language. Each one is small enough to finish in an evening, which is exactly why the collection keeps growing.",
     ],
-  },
+    plates: 1, video: false,
+    coven: [{ name: 'Charles J. Uy', role: 'Everything' }] },
 ];
 
-type Project = typeof PROJECTS[number];
-type Status = 'live' | 'archived' | 'in-progress';
+type Project = typeof WP_PROJECTS[number];
 
-const STATUS_LABEL: Record<Status, string> = {
-  live: 'Live',
-  archived: 'Archived',
-  'in-progress': 'In Progress',
+const WP_STATUS: Record<string, { label: string; accent: boolean }> = {
+  'live':        { label: 'Live',        accent: true  },
+  'archived':    { label: 'Archived',    accent: false },
+  'in-progress': { label: 'In Progress', accent: false },
 };
 
+function catLabel(id: string) {
+  const c = WP_CATEGORIES.find((c) => c.id === id);
+  return c ? c.label : id;
+}
+
 // ── Reveal on scroll ──────────────────────────────────────────────
-function useReveal(threshold = 0.12) {
+function useReveal() {
   const ref = useRef<HTMLElement>(null);
   const [seen, setSeen] = useState(false);
   useEffect(() => {
@@ -114,7 +117,7 @@ function useReveal(threshold = 0.12) {
     if (!el) return;
     const io = new IntersectionObserver(
       (es) => es.forEach((e) => { if (e.isIntersecting) setSeen(true); }),
-      { threshold },
+      { threshold: 0.12 },
     );
     io.observe(el);
     const fb = setTimeout(() => setSeen(true), 1800);
@@ -123,24 +126,141 @@ function useReveal(threshold = 0.12) {
   return [ref, seen] as const;
 }
 
-// ── Crosshair corner marks ────────────────────────────────────────
-const CORNERS = [
-  { top: 7, left: 7 }, { top: 7, right: 7 },
-  { bottom: 7, left: 7 }, { bottom: 7, right: 7 },
-] as React.CSSProperties[];
-
-function CrosshairCorners() {
+// ── Status pill ───────────────────────────────────────────────────
+function StatusPill({ status }: { status: string }) {
+  const s = WP_STATUS[status] || { label: status, accent: false };
   return (
-    <>
-      {CORNERS.map((pos, i) => (
-        <span key={i} style={{
-          position: 'absolute', ...pos, zIndex: 2,
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 9, opacity: 0.36, fontWeight: 700,
-          color: INK,
-        }}>+</span>
-      ))}
-    </>
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      fontFamily: "'IBM Plex Mono', monospace", fontSize: 8.5, fontWeight: 700,
+      letterSpacing: '0.18em', textTransform: 'uppercase', padding: '3px 9px',
+      border: `0.8px solid ${s.accent ? VERMILION : INK}`, color: s.accent ? VERMILION : INK,
+    }}>
+      <span style={{ width: 5, height: 5, borderRadius: '50%', background: s.accent ? VERMILION : INK,
+        boxShadow: s.accent ? `0 0 0 2px rgba(220,53,34,0.2)` : 'none' }} />
+      {s.label}
+    </span>
+  );
+}
+
+// ── Section rule ✦ ─── LABEL ── ──────────────────────────────────
+function SectionRule({ label }: { label: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '6px 0 2px' }}>
+      <span style={{ color: VERMILION, fontSize: 11 }}>✦</span>
+      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, fontWeight: 700, letterSpacing: '0.26em', textTransform: 'uppercase', color: INK }}>{label}</span>
+      <span style={{ flex: 1, height: 1, background: 'rgba(10,10,10,0.18)' }} />
+    </div>
+  );
+}
+
+// ── Project modal — "The Plate" ───────────────────────────────────
+function ProjectModal({ project, onClose }: { project: Project; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
+  }, [onClose]);
+
+  const p = project;
+  const plateCount = p.plates || 0;
+  const crossPos = [{ top: 10, left: 10 }, { top: 10, right: 10 }, { bottom: 10, left: 10 }, { bottom: 10, right: 10 }];
+
+  return (
+    <div className="pm-backdrop" onClick={onClose}>
+      <div className="pm-panel" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={p.title}>
+        {crossPos.map((pos, i) => <span key={i} className="pm-cross" style={pos}>+</span>)}
+
+        <button className="pm-close" onClick={onClose} aria-label="Close">
+          <span>ESC</span>
+          <svg width="13" height="13" viewBox="0 0 14 14">
+            <path d="M2 2 L12 12 M12 2 L2 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" fill="none"/>
+          </svg>
+        </button>
+
+        <div className="pm-scroll">
+          <header className="pm-head">
+            <div className="pm-circle">
+              <MagicCircle variant={p.circle} size={150} rotateSpeed={60} innerRotateSpeed={34} reverseInner runes showCardinals style={{ color: INK }} />
+            </div>
+            <div className="pm-head-text">
+              <div className="pm-meta-row">
+                <span className="pm-opus">OPUS · {p.n} / {p.year}</span>
+                <span className="pm-spell" style={{ borderColor: p.accent ? VERMILION : INK, color: p.accent ? VERMILION : INK }}>{p.spell}</span>
+                <StatusPill status={p.status} />
+              </div>
+              <h2 className="pm-title">{p.title}</h2>
+              <p className="pm-rolerow">{p.role} · {p.period} · {catLabel(p.cat)}</p>
+              {p.links.length > 0 && (
+                <div className="pm-links">
+                  {p.links.map((l) => (
+                    <a key={l.label} href={l.href}
+                      target={l.href.startsWith('http') ? '_blank' : undefined}
+                      rel="noopener noreferrer" className="pm-link">{l.label} ↗</a>
+                  ))}
+                </div>
+              )}
+            </div>
+          </header>
+
+          <p className="pm-brief">{p.blurb}</p>
+
+          {p.casting.length > 0 && (
+            <section className="pm-section">
+              <SectionRule label="Field Notes" />
+              <div className="pm-prose">
+                {p.casting.map((para, i) => (
+                  <p key={i} className={i === 0 ? 'pm-dropcap' : ''}>{para}</p>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {(plateCount > 0 || p.video) && (
+            <section className="pm-section">
+              <SectionRule label="Plates" />
+              <div className="pm-plates">
+                {p.video && <div className="pm-plate pm-plate-wide" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, opacity: 0.35 }}>video still</span></div>}
+                {Array.from({ length: plateCount }, (_, i) => (
+                  <div key={i} className="pm-plate" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, opacity: 0.35 }}>plate {i + 1}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="pm-platehint">Plates — screenshots and stills to be added.</p>
+            </section>
+          )}
+
+          {p.coven.length > 0 && (
+            <section className="pm-section">
+              <SectionRule label="The Coven" />
+              <div className="pm-coven">
+                {p.coven.map((m, i) => (
+                  <div key={i} className="pm-covenrow">
+                    <span className="pm-covensig">{m.name.split(' ').map((w) => w[0]).join('').slice(0, 2)}</span>
+                    <span className="pm-covenname">{m.name}</span>
+                    <span className="pm-covenrole">{m.role}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section className="pm-section">
+            <SectionRule label="Apparatus" />
+            <div className="pm-tags">
+              {p.tags.map((t) => <span key={t} className="pm-tag">{t}</span>)}
+            </div>
+          </section>
+
+          <div className="pm-foot">
+            <span /><span>INSCRIBED · {p.year} · ESC TO CLOSE THE PAGE</span><span />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -160,23 +280,19 @@ function WPCard({ p, index, onOpen }: { p: Project; index: number; onOpen: (p: P
         gridColumn: featured ? 'span 2' : 'span 1',
         position: 'relative', background: PAPER, cursor: 'pointer',
         border: `1.6px solid ${INK}`,
-        boxShadow: hover
-          ? `0 3px 0 ${INK}, 0 18px 38px rgba(10,10,10,0.13)`
-          : `0 2px 0 ${INK}`,
-        padding: featured ? '34px 38px' : '28px',
+        boxShadow: hover ? `0 3px 0 ${INK}, 0 18px 38px rgba(10,10,10,0.13)` : `0 2px 0 ${INK}`,
+        padding: featured ? '34px 38px' : '28px 28px',
         display: 'flex', flexDirection: featured ? 'row' : 'column',
         alignItems: featured ? 'center' : 'stretch',
         gap: featured ? 34 : 18,
         minHeight: featured ? 300 : 360,
         opacity: seen ? 1 : 0,
-        transform: seen
-          ? (hover ? 'translateY(-5px)' : 'translateY(0)')
-          : 'translateY(22px)',
+        transform: seen ? (hover ? 'translateY(-5px)' : 'translateY(0)') : 'translateY(22px)',
         transition: `opacity 560ms cubic-bezier(0.4,0,0.2,1) ${index * 55}ms, transform 420ms cubic-bezier(0.34,1.1,0.64,1)`,
         overflow: 'hidden',
       }}
     >
-      {/* Halftone wash */}
+      {/* halftone wash */}
       <div style={{
         position: 'absolute', inset: 0, opacity: 0.09,
         backgroundImage: 'radial-gradient(circle, #0a0a0a 1.1px, transparent 1.4px)',
@@ -186,259 +302,163 @@ function WPCard({ p, index, onOpen }: { p: Project; index: number; onOpen: (p: P
         pointerEvents: 'none',
       }} />
 
-      <CrosshairCorners />
+      {/* crosshair corners */}
+      {([{ top: 7, left: 7 }, { top: 7, right: 7 }, { bottom: 7, left: 7 }, { bottom: 7, right: 7 }] as React.CSSProperties[]).map((pos, i) => (
+        <span key={i} style={{ position: 'absolute', ...pos, zIndex: 2, fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, opacity: 0.36, fontWeight: 700 }}>+</span>
+      ))}
 
-      {/* Circle */}
+      {/* circle */}
       <div style={{
-        flexShrink: 0,
-        alignSelf: featured ? 'center' : 'flex-start',
+        flexShrink: 0, alignSelf: featured ? 'center' : 'flex-start',
         transform: hover ? 'scale(1.04)' : 'scale(1)',
         transition: 'transform 480ms cubic-bezier(0.34,1.1,0.64,1)',
         position: 'relative', zIndex: 1,
       }}>
-        <MagicCircle
-          variant={p.circle}
-          size={featured ? 184 : 120}
-          rotateSpeed={hover ? 16 : 92}
-          innerRotateSpeed={hover ? 8 : 52}
-          reverseInner runes showCardinals
-          style={{ color: INK }}
-        />
+        <MagicCircle variant={p.circle} size={featured ? 184 : 120}
+          rotateSpeed={hover ? 16 : 92} innerRotateSpeed={hover ? 8 : 52}
+          reverseInner runes={hover} showCardinals
+          style={{ color: INK }} />
       </div>
 
-      {/* Text */}
+      {/* text */}
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', flex: 1, gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-          <span style={{
-            fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5,
-            letterSpacing: '0.26em', fontWeight: 700, opacity: 0.55, textTransform: 'uppercase' as const,
-          }}>
+          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, letterSpacing: '0.26em', fontWeight: 700, opacity: 0.55, textTransform: 'uppercase' as const }}>
             OPUS · {p.n} / {p.year}
           </span>
           <span style={{
-            fontFamily: "'IBM Plex Mono', monospace", fontSize: 8,
-            letterSpacing: '0.2em', fontWeight: 700, textTransform: 'uppercase' as const,
-            padding: '3px 8px', borderRadius: 2,
+            fontFamily: "'IBM Plex Mono', monospace", fontSize: 8, letterSpacing: '0.2em', fontWeight: 700,
+            textTransform: 'uppercase' as const, padding: '3px 8px', borderRadius: 2,
             border: `0.8px solid ${p.accent ? VERMILION : INK}`,
-            color: p.accent ? VERMILION : INK,
-            whiteSpace: 'nowrap' as const,
+            color: p.accent ? VERMILION : INK, whiteSpace: 'nowrap' as const,
           }}>{p.spell}</span>
         </div>
 
         <h3 style={{
           fontFamily: "'Instrument Serif', Georgia, serif",
-          fontSize: featured ? 'clamp(1.6rem, 3vw, 2.4rem)' : 'clamp(1.2rem, 2vw, 1.7rem)',
-          fontWeight: 400, color: INK, letterSpacing: '-0.025em', lineHeight: 1.1,
-          margin: '2px 0',
+          fontSize: featured ? 'clamp(2.2rem, 3.4vw, 2.9rem)' : 'clamp(1.7rem, 2.4vw, 2.1rem)',
+          fontWeight: 400, letterSpacing: '-0.03em', lineHeight: 1.02, margin: 0, color: INK,
         }}>{p.title}</h3>
 
         <p style={{
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: '0.75rem', color: '#454543',
-          lineHeight: 1.55, opacity: 0.88,
-          maxWidth: featured ? '48ch' : '34ch',
+          fontFamily: "'Instrument Serif', Georgia, serif", fontStyle: 'italic',
+          fontSize: featured ? 'clamp(1rem, 1.4vw, 1.15rem)' : 'clamp(0.92rem, 1.2vw, 1.02rem)',
+          color: '#454545', lineHeight: 1.44, margin: 0, maxWidth: '46ch',
+          flex: featured ? '0 0 auto' : '1 0 auto',
         }}>{p.blurb}</p>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 5, marginTop: 'auto' }}>
-          {p.tags.map((tag) => (
-            <span key={tag} style={{
-              fontFamily: "'IBM Plex Mono', monospace", fontSize: 8,
-              padding: '2px 6px', border: `0.7px solid rgba(10,10,10,0.35)`,
-              letterSpacing: '0.1em', textTransform: 'uppercase' as const,
-            }}>{tag}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' as const, marginTop: 'auto' }}>
+          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 8.5, letterSpacing: '0.18em', fontWeight: 700, opacity: 0.5 }}>
+            ※ {catLabel(p.cat).toUpperCase()}
+          </span>
+          <span style={{ width: 1, height: 12, background: 'rgba(10,10,10,0.25)' }} />
+          {p.tags.map((t) => (
+            <span key={t} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 8.5, padding: '3px 8px', border: '1px solid rgba(10,10,10,0.3)', letterSpacing: '0.05em', whiteSpace: 'nowrap' as const }}>{t}</span>
           ))}
-          <span style={{
-            marginLeft: 'auto',
-            fontFamily: "'IBM Plex Mono', monospace", fontSize: 8,
-            color: p.status === 'live' ? VERMILION : '#888',
-            letterSpacing: '0.12em', textTransform: 'uppercase' as const,
-            alignSelf: 'center',
-          }}>{STATUS_LABEL[p.status]}</span>
         </div>
+      </div>
+
+      {/* cast hint on hover */}
+      <div style={{ position: 'absolute', bottom: 9, right: 13, zIndex: 3, fontFamily: "'IBM Plex Mono', monospace", fontSize: 8, letterSpacing: '0.18em', fontWeight: 700, opacity: hover ? 0.55 : 0, transition: 'opacity 280ms ease', textTransform: 'uppercase' as const }}>
+        cast ↗
       </div>
     </article>
   );
 }
 
-// ── Project modal ──────────────────────────────────────────────────
-function WPModal({ p, onClose }: { p: Project; onClose: () => void }) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
+// ── Filter chips ──────────────────────────────────────────────────
+function WPFilter({ active, onChange, counts }: { active: string; onChange: (id: string) => void; counts: Record<string, number> }) {
   return (
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 200,
-        background: 'rgba(250,249,246,0.92)',
-        backdropFilter: 'blur(2px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '2rem',
-        animation: 'fadeIn 180ms ease forwards',
-      }}
-    >
-      <style>{`@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }`}</style>
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: PAPER, border: `1.6px solid ${INK}`,
-          boxShadow: `0 4px 0 ${INK}, 0 24px 60px rgba(10,10,10,0.15)`,
-          maxWidth: 680, width: '100%',
-          maxHeight: '90vh', overflowY: 'auto',
-          padding: '44px 48px', position: 'relative',
-        }}
-      >
-        <CrosshairCorners />
-
-        {/* Close */}
-        <button onClick={onClose} style={{
-          position: 'absolute', top: 18, right: 18,
-          background: 'none', border: 'none', cursor: 'pointer',
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 11, letterSpacing: '0.14em', opacity: 0.5,
-          color: INK,
-        }}>ESC</button>
-
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 28, marginBottom: 32 }}>
-          <MagicCircle variant={p.circle} size={96} rotateSpeed={60} innerRotateSpeed={30} reverseInner runes={false} style={{ color: INK, flexShrink: 0 }} />
-          <div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, letterSpacing: '0.3em', opacity: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>
-              OPUS · {p.n} / {p.year}
-            </div>
-            <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 'clamp(1.8rem, 4vw, 2.6rem)', fontWeight: 400, letterSpacing: '-0.03em', color: INK }}>
-              {p.title}
-            </h2>
-            <div style={{ display: 'flex', gap: 12, marginTop: 10, flexWrap: 'wrap' }}>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, opacity: 0.6 }}>{p.role}</span>
-              <span style={{ opacity: 0.3 }}>·</span>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, opacity: 0.6 }}>{p.period}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Casting notes */}
-        {p.casting.map((note, i) => (
-          <p key={i} style={{
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: '0.78rem', lineHeight: 1.65, color: '#3a3a38',
-            marginBottom: 14,
-          }}>{note}</p>
-        ))}
-
-        {/* Links */}
-        {p.links.length > 0 && (
-          <div style={{ display: 'flex', gap: 12, marginTop: 28, flexWrap: 'wrap' }}>
-            {p.links.map((link) => (
-              <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" style={{
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase',
-                padding: '6px 16px', border: `1px solid ${INK}`,
-                color: INK, textDecoration: 'none',
-                transition: 'background 120ms, color 120ms',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = INK; e.currentTarget.style.color = PAPER; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = INK; }}
-              >{link.label} ↗</a>
-            ))}
-          </div>
-        )}
-      </div>
+    <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 8, justifyContent: 'center' }}>
+      {WP_CATEGORIES.map((c) => {
+        const isActive = c.id === active;
+        const count = c.id === 'all' ? counts.all : (counts[c.id] || 0);
+        if (c.id !== 'all' && count === 0) return null;
+        return (
+          <button key={c.id} onClick={() => onChange(c.id)} style={{
+            fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, fontWeight: 600,
+            letterSpacing: '0.12em', textTransform: 'uppercase' as const, cursor: 'pointer',
+            padding: '9px 15px', display: 'inline-flex', alignItems: 'center', gap: 8,
+            background: isActive ? INK : 'transparent',
+            color: isActive ? PAPER : INK,
+            border: `1.4px solid ${INK}`, transition: 'all 160ms ease',
+          }}>
+            <span style={{ opacity: 0.7, fontSize: 9 }}>{c.glyph}</span>
+            {c.label}
+            <span style={{ opacity: 0.5, fontSize: 8.5 }}>{count}</span>
+          </button>
+        );
+      })}
     </div>
-  );
-}
-
-// ── Category chip ──────────────────────────────────────────────────
-function CategoryChip({ cat, active, onClick }: { cat: typeof CATEGORIES[number]; active: boolean; onClick: () => void }) {
-  return (
-    <button onClick={onClick} style={{
-      display: 'flex', alignItems: 'center', gap: 6,
-      fontFamily: "'IBM Plex Mono', monospace",
-      fontSize: 10, letterSpacing: '0.16em', fontWeight: active ? 700 : 400,
-      textTransform: 'uppercase',
-      padding: '6px 14px',
-      border: `1px solid ${active ? INK : 'rgba(10,10,10,0.25)'}`,
-      background: active ? INK : 'transparent',
-      color: active ? PAPER : INK,
-      cursor: 'pointer',
-      transition: 'all 160ms ease',
-      borderRadius: 2,
-    }}>
-      <span style={{ opacity: 0.6 }}>{cat.glyph}</span>
-      {cat.label}
-    </button>
   );
 }
 
 // ── Works page root ───────────────────────────────────────────────
 export default function WorksPage() {
-  const [activeCat, setActiveCat] = useState('all');
-  const [modal, setModal] = useState<Project | null>(null);
+  const [filter, setFilter] = useState('all');
+  const [active, setActive] = useState<Project | null>(null);
 
-  const filtered = useMemo(
-    () => activeCat === 'all' ? PROJECTS : PROJECTS.filter((p) => p.cat === activeCat),
-    [activeCat],
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { all: WP_PROJECTS.length };
+    WP_PROJECTS.forEach((p) => { c[p.cat] = (c[p.cat] || 0) + 1; });
+    return c;
+  }, []);
+
+  const shown = useMemo(
+    () => filter === 'all' ? WP_PROJECTS : WP_PROJECTS.filter((p) => p.cat === filter),
+    [filter],
   );
 
   return (
-    <div style={{ background: PAPER, minHeight: '100vh', color: INK }}>
-      {/* Header */}
-      <header style={{ textAlign: 'center', padding: '7rem 2rem 3rem', position: 'relative' }}>
-        <div style={{
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 9.5, letterSpacing: '0.32em', fontWeight: 700,
-          textTransform: 'uppercase', opacity: 0.5, marginBottom: 12,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-        }}>
-          <span style={{ width: 20, height: 1, background: INK, opacity: 0.6, display: 'inline-block' }} />
-          ✦ OPUS · WORKS
-          <span style={{ width: 20, height: 1, background: INK, opacity: 0.6, display: 'inline-block' }} />
+    <>
+      {/* Nav */}
+      <nav className="wp-nav">
+        <a href="/" className="wp-brand">atelier</a>
+        <div className="wp-links">
+          <a href="/" className="wp-link">Home</a>
+          <a href="/works" className="wp-link active">Works</a>
+          <a href="/contact" className="wp-link">Contact</a>
         </div>
-        <h1 style={{
-          fontFamily: "'Instrument Serif', Georgia, serif",
-          fontSize: 'clamp(2.4rem, 6vw, 4rem)',
-          fontWeight: 400, letterSpacing: '-0.04em', color: INK,
-        }}>The Grimoire</h1>
-        <p style={{
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: '0.72rem', color: '#6a6a68',
-          marginTop: 14, maxWidth: '38ch', marginInline: 'auto', lineHeight: 1.6,
-        }}>
-          A record of conjured interfaces, research incantations, and tools cast in code.
-        </p>
+      </nav>
+
+      {/* Header */}
+      <header className="ph-header">
+        <div className="ph-circlemark">
+          <MagicCircle variant="casting" size={104} rotateSpeed={140} style={{ color: INK }} />
+        </div>
+        <div className="ph-eyebrow">✦ THE GRIMOIRE · COLLECTED WORKS ✦</div>
+        <h1 className="ph-title">Things I've conjured</h1>
+        <p className="ph-sub">A working index of projects, experiments and small spells — research, interfaces, sound and tools. Filter by discipline; hover a card to spin up its circle.</p>
       </header>
 
-      {/* Category filter */}
-      <div style={{
-        display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center',
-        padding: '0 2rem 2.5rem',
-      }}>
-        {CATEGORIES.map((cat) => (
-          <CategoryChip
-            key={cat.id} cat={cat}
-            active={cat.id === activeCat}
-            onClick={() => setActiveCat(cat.id)}
-          />
-        ))}
+      {/* Sticky filter bar */}
+      <div className="wp-filterbar">
+        <WPFilter active={filter} onChange={setFilter} counts={counts} />
       </div>
 
       {/* Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: 10,
-        maxWidth: 960, marginInline: 'auto',
-        padding: '0 1.5rem 6rem',
-      }}>
-        {filtered.map((p, i) => (
-          <WPCard key={p.slug} p={p} index={i} onOpen={setModal} />
-        ))}
-      </div>
+      <main className="wp-gridwrap">
+        <div className="wp-grid" key={filter}>
+          {shown.map((p, i) => <WPCard key={p.title} p={p} index={i} onOpen={setActive} />)}
+        </div>
+        <div className="wp-count">
+          {shown.length} {shown.length === 1 ? 'work' : 'works'}{filter !== 'all' ? ` · ${catLabel(filter)}` : ''} · more inscribed soon
+        </div>
+      </main>
 
-      {modal && <WPModal p={modal} onClose={() => setModal(null)} />}
-    </div>
+      {/* Footer */}
+      <footer className="wp-footer">
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 30 }}>
+          <MagicCircle variant="binding" size={170} rotateSpeed={110} style={{ color: PAPER }} />
+        </div>
+        <p className="wp-foot-line">let's make something magic.</p>
+        <a href="mailto:charlesjoshuauy@gmail.com" className="wp-foot-mail">charlesjoshuauy@gmail.com</a>
+        <div className="wp-colophon">
+          <span />&copy; MMXXVI · CHARLES<span />
+        </div>
+      </footer>
+
+      {active && <ProjectModal project={active} onClose={() => setActive(null)} />}
+    </>
   );
 }

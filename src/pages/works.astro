@@ -1,9 +1,179 @@
 ---
-// src/pages/works.astro — Works page using React (complex filter state + modal)
+// src/pages/works.astro — Works page using React (filter state + modal)
 import BaseLayout from '../layouts/BaseLayout.astro';
 import WorksPage from '../components/works/WorksPage';
 ---
 
-<BaseLayout title="Works — Atelier" description="The Grimoire: a record of conjured interfaces, research incantations, and tools cast in code.">
+<BaseLayout title="Works — Atelier" description="A working index of projects, experiments and small spells — research, interfaces, sound and tools.">
   <WorksPage client:only="react" />
 </BaseLayout>
+
+<!-- CSS from Works.html exactly: nav, page header, filter, grid, modal, footer -->
+<style is:global>
+  /* ── Animations ── */
+  @keyframes mcAppear { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
+  @keyframes mcRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes mcRotateRev { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+  @keyframes wpFadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── Nav ── */
+  .wp-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 32px; mix-blend-mode: multiply;
+  }
+  .wp-brand {
+    font-family: 'Instrument Serif', Georgia, serif; font-style: italic;
+    font-size: 22px; color: #0a0a0a; text-decoration: none; letter-spacing: -0.02em;
+  }
+  .wp-links { display: flex; gap: 22px; align-items: center; }
+  .wp-link {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase; color: #0a0a0a;
+    text-decoration: none; opacity: 0.5; transition: opacity 0.2s;
+  }
+  .wp-link:hover { opacity: 1; }
+  .wp-link.active { opacity: 1; border-bottom: 1.5px solid #0a0a0a; padding-bottom: 2px; }
+
+  /* ── Page header ── */
+  .ph-header {
+    position: relative; z-index: 1; text-align: center;
+    max-width: 720px; margin: 0 auto; padding: 124px 32px 8px;
+    animation: wpFadeUp 700ms cubic-bezier(0.4,0,0.2,1) both;
+  }
+  .ph-circlemark { display: flex; justify-content: center; margin-bottom: 24px; opacity: 0.9; }
+  .ph-eyebrow {
+    font-size: 10px; letter-spacing: 0.34em; font-weight: 700;
+    opacity: 0.55; text-transform: uppercase; margin-bottom: 18px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .ph-title {
+    font-family: 'Instrument Serif', Georgia, serif; font-weight: 400;
+    font-size: clamp(2.8rem, 6.5vw, 4.6rem); letter-spacing: -0.04em;
+    line-height: 0.98; margin-bottom: 20px; color: #0a0a0a;
+  }
+  .ph-sub {
+    font-size: clamp(0.74rem, 1vw, 0.82rem); line-height: 1.65; color: #454545;
+    max-width: 52ch; margin: 0 auto; letter-spacing: 0.01em;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ── Filter ── */
+  .wp-filterbar {
+    position: sticky; top: 0; z-index: 40;
+    padding: 26px 32px 22px; margin-top: 40px;
+    background: linear-gradient(#faf9f6 62%, rgba(250,249,246,0));
+  }
+
+  /* ── Grid ── */
+  .wp-gridwrap { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 6px 32px 40px; }
+  .wp-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;
+    align-items: stretch; animation: wpFadeUp 480ms cubic-bezier(0.4,0,0.2,1) both;
+  }
+  .wp-count {
+    text-align: center; margin-top: 34px;
+    font-size: 9.5px; letter-spacing: 0.24em; font-weight: 600;
+    opacity: 0.5; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace;
+  }
+
+  @media (max-width: 760px) {
+    .wp-grid { grid-template-columns: 1fr; }
+    .wp-grid article { grid-column: span 1 !important; flex-direction: column !important; }
+  }
+
+  /* ── Footer ── */
+  .wp-footer {
+    position: relative; z-index: 1; background: #0a0a0a; color: #faf9f6;
+    padding: 90px 32px 68px; text-align: center; margin-top: 60px;
+  }
+  .wp-foot-line {
+    font-family: 'Instrument Serif', Georgia, serif; font-style: italic;
+    font-size: clamp(1.4rem, 3vw, 2rem); margin-bottom: 12px;
+  }
+  .wp-foot-mail {
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #faf9f6;
+    letter-spacing: 0.08em; text-decoration: none;
+    border-bottom: 1px solid rgba(250,249,246,0.4); padding-bottom: 2px;
+  }
+  .wp-colophon {
+    display: flex; align-items: center; gap: 14px; justify-content: center; margin-top: 40px;
+    font-size: 9px; letter-spacing: 0.28em; opacity: 0.6; font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .wp-colophon span { width: 28px; height: 1px; background: #faf9f6; opacity: 0.5; }
+
+  /* ══ Project modal — "The Plate" ══ */
+  @keyframes pmBackIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pmPanelIn { from { opacity: 0; transform: translateY(26px) scale(0.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+  .pm-backdrop {
+    position: fixed; inset: 0; z-index: 200;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 48px 24px; overflow-y: auto;
+    background: rgba(28, 26, 22, 0.46); backdrop-filter: blur(4px);
+    animation: pmBackIn 240ms ease both;
+  }
+  .pm-panel {
+    position: relative; width: min(920px, 100%); margin: auto;
+    background: #faf9f6; border: 1.6px solid #0a0a0a;
+    box-shadow: 0 4px 0 #0a0a0a, 0 30px 80px rgba(10,10,10,0.34);
+    animation: pmPanelIn 360ms cubic-bezier(0.34,1.05,0.64,1) both;
+  }
+  .pm-panel::before {
+    content: ''; position: absolute; inset: 7px; border: 0.5px solid rgba(10,10,10,0.22);
+    pointer-events: none; z-index: 1;
+  }
+  .pm-cross { position: absolute; z-index: 3; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 700; opacity: 0.4; color: #0a0a0a; }
+  .pm-close {
+    position: absolute; top: 14px; right: 16px; z-index: 5;
+    display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+    background: #faf9f6; border: 1.2px solid #0a0a0a; color: #0a0a0a;
+    padding: 6px 10px; font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    font-weight: 700; letter-spacing: 0.18em; transition: all 160ms ease;
+  }
+  .pm-close:hover { background: #0a0a0a; color: #faf9f6; }
+  .pm-scroll { position: relative; z-index: 2; padding: 52px clamp(28px, 5vw, 64px) 30px; }
+  .pm-head { display: flex; gap: 32px; align-items: center; }
+  .pm-circle { flex-shrink: 0; }
+  .pm-head-text { flex: 1; min-width: 0; }
+  .pm-meta-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .pm-opus { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.26em; font-weight: 700; opacity: 0.55; text-transform: uppercase; }
+  .pm-spell { font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 0.2em; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border: 0.8px solid; }
+  .pm-title { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(2.6rem, 5vw, 3.7rem); letter-spacing: -0.04em; line-height: 0.96; margin-bottom: 10px; color: #0a0a0a; }
+  .pm-rolerow { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: #555; text-transform: uppercase; }
+  .pm-links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  .pm-link { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #0a0a0a; text-decoration: none; border: 1.2px solid #0a0a0a; padding: 8px 14px; transition: all 150ms ease; }
+  .pm-link:hover { background: #0a0a0a; color: #faf9f6; }
+  .pm-brief { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: clamp(1.2rem, 2vw, 1.5rem); line-height: 1.4; color: #2a2a28; margin: 30px 0 8px; }
+  .pm-section { margin-top: 30px; }
+  .pm-prose { margin-top: 14px; }
+  .pm-prose p { font-family: 'Instrument Serif', Georgia, serif; font-size: 1.12rem; line-height: 1.62; color: #2c2c2a; margin-bottom: 14px; }
+  .pm-dropcap::first-letter { font-size: 3.1em; line-height: 0.82; float: left; padding: 4px 10px 0 0; color: #dc3522; font-weight: 400; }
+  .pm-plates { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .pm-plate { width: 100%; aspect-ratio: 4 / 3; border: 1.3px solid #0a0a0a; box-shadow: 0 2px 0 #0a0a0a; background: rgba(10,10,10,0.015); }
+  .pm-plate-wide { grid-column: span 2; aspect-ratio: 16 / 9; }
+  .pm-platehint { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.06em; color: #888; margin-top: 10px; text-align: center; }
+  .pm-coven { margin-top: 14px; display: flex; flex-direction: column; gap: 0; }
+  .pm-covenrow { display: flex; align-items: center; gap: 14px; padding: 11px 2px; border-bottom: 0.5px solid rgba(10,10,10,0.14); }
+  .pm-covenrow:last-child { border-bottom: none; }
+  .pm-covensig { width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; border: 1.2px solid #0a0a0a; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 700; color: #0a0a0a; }
+  .pm-covenname { font-family: 'Instrument Serif', Georgia, serif; font-size: 1.2rem; flex: 1; color: #0a0a0a; }
+  .pm-covenrole { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #777; }
+  .pm-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .pm-tag { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.05em; padding: 5px 11px; border: 1px solid rgba(10,10,10,0.32); color: #0a0a0a; }
+  .pm-foot { display: flex; align-items: center; gap: 14px; justify-content: center; margin-top: 36px; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: 0.24em; opacity: 0.5; font-weight: 600; text-transform: uppercase; }
+  .pm-foot span:first-child, .pm-foot span:last-child { width: 30px; height: 1px; background: #0a0a0a; opacity: 0.4; }
+
+  @media (max-width: 680px) {
+    .pm-backdrop { padding: 0; }
+    .pm-panel { min-height: 100%; width: 100%; }
+    .pm-head { flex-direction: column; text-align: center; gap: 18px; }
+    .pm-meta-row { justify-content: center; }
+    .pm-links { justify-content: center; }
+    .pm-plates { grid-template-columns: 1fr; }
+    .pm-plate-wide { grid-column: span 1; }
+    .pm-scroll { padding: 50px 22px 26px; }
+  }
+  @media (max-width: 600px) { .ph-header { padding-top: 100px; } }
+</style>
