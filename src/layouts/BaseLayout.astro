@@ -33,6 +33,7 @@ const {
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Instrument+Serif:ital@0;1&display=swap"
       rel="stylesheet"
     />
+    {isHome && <script is:inline src="/face-data.js" defer></script>}
   </head>
   <body class:list={[{ 'page-home': isHome }]}
     style={!isHome ? 'display:flex;flex-direction:column;min-height:100vh;' : ''}>

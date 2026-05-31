@@ -28,7 +28,7 @@ export const SECTIONS: Section[] = [
     prefix: "heyo! I'm",
     descriptor: 'Charles',
     subtitle: 'A creative developer working where code, craft, and a little bit of magic overlap.',
-    gridState: 'graphPaper',
+    gridState: 'face',
     tagline: 'PORTFOLIO / 00',
     stickers: [
       { text: '✦', x: -30, y: -20, rot: -14, size: 24, type: 'glyph', delay: 0.7 },
@@ -54,8 +54,8 @@ export const SECTIONS: Section[] = [
     prefix: "heyo! I'm an aspiring",
     descriptor: 'researcher',
     subtitle: 'Measuring what lies between fields — CS, science, humanities, the ideas that refuse to sit in one box.',
-    gridState: 'astrolabe',
-    tagline: 'ASTROLABE / 02',
+    gridState: 'venn',
+    tagline: 'BETWEEN FIELDS / 02',
     stickers: [
       { text: '†', x: -28, y: -19, rot: -6, size: 26, type: 'glyph', delay: 0.7 },
       { text: 'CS ∩ ?', x: 28, y: -21, rot: 8, size: 10, type: 'stamp', delay: 0.85 },

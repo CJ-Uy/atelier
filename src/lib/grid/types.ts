@@ -25,13 +25,15 @@ export type GridStateName =
   | 'cityscape'
   | 'headphones'
   // Design system states (grimoire aesthetic)
+  | 'face'
   | 'web'
   | 'astrolabe'
   | 'planisphere'
   | 'waveform'
   | 'rosette'
   | 'banig'
-  | 'blueprint';
+  | 'blueprint'
+  | 'venn';
 
 export interface GridConfig {
   cols: number;

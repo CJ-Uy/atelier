@@ -768,6 +768,64 @@ function waveAmp(i: number, N: number): number {
   return Math.min(1, v);
 }
 
+// ── Face (portrait) — grid positions fixed, alpha encodes the likeness ──
+// Data is precomputed in public/face-data.js (window.FACE_POINTS, row-major, 57×41).
+// graphPaper → face is a darkroom develop: surrounding grid dissolves, portrait emerges.
+export const face: GridStateFunction = (cols, rows) =>
+  buildGrid(cols, rows,
+    (_c, _r, cx, cy) => [cx, cy], // positions stay at graphPaper locations
+    (c, r) => {
+      const pts = (typeof window !== 'undefined')
+        ? (window as unknown as { FACE_POINTS?: { x: number; y: number; a: number }[] }).FACE_POINTS
+        : undefined;
+      if (pts) {
+        const p = pts[r * (cols + 1) + c];
+        if (p) return p.a;
+      }
+      return 0;
+    },
+  );
+
+// ── Venn (researcher · default) — three overlapping ring circles ──
+const VENN_R = 0.46, VENN_D = 0.30;
+const VENN_CENTERS: [number, number][] = [
+  [0, VENN_D * 1.18],
+  [-VENN_D * 1.08, -VENN_D * 0.74],
+  [VENN_D * 1.08, -VENN_D * 0.74],
+];
+const VENN_THR = 0.05;
+
+export const venn: GridStateFunction = (cols, rows) =>
+  buildGrid(cols, rows,
+    (_c, _r, cx, cy) => {
+      let bestX = cx, bestY = cy, bd = Infinity;
+      for (const ct of VENN_CENTERS) {
+        const dx = cx - ct[0], dy = cy - ct[1];
+        const dist = Math.hypot(dx, dy) || 1e-6;
+        const dd = Math.abs(dist - VENN_R);
+        if (dd < bd) {
+          bd = dd;
+          const f = VENN_R / dist;
+          bestX = ct[0] + dx * f;
+          bestY = ct[1] + dy * f;
+        }
+      }
+      if (bd <= VENN_THR) {
+        const bl = 0.9;
+        return [cx + (bestX - cx) * bl, cy + (bestY - cy) * bl];
+      }
+      return [cx, cy];
+    },
+    (_c, _r, cx, cy) => {
+      let minD = Infinity;
+      for (const ct of VENN_CENTERS) {
+        const dist = Math.hypot(cx - ct[0], cy - ct[1]);
+        minD = Math.min(minD, Math.abs(dist - VENN_R));
+      }
+      return minD <= VENN_THR ? 1 : 0;
+    },
+  );
+
 // ── Web (developer) — spider web: off-center hub, spokes, irregular frame ──
 const WEB_N = 18;
 const WEB_HUB_X = 0.0, WEB_HUB_Y = 0.10, WEB_HUB_R = 0.05;
@@ -968,7 +1026,7 @@ export const GRID_STATE_NAMES: GridStateName[] = [
   'mangaPanels', 'filmComposition', 'banigWeaving', 'mondrian',
   'developerSetup', 'cityscape',
   // design system states
-  'web', 'astrolabe', 'planisphere', 'waveform', 'rosette', 'banig', 'blueprint',
+  'face', 'venn', 'web', 'astrolabe', 'planisphere', 'waveform', 'rosette', 'banig', 'blueprint',
 ];
 
 const STATE_MAP: Record<GridStateName, GridStateFunction> = {
@@ -977,7 +1035,7 @@ const STATE_MAP: Record<GridStateName, GridStateFunction> = {
   mangaPanels, filmComposition, banigWeaving, mondrian,
   developerSetup, cityscape,
   // design system states
-  web, astrolabe, planisphere, waveform, rosette, banig, blueprint,
+  face, venn, web, astrolabe, planisphere, waveform, rosette, banig, blueprint,
 };
 
 export function getGridState(name: GridStateName, cols: number, rows: number): GridState {

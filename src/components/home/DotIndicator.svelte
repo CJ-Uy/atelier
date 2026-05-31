@@ -67,13 +67,15 @@
     opacity: 0.25;
     transition:
       width 280ms cubic-bezier(0.4,0,0.2,1),
-      opacity 200ms ease;
+      opacity 200ms ease,
+      background 200ms ease;
     flex-shrink: 0;
   }
 
   .indicator.active .indicator-line {
     width: 28px;
     opacity: 1;
+    background: var(--vermilion);
   }
 
   .indicator:hover:not(.active) .indicator-line {
@@ -87,7 +89,7 @@
     font-weight: 600;
     letter-spacing: 0.22em;
     text-transform: uppercase;
-    color: var(--ink);
+    color: var(--vermilion);
     opacity: 0.7;
     white-space: nowrap;
     animation: fadeLabel 200ms ease forwards;

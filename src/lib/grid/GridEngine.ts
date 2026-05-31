@@ -93,9 +93,7 @@ export class GridEngine {
   private time = 0;
   private startTime = performance.now();
 
-  private cursorX = -9999;
-  private cursorY = -9999;
-  private cursorActive = false;
+  // cursor fields removed — no cursor interaction
 
   // Pulse: fired when the grid settles to a new state
   private pulseStart = -9999;
@@ -105,14 +103,12 @@ export class GridEngine {
   // Sparks
   private sparks: Spark[] = [];
 
-  // Config (matches design tweaks defaults)
   private gridColor = '#0a0a0a';
   private gridOpacity = 0.55;
   private lineWeight = 0.8;
   private showPoints = true;
   private sparklesEnabled = true;
   private motionPulse = true;
-  private interactive = true;
 
   private rafId: number | null = null;
 
@@ -171,22 +167,10 @@ export class GridEngine {
 
   setTime(t: number): void { this.time = t; }
 
-  setCursor(x: number, y: number): void {
-    // Convert from NDC (-1..1) to pixel space — done in render()
-    this.cursorX = x;
-    this.cursorY = y;
-    this.cursorActive = true;
-  }
-
-  /** Pass raw pointer pixel coordinates directly (for the cursor ring) */
-  setCursorPx(px: number, py: number): void {
-    const w = this.canvas.clientWidth, h = this.canvas.clientHeight;
-    this.cursorX = (px / w) * 2 - 1;
-    this.cursorY = -((py / h) * 2 - 1);
-    this.cursorActive = true;
-  }
-
-  setCursorInactive(): void { this.cursorActive = false; }
+  // cursor methods kept as no-ops for backwards compatibility
+  setCursor(_x: number, _y: number): void {}
+  setCursorPx(_px: number, _py: number): void {}
+  setCursorInactive(): void {}
 
   render(): void { this._draw(); }
 
@@ -232,33 +216,14 @@ export class GridEngine {
     const pts = lerpPoints(this.currentPts, this.targetPts, prog);
     const cx = w / 2, cy = h / 2;
     const scale = Math.min(w, h) * 0.48;
-    // Cursor interaction radius: ~22% of smaller viewport dimension
-    const radius = Math.min(w, h) * 0.22;
-    const radiusSq = radius * radius;
 
-    // Convert cursor from NDC to pixels
-    const curPx = cx + this.cursorX * (w / 2);
-    const curPy = cy - this.cursorY * (h / 2);
-
-    // ── Screen-space points with wobble + cursor pull ──
+    // ── Screen-space points with idle wobble only ──
     const screenPts = pts.map((p) => {
       const wobX = Math.sin(time * 0.8 + p.x * 3.14159) * 0.002;
       const wobY = Math.sin(time * 0.6 + p.y * 3.14159 + 1.5708) * 0.002;
-      let sx = cx + (p.x + wobX) * scale;
-      let sy = cy - (p.y + wobY) * scale;
-      let a = p.a;
-      if (this.cursorActive && this.interactive) {
-        const dx = curPx - sx, dy = curPy - sy;
-        const distSq = dx * dx + dy * dy;
-        if (distSq < radiusSq) {
-          const dist = Math.sqrt(distSq);
-          const falloff = 1 - dist / radius;
-          const pull = falloff * falloff * 0.5;
-          sx += dx * pull; sy += dy * pull;
-          a = Math.min(1, a + falloff * 0.6);
-        }
-      }
-      return { sx, sy, a };
+      const sx = cx + (p.x + wobX) * scale;
+      const sy = cy - (p.y + wobY) * scale;
+      return { sx, sy, a: p.a };
     });
 
     const gridColor = this.gridColor;
@@ -351,35 +316,5 @@ export class GridEngine {
       }
     }
 
-    // ── Cursor casting ring ──
-    if (this.cursorActive && this.interactive) {
-      const TAU = Math.PI * 2;
-      const ringR = Math.min(w, h) * 0.075;
-      ctx.save();
-      ctx.translate(curPx, curPy);
-      ctx.strokeStyle = gridColor; ctx.lineWidth = 0.9; ctx.globalAlpha = 0.55 * fadeMul;
-      ctx.setLineDash([2, 3]);
-      ctx.beginPath(); ctx.arc(0, 0, ringR, 0, TAU); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.beginPath(); ctx.arc(0, 0, ringR * 0.42, 0, TAU); ctx.stroke();
-      // Cardinal tick marks
-      const m1 = ringR * 0.78, m2 = ringR * 1.18;
-      ctx.beginPath();
-      ctx.moveTo(-m2, 0); ctx.lineTo(-m1, 0);
-      ctx.moveTo(m1, 0);  ctx.lineTo(m2, 0);
-      ctx.moveTo(0, -m2); ctx.lineTo(0, -m1);
-      ctx.moveTo(0, m1);  ctx.lineTo(0, m2);
-      ctx.stroke();
-      // Rotating ring of 8 dots
-      ctx.rotate(time * 0.25);
-      ctx.globalAlpha = 0.7 * fadeMul; ctx.fillStyle = gridColor;
-      const sR = ringR * 0.68;
-      for (let i = 0; i < 8; i++) {
-        const a = (i / 8) * TAU;
-        ctx.beginPath(); ctx.arc(Math.cos(a) * sR, Math.sin(a) * sR, 1.0, 0, TAU); ctx.fill();
-      }
-      ctx.restore();
-      ctx.globalAlpha = 1;
-    }
   }
 }
