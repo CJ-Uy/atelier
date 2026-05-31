@@ -1,0 +1,21 @@
+---
+// src/components/home/CornerMarks.astro
+// Architect's-notebook registration brackets at the four viewport corners.
+// Quiet structure that says "composed on purpose." Home only.
+// Ported from the design's CornerMarks (Atelier.html): L=22px, pad=22px, 1px, 40% ink.
+const corners = [
+  { pos: 'top-[22px] left-[22px]',     bar: 'top-0 left-0',     vbar: 'top-0 left-0' },
+  { pos: 'top-[22px] right-[22px]',    bar: 'top-0 right-0',    vbar: 'top-0 right-0' },
+  { pos: 'bottom-[22px] left-[22px]',  bar: 'bottom-0 left-0',  vbar: 'bottom-0 left-0' },
+  { pos: 'bottom-[22px] right-[22px]', bar: 'bottom-0 right-0', vbar: 'bottom-0 right-0' },
+];
+---
+
+<div class="corner-marks" aria-hidden="true">
+  {corners.map((c) => (
+    <div class={`fixed h-[22px] w-[22px] opacity-40 pointer-events-none z-[4] ${c.pos}`}>
+      <span class={`absolute h-px w-[22px] bg-ink ${c.bar}`}></span>
+      <span class={`absolute w-px h-[22px] bg-ink ${c.vbar}`}></span>
+    </div>
+  ))}
+</div>

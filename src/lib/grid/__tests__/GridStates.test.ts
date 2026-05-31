@@ -8,12 +8,23 @@ const ROWS = 8;
 const VERT_COUNT = (COLS + 1) * (ROWS + 1); // 117
 
 describe('GRID_STATE_NAMES', () => {
-  it('has exactly 17 entries', () => {
-    expect(GRID_STATE_NAMES).toHaveLength(17);
-  });
-
   it('contains no duplicates', () => {
     expect(new Set(GRID_STATE_NAMES).size).toBe(GRID_STATE_NAMES.length);
+  });
+
+  it('includes the base state', () => {
+    expect(GRID_STATE_NAMES).toContain('graphPaper');
+  });
+
+  it('includes every grimoire design state (Atelier facets)', () => {
+    // The eight identity facets the home scroll morphs through, plus the
+    // portrait and the researcher venn variant. See DESIGN.md §07.
+    for (const name of [
+      'face', 'web', 'venn', 'astrolabe', 'planisphere',
+      'waveform', 'rosette', 'banig', 'blueprint',
+    ]) {
+      expect(GRID_STATE_NAMES).toContain(name);
+    }
   });
 });
 

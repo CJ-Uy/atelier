@@ -26,8 +26,10 @@ describe('SECTIONS', () => {
     SECTIONS.forEach((s) => expect(GRID_STATE_NAMES).toContain(s.gridState));
   });
 
-  it('first section uses graphPaper', () => {
-    expect(SECTIONS[0].gridState).toBe('graphPaper');
+  it('first section develops the portrait (face)', () => {
+    // The opening ritual morphs graphPaper → face, then holds; facet 0 rests
+    // on the portrait. See DESIGN.md §07 and the BaseLayout opening ritual.
+    expect(SECTIONS[0].gridState).toBe('face');
   });
 
   it('no two adjacent sections share the same gridState', () => {

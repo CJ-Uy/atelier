@@ -1043,3 +1043,20 @@ export function getGridState(name: GridStateName, cols: number, rows: number): G
   if (!fn) throw new Error(`Unknown grid state: "${name}"`);
   return fn(cols, rows);
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  Spell geometry registry — the FacetDiagram annotation layer reads
+//  these to align its ink (inscription bands, ticks, dimension lines,
+//  accents) to the exact grid structures the engine renders.
+//  Mirror of window.SPELL_GEO from the design's grid-engine.jsx.
+// ═══════════════════════════════════════════════════════════════
+export const SPELL_GEO = {
+  web: { N: WEB_N, hubX: WEB_HUB_X, hubY: WEB_HUB_Y, hubR: WEB_HUB_R, rings: WEB_RING_FRACS, anchors: WEB_ANCHORS, frame: WEB_FRAME },
+  venn: { R: VENN_R, centers: VENN_CENTERS },
+  astrolabe: { N: AST_N, rings: AST_RINGS },
+  planisphere: { N: PLAN_N, rings: PLAN_RINGS },
+  waveform: { N: WAVE_N, inner: WAVE_INNER, outer: WAVE_OUTER },
+  rosette: { N: ROS_N, rings: ROS_RINGS },
+  banig: { rings: BANIG_RINGS },
+  blueprint: { frame: _fr, segs: BP_SEGS },
+} as const;

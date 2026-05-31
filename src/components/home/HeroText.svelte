@@ -28,9 +28,11 @@
   });
 
   function stickerStyle(s: Sticker): string {
+    // x/y are viewport-height units (vh) so marginalia flings out to the
+    // corners around the centred circle — matching the design's FloatingSticker.
     return [
-      `--baseX: ${s.x}px`,
-      `--baseY: ${s.y}px`,
+      `--baseX: ${s.x}vh`,
+      `--baseY: ${s.y}vh`,
       `--baseRot: ${s.rot}deg`,
       `font-size: ${s.size}px`,
       `animation-delay: ${s.delay}s, ${s.delay + 0.3}s`,
@@ -245,14 +247,15 @@
     border-color: var(--vermilion);
   }
 
-  /* ── Tape sticker ──────────────────────────────────────────── */
+  /* ── Tape sticker — vellum strip, top/bottom edges only ─────── */
   .sticker-tape {
     font-family: 'IBM Plex Mono', monospace;
     font-weight: 500;
-    letter-spacing: 0.08em;
-    padding: 3px 10px;
-    background: rgba(245,238,220,0.9);
-    border: 0.8px solid var(--ink);
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+    background: rgba(245,238,220,0.85);
+    border-top: 0.5px solid rgba(10,10,10,0.25);
+    border-bottom: 0.5px solid rgba(10,10,10,0.25);
     color: var(--ink);
   }
 
@@ -260,12 +263,12 @@
   .sticker-sticker {
     font-family: 'Instrument Serif', Georgia, serif;
     font-style: italic;
-    padding: 4px 12px;
-    background: var(--paper);
-    border: 1px solid var(--ink);
-    border-radius: 4px;
+    padding: 3px 10px;
+    background: rgba(250,249,246,0.96);
+    border: 0.8px solid var(--ink);
+    border-radius: 2px;
     color: var(--ink);
-    box-shadow: 1px 1px 0 var(--ink), 0 4px 12px rgba(10,10,10,0.08);
+    box-shadow: 0 1px 0 rgba(10,10,10,0.85);
   }
 
   /* ── Mobile ────────────────────────────────────────────────── */

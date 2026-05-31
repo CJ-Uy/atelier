@@ -104,6 +104,19 @@ export class ScrollOrchestrator {
       };
       window.dispatchEvent(new CustomEvent('atelier:section-change', { detail }));
     }
+
+    // Continuous progress for the FacetDiagram annotation layer: which state is
+    // active at the nearest section, how settled it is (0 mid-morph → 1 at rest),
+    // and the outro fade so the ink dissolves with the grid.
+    const fade = fraction <= maxIndex ? 1 : Math.max(0, 1 - (fraction - maxIndex));
+    window.dispatchEvent(new CustomEvent('atelier:grid-progress', {
+      detail: {
+        index: nearestIdx,
+        stateName: this.sections[nearestIdx]?.gridState ?? 'graphPaper',
+        progress,
+        fade,
+      },
+    }));
   }
 
   /** Smooth-scroll to nearest section after user stops scrolling */

@@ -26,10 +26,10 @@
       aria-current={i === active ? 'true' : undefined}
       onclick={() => jump(i)}
     >
+      <!-- descriptor label: always rendered (reserves width, no layout shift),
+           inked only when active — matches the design's SectionIndicator -->
+      <span class="indicator-label">{section.descriptor}</span>
       <span class="indicator-line"></span>
-      {#if i === active}
-        <span class="indicator-label">{section.tagline.split(' / ')[0]}</span>
-      {/if}
     </button>
   {/each}
 </nav>
@@ -37,73 +37,68 @@
 <style>
   .dot-nav {
     position: fixed;
-    right: 1.75rem;
+    right: 28px;
     top: 50%;
     transform: translateY(-50%);
     z-index: 50;
     display: flex;
     flex-direction: column;
-    gap: 0.55rem;
+    gap: 0;
+    align-items: flex-end;
     pointer-events: auto;
   }
 
   .indicator {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     justify-content: flex-end;
     background: none;
     border: none;
-    padding: 2px 0;
+    padding: 7px 0;
     cursor: pointer;
     position: relative;
   }
 
   .indicator-line {
     display: block;
-    height: 1px;
-    width: 12px;
-    background: var(--ink);
-    opacity: 0.25;
-    transition:
-      width 280ms cubic-bezier(0.4,0,0.2,1),
-      opacity 200ms ease,
-      background 200ms ease;
+    height: 2px;
+    width: 8px;
+    background: #bbb;
+    border-radius: 1px;
+    transition: all 300ms cubic-bezier(0.4,0,0.2,1);
     flex-shrink: 0;
   }
 
   .indicator.active .indicator-line {
     width: 28px;
-    opacity: 1;
-    background: var(--vermilion);
+    background: var(--ink);
   }
 
   .indicator:hover:not(.active) .indicator-line {
-    width: 18px;
-    opacity: 0.5;
+    width: 16px;
+    background: var(--mute-1);
   }
 
   .indicator-label {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 8px;
+    font-size: 9px;
     font-weight: 600;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--vermilion);
-    opacity: 0.7;
+    color: transparent;
+    transition: color 300ms ease;
     white-space: nowrap;
-    animation: fadeLabel 200ms ease forwards;
   }
 
-  @keyframes fadeLabel {
-    from { opacity: 0; transform: translateX(4px); }
-    to   { opacity: 0.7; transform: translateX(0); }
-  }
+  .indicator.active .indicator-label { color: var(--ink); }
 
   .indicator:focus-visible { outline: 2px solid var(--vermilion); outline-offset: 3px; border-radius: 2px; }
 
   @media (max-width: 640px) {
-    .dot-nav { right: 0.75rem; gap: 0.4rem; }
+    .dot-nav { right: 12px; }
+    .indicator { padding: 9px 4px; }
     .indicator-label { display: none; }
+    .indicator.active .indicator-line { width: 18px; }
   }
 </style>

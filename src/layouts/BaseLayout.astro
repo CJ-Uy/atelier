@@ -3,6 +3,9 @@
 import '../styles/global.css';
 import Navbar from '../components/shared/Navbar.astro';
 import DotIndicator from '../components/home/DotIndicator.svelte';
+import CornerMarks from '../components/home/CornerMarks.astro';
+import HomeOutro from '../components/home/HomeOutro.svelte';
+import FacetDiagram from '../components/home/FacetDiagram.svelte';
 import { SECTIONS } from '../components/home/sections';
 
 interface Props {
@@ -48,6 +51,10 @@ const {
           style="position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;"
           aria-hidden="true"
         ></canvas>
+        <!-- Inked annotation layer over the grid (sits below the hero text) -->
+        <FacetDiagram client:only="svelte" />
+        <!-- Registration brackets at the four corners -->
+        <CornerMarks />
       </>
     )}
 
@@ -55,7 +62,7 @@ const {
     {isHome && <Navbar />}
 
     {isHome && (
-      <main style="position:fixed;inset:0;z-index:1;pointer-events:none;">
+      <main style="position:fixed;inset:0;z-index:2;pointer-events:none;">
         <slot />
       </main>
     )}
@@ -63,14 +70,19 @@ const {
     {isHome && <DotIndicator client:only="svelte" />}
 
     {isHome && (
-      <div class="scroll-container" aria-hidden="true">
+      <div class="scroll-container">
         {SECTIONS.map((s) => (
           <div
             class="scroll-section"
             data-section-id={String(s.id)}
             data-grid-state={s.gridState}
+            aria-hidden="true"
           />
         ))}
+        <!-- Closing band — bridges to the Works page -->
+        <div class="outro-wrap">
+          <HomeOutro client:visible />
+        </div>
       </div>
     )}
 
@@ -93,12 +105,87 @@ const {
         const scrollContainer = document.querySelector('.scroll-container') as HTMLElement | null;
         if (scrollContainer) {
           const orchestrator = new ScrollOrchestrator(engine, SECTIONS);
-          orchestrator.init(scrollContainer);
 
           window.addEventListener('atelier:jump-to-section', (e) => {
             const detail = (e as CustomEvent<{ index: number }>).detail;
             orchestrator.goToSection(detail.index);
           });
+
+          // ── Opening ritual: the dot grid develops Charles's portrait, then
+          // holds. graphPaper → face over ~2.4s, eased. A real scroll/key aborts
+          // and hands control to the scroll-driven morph. The orchestrator is
+          // only wired AFTER the ritual settles or is interrupted, so the two
+          // never fight over `progress`.
+          let ritualDone = false;
+          let ritualRaf = 0;
+          const startTimer = window.setTimeout(runRitual, 380);
+
+          function finishRitual() {
+            if (ritualDone) return;
+            ritualDone = true;
+            cancelAnimationFrame(ritualRaf);
+            clearTimeout(startTimer);
+            scrollContainer!.removeEventListener('wheel', abortRitual);
+            scrollContainer!.removeEventListener('touchstart', abortRitual);
+            window.removeEventListener('keydown', onKey);
+            // Promote face → current so the scroll morph starts from the portrait.
+            engine.setCurrent('face');
+            engine.setProgress(0);
+            orchestrator.init(scrollContainer!);
+          }
+
+          // ── Grid + hero fade-out as the closing band scrolls in. The last
+          // facet sits at fraction = SECTIONS.length - 1; past it the grid and
+          // nameplate dissolve so the outro reads on clean paper.
+          const heroLayer = document.querySelector('main') as HTMLElement | null;
+          const cornerMarks = document.querySelector('.corner-marks') as HTMLElement | null;
+          const heroMax = SECTIONS.length - 1;
+          scrollContainer!.addEventListener('scroll', () => {
+            const h = scrollContainer!.clientHeight;
+            if (!h) return;
+            const fraction = scrollContainer!.scrollTop / h;
+            const fade = fraction <= heroMax ? 1 : Math.max(0, 1 - (fraction - heroMax));
+            canvas!.style.opacity = String(fade);
+            if (cornerMarks) cornerMarks.style.opacity = String(fade);
+            if (heroLayer) {
+              heroLayer.style.opacity = String(fade);
+              heroLayer.style.visibility = fade < 0.02 ? 'hidden' : 'visible';
+            }
+          }, { passive: true });
+
+          function abortRitual() {
+            if (ritualDone) return;
+            // jump the develop to fully-formed, then hand off
+            engine.setCurrent('graphPaper');
+            engine.setTarget('face');
+            engine.setProgress(1);
+            finishRitual();
+          }
+
+          function onKey(e: KeyboardEvent) {
+            if (['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', ' '].includes(e.key)) abortRitual();
+          }
+
+          function runRitual() {
+            engine.setCurrent('graphPaper');
+            engine.setTarget('face');
+            const dur = 2400;
+            const ease = (t: number) =>
+              t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            const t0 = performance.now();
+            scrollContainer!.addEventListener('wheel', abortRitual, { passive: true });
+            scrollContainer!.addEventListener('touchstart', abortRitual, { passive: true });
+            window.addEventListener('keydown', onKey);
+            const step = (now: number) => {
+              if (ritualDone) return;
+              if (scrollContainer!.scrollTop > 2) { abortRitual(); return; }
+              const t = Math.min((now - t0) / dur, 1);
+              engine.setProgress(ease(t));
+              if (t < 1) ritualRaf = requestAnimationFrame(step);
+              else finishRitual();
+            };
+            ritualRaf = requestAnimationFrame(step);
+          }
         }
 
         document.addEventListener('pointermove', (e) => {
