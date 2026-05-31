@@ -23,7 +23,15 @@ export type GridStateName =
   | 'mondrian'
   | 'developerSetup'
   | 'cityscape'
-  | 'headphones';
+  | 'headphones'
+  // Design system states (grimoire aesthetic)
+  | 'web'
+  | 'astrolabe'
+  | 'planisphere'
+  | 'waveform'
+  | 'rosette'
+  | 'banig'
+  | 'blueprint';
 
 export interface GridConfig {
   cols: number;

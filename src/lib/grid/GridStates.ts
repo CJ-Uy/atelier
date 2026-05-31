@@ -723,12 +723,252 @@ export const mondrian: GridStateFunction = (cols, rows) => {
   });
 };
 
+// ═══════════════════════════════════════════════════════════════
+//  Design-system grimoire states (ink-on-paper aesthetic)
+// ═══════════════════════════════════════════════════════════════
+
+// ── Shared helpers ────────────────────────────────────────────
+const TAU = Math.PI * 2;
+
+function snapAngle(angle: number, N: number, blend: number): number {
+  const step = TAU / N;
+  const snap = Math.round(angle / step) * step;
+  return angle * (1 - blend) + snap * blend;
+}
+
+function snapToRings(dist: number, rings: number[], blend: number): number {
+  let best = rings[0], bd = Math.abs(dist - rings[0]);
+  for (const r of rings) {
+    const d = Math.abs(dist - r);
+    if (d < bd) { bd = d; best = r; }
+  }
+  return dist * (1 - blend) + best * blend;
+}
+
+function closestOnSeg(
+  px: number, py: number,
+  ax: number, ay: number,
+  bx: number, by: number,
+): { x: number; y: number; d: number } {
+  const dx = bx - ax, dy = by - ay;
+  const len2 = dx * dx + dy * dy || 1e-9;
+  let t = ((px - ax) * dx + (py - ay) * dy) / len2;
+  t = Math.max(0, Math.min(1, t));
+  const x = ax + dx * t, y = ay + dy * t;
+  return { x, y, d: Math.hypot(px - x, py - y) };
+}
+
+function waveAmp(i: number, N: number): number {
+  const t = i / N;
+  const v = Math.abs(
+    Math.sin(t * TAU * 9) * 0.5 +
+    Math.sin(t * TAU * 23 + 1) * 0.3 +
+    Math.sin(t * TAU * 4) * 0.2,
+  ) * (0.45 + 0.55 * Math.abs(Math.sin(t * TAU)));
+  return Math.min(1, v);
+}
+
+// ── Web (developer) — spider web: off-center hub, spokes, irregular frame ──
+const WEB_N = 18;
+const WEB_HUB_X = 0.0, WEB_HUB_Y = 0.10, WEB_HUB_R = 0.05;
+const WEB_RING_FRACS = [0.18, 0.34, 0.52, 0.72, 0.92, 1.0];
+const WEB_ANCHORS = [2, 6, 11, 16];
+const WEB_GAP = -1; // no empty sector
+const WEB_FRAME: number[] = Array.from({ length: WEB_N }, (_, i) =>
+  0.74 + 0.15 * Math.sin(i * 1.7 + 0.5) + 0.07 * Math.cos(i * 2.9),
+);
+
+export const web: GridStateFunction = (cols, rows) =>
+  buildGrid(cols, rows,
+    (c, r, cx, cy) => {
+      const rx = cx - WEB_HUB_X, ry = cy - WEB_HUB_Y;
+      const dist = Math.sqrt(rx * rx + ry * ry);
+      const angle = Math.atan2(ry, rx);
+      const step = TAU / WEB_N;
+      let idx = Math.round(angle / step);
+      idx = ((idx % WEB_N) + WEB_N) % WEB_N;
+      if (idx === WEB_GAP) return [cx, cy];
+      const snapA = angle * 0.05 + (idx * step) * 0.95;
+      if (dist < WEB_HUB_R) return [WEB_HUB_X, WEB_HUB_Y];
+      const frameR = WEB_FRAME[idx];
+      const isAnchor = WEB_ANCHORS.includes(idx);
+      let targetR: number;
+      if (isAnchor && dist > frameR * 0.92) {
+        targetR = Math.min(dist, 1.5);
+      } else {
+        const fr = WEB_RING_FRACS;
+        const ratio = Math.min(dist / frameR, 1.04);
+        let best = fr[0], bd = Math.abs(ratio - fr[0]);
+        for (const f of fr) { const d = Math.abs(ratio - f); if (d < bd) { bd = d; best = f; } }
+        targetR = (ratio * 0.1 + best * 0.9) * frameR;
+      }
+      return [WEB_HUB_X + Math.cos(snapA) * targetR, WEB_HUB_Y + Math.sin(snapA) * targetR];
+    },
+    (_c, _r, cx, cy) => {
+      const rx = cx - WEB_HUB_X, ry = cy - WEB_HUB_Y;
+      const dist = Math.sqrt(rx * rx + ry * ry);
+      if (dist < WEB_HUB_R) return 0;
+      return 1;
+    },
+  );
+
+// ── Astrolabe (researcher) — nested measurement rings + 24 index lines ──
+const AST_N = 24;
+const AST_RINGS = [0.30, 0.52, 0.72, 0.92];
+
+export const astrolabe: GridStateFunction = (cols, rows) =>
+  buildGrid(cols, rows,
+    (_c, _r, cx, cy) => {
+      const dist = Math.sqrt(cx * cx + cy * cy);
+      const angle = Math.atan2(cy, cx);
+      const snapA = snapAngle(angle, AST_N, 0.84);
+      const targetR = dist < 0.05 ? 0 : snapToRings(dist, [0, ...AST_RINGS], 0.9);
+      return [Math.cos(snapA) * targetR, Math.sin(snapA) * targetR];
+    },
+    (_c, _r, cx, cy) => {
+      const dist = Math.sqrt(cx * cx + cy * cy);
+      return dist < 0.04 ? 0 : 1;
+    },
+  );
+
+// ── Planisphere (big dreamer) — celestial sphere skeleton: rings + graticule ──
+const PLAN_N = 12;
+const PLAN_RINGS = [0.34, 0.60, 0.86];
+
+export const planisphere: GridStateFunction = (cols, rows) =>
+  buildGrid(cols, rows,
+    (_c, _r, cx, cy) => {
+      const dist = Math.sqrt(cx * cx + cy * cy);
+      const angle = Math.atan2(cy, cx);
+      const snapA = snapAngle(angle, PLAN_N, 0.6);
+      const targetR = dist < 0.05 ? 0 : snapToRings(dist, [0, ...PLAN_RINGS], 0.82);
+      return [Math.cos(snapA) * targetR, Math.sin(snapA) * targetR];
+    },
+    (_c, _r, cx, cy) => {
+      const dist = Math.sqrt(cx * cx + cy * cy);
+      return dist < 0.04 ? 0 : 0.92;
+    },
+  );
+
+// ── Waveform (music) — polar vinyl waveform with 132 radial bars ──
+const WAVE_N = 132;
+const WAVE_INNER = 0.32, WAVE_OUTER = 0.96;
+
+export const waveform: GridStateFunction = (cols, rows) =>
+  buildGrid(cols, rows,
+    (_c, _r, cx, cy) => {
+      const dist = Math.sqrt(cx * cx + cy * cy);
+      const angle = Math.atan2(cy, cx);
+      const snapA = snapAngle(angle, WAVE_N, 0.94);
+      const i = ((Math.round(snapA / (TAU / WAVE_N)) % WAVE_N) + WAVE_N) % WAVE_N;
+      const len = WAVE_INNER + waveAmp(i, WAVE_N) * (WAVE_OUTER - WAVE_INNER);
+      const targetR = dist < WAVE_INNER * 0.5 ? 0 : (dist < WAVE_INNER ? WAVE_INNER : Math.min(dist, len));
+      return [Math.cos(snapA) * targetR, Math.sin(snapA) * targetR];
+    },
+    (_c, _r, cx, cy) => {
+      const dist = Math.sqrt(cx * cx + cy * cy);
+      return dist < WAVE_INNER * 0.4 ? 0 : 1;
+    },
+  );
+
+// ── Rosette (digital media) — halftone rosette: 36 spokes + 8 dense rings ──
+const ROS_N = 36;
+const ROS_RINGS = [0.12, 0.24, 0.36, 0.48, 0.60, 0.72, 0.84, 0.96];
+
+export const rosette: GridStateFunction = (cols, rows) =>
+  buildGrid(cols, rows,
+    (_c, _r, cx, cy) => {
+      const dist = Math.sqrt(cx * cx + cy * cy);
+      const angle = Math.atan2(cy, cx);
+      const snapA = snapAngle(angle, ROS_N, 0.7);
+      const targetR = dist < 0.04 ? 0 : snapToRings(dist, [0, ...ROS_RINGS], 0.85);
+      return [Math.cos(snapA) * targetR, Math.sin(snapA) * targetR];
+    },
+    (_c, _r, cx, cy) => {
+      const dist = Math.sqrt(cx * cx + cy * cy);
+      return dist < 0.03 ? 0 : 1;
+    },
+  );
+
+// ── Banig (Waray) — concentric Manhattan/diamond rings ──
+const BANIG_RINGS = [0.18, 0.34, 0.50, 0.66, 0.82, 0.98];
+
+export const banig: GridStateFunction = (cols, rows) =>
+  buildGrid(cols, rows,
+    (c, r, cx, cy) => {
+      const l1 = Math.abs(cx) + Math.abs(cy);
+      if (l1 < 0.06) return [0, 0];
+      const targetL1 = snapToRings(l1, [0.06, ...BANIG_RINGS], 0.9);
+      const f = targetL1 / l1;
+      const phase = (c + r) % 2 === 0 ? 1 : -1;
+      return [cx * f + 0.006 * phase, cy * f - 0.006 * phase];
+    },
+    (_c, _r, cx, cy) => {
+      const l1 = Math.abs(cx) + Math.abs(cy);
+      return l1 < 0.06 ? 0 : 1;
+    },
+  );
+
+// ── Blueprint (building things) — isometric cube + drawing-sheet border ──
+(function computeBlueprintGeo() {
+  // pre-compute at module load — avoids re-computing on each call
+})();
+
+const _s = 0.56;
+const _cos30 = Math.cos(Math.PI / 6);
+const _sin30 = 0.5;
+const _fr = 0.97;
+const BP_THR = 0.075;
+const BP_SEGS: [[number, number], [number, number]][] = [
+  // isometric cube edges
+  [[0, _s], [_s * _cos30, _s * _sin30]],
+  [[_s * _cos30, _s * _sin30], [_s * _cos30, -_s * _sin30]],
+  [[_s * _cos30, -_s * _sin30], [0, -_s]],
+  [[0, -_s], [-_s * _cos30, -_s * _sin30]],
+  [[-_s * _cos30, -_s * _sin30], [-_s * _cos30, _s * _sin30]],
+  [[-_s * _cos30, _s * _sin30], [0, _s]],
+  [[0, 0], [0, _s]],
+  [[0, 0], [_s * _cos30, -_s * _sin30]],
+  [[0, 0], [-_s * _cos30, -_s * _sin30]],
+  // drawing sheet border
+  [[-_fr, _fr], [_fr, _fr]],
+  [[_fr, _fr], [_fr, -_fr]],
+  [[_fr, -_fr], [-_fr, -_fr]],
+  [[-_fr, -_fr], [-_fr, _fr]],
+];
+
+export const blueprint: GridStateFunction = (cols, rows) =>
+  buildGrid(cols, rows,
+    (_c, _r, cx, cy) => {
+      let best = { x: cx, y: cy, d: Infinity };
+      for (const seg of BP_SEGS) {
+        const hit = closestOnSeg(cx, cy, seg[0][0], seg[0][1], seg[1][0], seg[1][1]);
+        if (hit.d < best.d) best = hit;
+      }
+      if (best.d <= BP_THR) {
+        const blend = 0.9;
+        return [cx + (best.x - cx) * blend, cy + (best.y - cy) * blend];
+      }
+      return [cx, cy];
+    },
+    (_c, _r, cx, cy) => {
+      let minD = Infinity;
+      for (const seg of BP_SEGS) {
+        const hit = closestOnSeg(cx, cy, seg[0][0], seg[0][1], seg[1][0], seg[1][1]);
+        if (hit.d < minD) minD = hit.d;
+      }
+      return minD <= BP_THR ? 1 : 0;
+    },
+  );
+
 // ─── Registry ───────────────────────────────────────────────────
 export const GRID_STATE_NAMES: GridStateName[] = [
   'graphPaper', 'keyboard', 'terminal', 'spacetimeWarp', 'chartsData',
   'dreamCatcher', 'bassGuitar', 'musicProduction', 'headphones', 'volleyball', 'topographic', 'pixelGrid',
   'mangaPanels', 'filmComposition', 'banigWeaving', 'mondrian',
   'developerSetup', 'cityscape',
+  // design system states
+  'web', 'astrolabe', 'planisphere', 'waveform', 'rosette', 'banig', 'blueprint',
 ];
 
 const STATE_MAP: Record<GridStateName, GridStateFunction> = {
@@ -736,6 +976,8 @@ const STATE_MAP: Record<GridStateName, GridStateFunction> = {
   dreamCatcher, bassGuitar, musicProduction, headphones, volleyball, topographic, pixelGrid,
   mangaPanels, filmComposition, banigWeaving, mondrian,
   developerSetup, cityscape,
+  // design system states
+  web, astrolabe, planisphere, waveform, rosette, banig, blueprint,
 };
 
 export function getGridState(name: GridStateName, cols: number, rows: number): GridState {

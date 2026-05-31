@@ -3,29 +3,31 @@
 
 /* ── Design Tokens (Tailwind v4 CSS-first config) ─────────────── */
 @theme {
-  /* Backgrounds */
-  --color-bg-dark:  #161618;
-  --color-bg-light: #F5F2ED;
+  --color-ink:       #0a0a0a;
+  --color-paper:     #faf9f6;
+  --color-vellum:    #f5eedc;
+  --color-vermilion: #dc3522;
+  --color-mute-1:    #999999;
+  --color-mute-2:    #e8e6e1;
 
-  /* Brand */
-  --color-primary:   #DC3522;   /* vermillion — grid lines, accents */
-  --color-secondary: #E8805A;   /* ember — prefix text, subtitles */
-
-  /* Text */
-  --color-text-dark:           #EEEBE6;   /* warm cream — dark mode body */
-  --color-text-light:          #1A1A1A;   /* near-black — light mode body */
-  --color-text-secondary-light:#8B6B5A;   /* warm brown — light mode secondary */
-  --color-muted:               #9A9896;   /* slate — timestamps, hints (boosted for WCAG AA on dark bg) */
-
-  /* Fonts */
-  --font-sans: "Host Grotesk", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-serif: "Instrument Serif", Georgia, serif;
+  --font-mono:  "IBM Plex Mono", ui-monospace, monospace;
 }
 
-/* ── Semantic Aliases — cream/black only, no dark mode ───────── */
+/* ── Semantic CSS vars ────────────────────────────────────────── */
 :root {
-  --color-surface:    var(--color-bg-light);
-  --color-on-surface: var(--color-text-light);
+  --ink:       #0a0a0a;
+  --paper:     #faf9f6;
+  --vellum:    #f5eedc;
+  --vermilion: #dc3522;
+  --mute-1:    #999999;
+  --mute-2:    #e8e6e1;
+
+  /* legacy aliases kept for the grid engine */
+  --color-surface:    var(--paper);
+  --color-on-surface: var(--ink);
+  --color-primary:    var(--vermilion);
+  --color-muted:      var(--mute-1);
 }
 
 /* ── Base Reset ───────────────────────────────────────────────── */
@@ -40,12 +42,14 @@ html {
 }
 
 body {
-  background-color: var(--color-surface);
-  color: var(--color-on-surface);
-  font-family: var(--font-sans);
-  overflow: hidden;   /* only .scroll-container scrolls */
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  overflow: hidden;
   width: 100vw;
   height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 /* ── Scroll Architecture ──────────────────────────────────────── */
@@ -56,10 +60,7 @@ body {
   scrollbar-width: none;
   -ms-overflow-style: none;
   z-index: 2;
-  /* No CSS scroll-snap — JS handles drift-to-nearest on scroll end.
-     This eliminates directional resistance that causes up-scroll dead zones. */
 }
-
 .scroll-container::-webkit-scrollbar { display: none; }
 
 .scroll-section {
@@ -78,8 +79,40 @@ body:not(.page-home) {
   overflow-y: auto;
 }
 
+/* ── Ink texture overlay ──────────────────────────────────────── */
+.ink-texture {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.015'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+}
+
+/* ── Radial vignette — crisp grid at center, paper falloff at edges ── */
+.grid-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 60% 64% at 50% 47%,
+    rgba(250,249,246,0)    34%,
+    rgba(250,249,246,0.30) 66%,
+    rgba(250,249,246,0.80) 90%,
+    rgba(250,249,246,0.96) 100%
+  );
+  transition: opacity 300ms ease;
+}
+
+/* ── Selection ────────────────────────────────────────────────── */
+::selection {
+  background: var(--ink);
+  color: var(--paper);
+}
+
 /* ── Focus ────────────────────────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--vermilion);
   outline-offset: 3px;
 }
