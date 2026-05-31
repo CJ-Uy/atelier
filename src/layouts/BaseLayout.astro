@@ -100,11 +100,11 @@ const {
           });
         }
 
-        document.addEventListener('mousemove', (e) => {
-          engine.setCursor(
-            (e.clientX / window.innerWidth) * 2 - 1,
-            -((e.clientY / window.innerHeight) * 2 - 1),
-          );
+        document.addEventListener('pointermove', (e) => {
+          engine.setCursorPx(e.clientX, e.clientY);
+        }, { passive: true });
+        document.addEventListener('pointerleave', () => {
+          engine.setCursorInactive();
         });
       }
     </script>
