@@ -1,0 +1,9 @@
+---
+// src/pages/contact.astro — Contact page using Vue (declarative sigil layout, reactive charge state)
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ContactPage from '../components/contact/ContactPage.vue';
+---
+
+<BaseLayout title="Contact — Atelier" description="Reach Charles. Choose a channel and trace the sigil.">
+  <ContactPage client:only="vue" />
+</BaseLayout>
