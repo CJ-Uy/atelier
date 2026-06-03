@@ -977,6 +977,17 @@ const _cos30 = Math.cos(Math.PI / 6);
 const _sin30 = 0.5;
 const _fr = 0.97;
 const BP_THR = 0.075;
+// Isometric cube vertices — the SVG annotation layer (AnnBlueprint) hangs its
+// dimension lines, angle callout and revision balloon off these exact points.
+const BP_VERTS = {
+  top: [0, _s] as [number, number],
+  ur: [_s * _cos30, _s * _sin30] as [number, number],
+  lr: [_s * _cos30, -_s * _sin30] as [number, number],
+  bot: [0, -_s] as [number, number],
+  ll: [-_s * _cos30, -_s * _sin30] as [number, number],
+  ul: [-_s * _cos30, _s * _sin30] as [number, number],
+  ctr: [0, 0] as [number, number],
+};
 const BP_SEGS: [[number, number], [number, number]][] = [
   // isometric cube edges
   [[0, _s], [_s * _cos30, _s * _sin30]],
@@ -1058,5 +1069,5 @@ export const SPELL_GEO = {
   waveform: { N: WAVE_N, inner: WAVE_INNER, outer: WAVE_OUTER },
   rosette: { N: ROS_N, rings: ROS_RINGS },
   banig: { rings: BANIG_RINGS },
-  blueprint: { frame: _fr, segs: BP_SEGS },
+  blueprint: { frame: _fr, fr: _fr, s: _s, verts: BP_VERTS, segs: BP_SEGS },
 } as const;
