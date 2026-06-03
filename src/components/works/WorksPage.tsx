@@ -34,7 +34,7 @@ const WP_PROJECTS = [
     plates: 3, video: true,
     coven: [{ name: 'Charles J. Uy', role: 'Everything' }] },
 
-  { n: 'II', slug: 'ad-multo', circle: 'hexagram' as const, title: 'Ad Multo', year: '2026', cat: 'research',
+  { n: 'II', slug: 'ad-multo', circle: 'lattice' as const, title: 'Ad Multo', year: '2026', cat: 'research',
     blurb: 'A scroll-driven reader for academic papers, conjured in 48 hours. Citations bloom in the margin.',
     tags: ['Next.js', 'Reader', 'API'], spell: 'haste', accent: false,
     role: 'Frontend & UX', period: 'Hackathon · 48h', status: 'archived' as const,
@@ -58,7 +58,7 @@ const WP_PROJECTS = [
     plates: 3, video: true,
     coven: [{ name: 'Charles J. Uy', role: 'Everything' }] },
 
-  { n: 'IV', slug: 'marginalia', circle: 'eye' as const, title: 'Marginalia', year: '2025', cat: 'research',
+  { n: 'IV', slug: 'marginalia', circle: 'lens' as const, title: 'Marginalia', year: '2025', cat: 'research',
     blurb: "A lay-physicist's commonplace book — wormhole metrics, embedding diagrams, light around mass.",
     tags: ['Physics', 'LaTeX', 'Writing'], spell: 'scrying', accent: false,
     role: 'Author', period: 'Ongoing', status: 'in-progress' as const,
@@ -70,7 +70,7 @@ const WP_PROJECTS = [
     plates: 2, video: false,
     coven: [] },
 
-  { n: 'V', slug: 'loopline', circle: 'pentagram' as const, title: 'Loopline', year: '2025', cat: 'audio',
+  { n: 'V', slug: 'loopline', circle: 'bloom' as const, title: 'Loopline', year: '2025', cat: 'audio',
     blurb: 'A browser looper for bass guitar. Four strings, infinite layers, one big record button.',
     tags: ['Web Audio', 'Canvas'], spell: 'echo', accent: false,
     role: 'Design & build', period: 'Weekend build', status: 'live' as const,

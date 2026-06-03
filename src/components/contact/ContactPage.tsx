@@ -10,8 +10,6 @@ import MagicCircle from '../shared/MagicCircle';
 const INKC = '#0a0a0a';
 const VERMC = '#dc3522';
 
-const CONTACT_RUNES = '· VOCA · SCRIBE · INVOCO · RESPONDEO · COLLOQVIVM · SOCIETAS · ADSVM ';
-
 const CHANNELS = [
   { id: 'email',    sigil: '✉',  label: 'Email',             handle: 'charlesjoshuauy@gmail.com',     href: 'mailto:charlesjoshuauy@gmail.com',                      angle: -90, accent: true  },
   { id: 'github',   sigil: 'GH', label: 'GitHub',            handle: 'CJ-Uy',                          href: 'https://github.com/CJ-Uy',                              angle: -30 },
@@ -169,7 +167,7 @@ function SummoningCircle() {
       <div ref={wrapRef} style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', zIndex: 1 }}>
         <MagicCircle variant="summoning" size={circleSize}
           rotateSpeed={150} innerRotateSpeed={80}
-          reverseInner runes runeText={CONTACT_RUNES} showCardinals
+          reverseInner runes showCardinals
           style={{ color: INKC }} />
       </div>
 
@@ -201,7 +199,7 @@ function SummoningList() {
   return (
     <div style={{ maxWidth: 420, margin: '0 auto', width: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 34 }}>
-        <MagicCircle variant="summoning" size={180} rotateSpeed={150} innerRotateSpeed={80} reverseInner runeText={CONTACT_RUNES} showCardinals style={{ color: INKC }} />
+        <MagicCircle variant="summoning" size={180} rotateSpeed={150} innerRotateSpeed={80} reverseInner showCardinals style={{ color: INKC }} />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {CHANNELS.map((ch) => {
@@ -247,7 +245,7 @@ export default function ContactPage() {
 
       <header className="ph-header">
         <div className="ph-circlemark">
-          <MagicCircle variant="summoning" size={104} rotateSpeed={140} innerRotateSpeed={70} reverseInner runeText={CONTACT_RUNES} style={{ color: INKC }} />
+          <MagicCircle variant="summoning" size={104} rotateSpeed={140} innerRotateSpeed={70} reverseInner style={{ color: INKC }} />
         </div>
         <div className="ph-eyebrow">✦ THE SUMMONING · RITE NO. VIII ✦</div>
         <h1 className="ph-title">Contact Me</h1>
