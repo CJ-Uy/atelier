@@ -167,14 +167,15 @@ function SummoningCircle() {
       <div ref={wrapRef} style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', zIndex: 1 }}>
         <MagicCircle variant="summoning" size={circleSize}
           rotateSpeed={150} innerRotateSpeed={80}
-          reverseInner runes showCardinals
+          reverseInner runes
           style={{ color: INKC }} />
       </div>
 
-      {/* core monogram */}
-      <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', textAlign: 'center', pointerEvents: 'none', zIndex: 3 }}>
+      {/* core monogram — the disc is centred exactly on the ring's hub; the label
+          is floated out of flow below it so it can't pull the disc off-centre */}
+      <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: 102, height: 102, pointerEvents: 'none', zIndex: 3 }}>
         <div style={{
-          width: 102, height: 102, borderRadius: '50%', margin: '0 auto',
+          width: 102, height: 102, borderRadius: '50%',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: '#faf9f6',
           border: `1.5px solid ${charging ? VERMC : INKC}`,
@@ -183,7 +184,7 @@ function SummoningCircle() {
         }}>
           <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 27, color: INKC, letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>CJ-Uy</span>
         </div>
-        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 8.5, fontWeight: 700, letterSpacing: '0.3em', color: charging ? VERMC : '#888', marginTop: 11, textTransform: 'uppercase', transition: 'color 200ms ease' }}>
+        <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: 11, fontFamily: "'IBM Plex Mono', monospace", fontSize: 8.5, fontWeight: 700, letterSpacing: '0.3em', textIndent: '0.3em', color: charging ? VERMC : '#888', textTransform: 'uppercase', whiteSpace: 'nowrap', transition: 'color 200ms ease' }}>
           {charging ? 'channelling' : 'summon'}
         </div>
       </div>
@@ -199,7 +200,7 @@ function SummoningList() {
   return (
     <div style={{ maxWidth: 420, margin: '0 auto', width: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 34 }}>
-        <MagicCircle variant="summoning" size={180} rotateSpeed={150} innerRotateSpeed={80} reverseInner showCardinals style={{ color: INKC }} />
+        <MagicCircle variant="summoning" size={180} rotateSpeed={150} innerRotateSpeed={80} reverseInner style={{ color: INKC }} />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {CHANNELS.map((ch) => {
