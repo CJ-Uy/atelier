@@ -162,7 +162,7 @@
   const PLAN_BRIGHT = PLAN_STARS.reduce((bi, s, i, arr) => (s.mag > arr[bi].mag ? i : bi), 0);
   const PLAN_CONSTS = [[2, 9, 17, 23, 28], [5, 12, 19, 26, 33], [38, 41, 44, 46]];
   const PLAN_INCONST = new Set(PLAN_CONSTS.flat());
-  const PLAN_CARDS: [string, number][] = [['N', -Math.PI / 2], ['E', 0], ['S', Math.PI / 2], ['W', Math.PI]];
+  const PLAN_CARDS: [string, number][] = [['S', -Math.PI / 2], ['E', 0], ['N', Math.PI / 2], ['W', Math.PI]];
   function planStarXY(i: number): [number, number] {
     const s = PLAN_STARS[i];
     return P(Math.cos(s.a) * s.rr, Math.sin(s.a) * s.rr);

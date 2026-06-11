@@ -32,7 +32,7 @@ export const SECTIONS: Section[] = [
     tagline: 'PORTFOLIO / 00',
     stickers: [
       { text: '✦', x: -30, y: -20, rot: -14, size: 24, type: 'glyph', delay: 0.7 },
-      { text: 'EST 2006', x: 29, y: -22, rot: 8, size: 9, type: 'stamp', delay: 0.85, accent: true },
+      { text: 'EST 2005', x: 29, y: -22, rot: 8, size: 9, type: 'stamp', delay: 0.85, accent: true },
       { text: 'hello.', x: -31, y: 17, rot: 10, size: 13, type: 'sticker', delay: 1.0 },
     ],
   },
@@ -110,7 +110,7 @@ export const SECTIONS: Section[] = [
     stickers: [
       { text: '◇', x: -29, y: -19, rot: -8, size: 24, type: 'glyph', delay: 0.7 },
       { text: 'LEYTE PH', x: 28, y: -21, rot: 8, size: 9, type: 'stamp', delay: 0.85 },
-      { text: 'banig', x: -31, y: 17, rot: 6, size: 14, type: 'sticker', delay: 1.0 },
+      { text: 'Tacloban City', x: -31, y: 17, rot: 6, size: 14, type: 'sticker', delay: 1.0 },
     ],
   },
   {
