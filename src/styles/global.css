@@ -128,6 +128,87 @@ body:not(.page-home)::after {
   transition: opacity 300ms ease;
 }
 
+/* ── Shared page chrome (Works, Contact, Notes) ──────────────── */
+@keyframes cmFadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.wp-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 32px; mix-blend-mode: multiply;
+}
+.wp-brand {
+  font-family: 'Instrument Serif', Georgia, serif; font-style: italic;
+  font-size: 22px; color: #0a0a0a; text-decoration: none; letter-spacing: -0.02em;
+}
+.wp-links { display: flex; gap: 22px; align-items: center; }
+.wp-link {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase; color: #0a0a0a;
+  text-decoration: none; opacity: 0.5; transition: opacity 0.2s;
+}
+.wp-link:hover { opacity: 1; }
+.wp-link.active { opacity: 1; border-bottom: 1.5px solid #0a0a0a; padding-bottom: 2px; }
+
+.ph-header {
+  position: relative; z-index: 1; text-align: center;
+  max-width: 720px; margin: 0 auto; padding: 124px 32px 8px;
+  animation: cmFadeUp 700ms cubic-bezier(0.4,0,0.2,1) both;
+}
+.ph-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; letter-spacing: 0.34em; font-weight: 700;
+  opacity: 0.55; text-transform: uppercase; margin-bottom: 18px;
+}
+.ph-title {
+  font-family: 'Instrument Serif', Georgia, serif; font-weight: 400;
+  font-size: clamp(2.8rem, 6.5vw, 4.6rem); letter-spacing: -0.04em;
+  line-height: 0.98; margin-bottom: 20px; color: #0a0a0a;
+}
+.ph-sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: clamp(0.74rem, 1vw, 0.82rem); line-height: 1.65; color: #454545;
+  max-width: 52ch; margin: 0 auto; letter-spacing: 0.01em;
+}
+
+.cm-foot {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  padding: 24px 32px 40px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 0.24em; font-weight: 600; opacity: 0.5; text-transform: uppercase;
+}
+.cm-foot span:first-child,
+.cm-foot span:last-child { width: 30px; height: 1px; background: #0a0a0a; opacity: 0.5; display: inline-block; }
+
+/* ── Scroll progress hairline (home only) ─────────────────────── */
+.scroll-progress {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(220, 53, 34, 0.9);
+  transform: scaleX(0);
+  transform-origin: left;
+  z-index: 60;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* ── Reduced motion ───────────────────────────────────────────── */
+/* Decorative animation collapses to its end state; scroll-driven
+   morphs remain (user-initiated motion). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ── Selection ────────────────────────────────────────────────── */
 ::selection {
   background: var(--ink);

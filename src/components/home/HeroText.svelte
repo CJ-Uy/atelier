@@ -8,15 +8,22 @@
   let current: Section = $state(SECTIONS[0]);
   let exiting = $state(false);
   let animateIn = $state(false);
+  // First-load entrance: each nameplate line rises in sequence while the
+  // portrait develops on the grid. Cleared after the ritual settles (or on
+  // the first section change) so per-section transitions take over.
+  let intro = $state(true);
 
   onMount(() => {
     // Trigger initial pop-in
     setTimeout(() => { animateIn = true; }, 80);
+    const introTimer = setTimeout(() => { intro = false; }, 2600);
 
     window.addEventListener('atelier:section-change', (e) => {
       const { index } = (e as CustomEvent<{ index: number }>).detail;
       const next = SECTIONS[index];
       if (!next || next.id === current.id) return;
+      intro = false;
+      clearTimeout(introTimer);
       exiting = true;
       animateIn = false;
       setTimeout(() => {
@@ -43,6 +50,7 @@
 <!-- Nameplate — lower edge of viewport -->
 <div
   class="nameplate"
+  class:intro
   aria-live="polite"
   aria-atomic="true"
 >
@@ -68,6 +76,13 @@
 
   <!-- Subtitle (mono) -->
   <p class="subtitle" class:fade-out={exiting}>{current.subtitle}</p>
+
+  <!-- Mobile marginalia — the sticker field folds into an inline chip row -->
+  <div class="chip-row" class:visible={animateIn && !exiting} aria-hidden="true">
+    {#each current.stickers.filter((s) => s.type !== 'glyph') as s, i (current.id + '-chip-' + i)}
+      <span class="chip chip-{s.type}" class:chip-accent={s.accent}>{s.text}</span>
+    {/each}
+  </div>
 </div>
 
 <!-- Floating stickers around the card -->
@@ -142,16 +157,17 @@
     color: #6a6a68;
     margin: 14px 0 0;
     opacity: 1;
-    transition: opacity 200ms ease;
+    /* staggered re-entry: prefix settles just after the descriptor lands */
+    transition: opacity 220ms ease 60ms;
   }
-  .prefix.out { opacity: 0; }
+  .prefix.out { opacity: 0; transition-delay: 0ms; }
 
   /* ── Descriptor ────────────────────────────────────────────── */
   .descriptor-wrap { overflow: hidden; }
 
   .descriptor {
     font-family: 'Instrument Serif', Georgia, serif;
-    font-size: clamp(2.6rem, 6.4vw, 4.6rem);
+    font-size: clamp(2.8rem, 7vw, 5.1rem);
     font-weight: 400;
     color: var(--ink);
     letter-spacing: -0.038em;
@@ -189,9 +205,29 @@
     letter-spacing: 0.01em;
     line-height: 1.6;
     opacity: 0.92;
-    transition: opacity 250ms ease;
+    transform: translateY(0);
+    transition: opacity 250ms ease 90ms, transform 250ms ease 90ms;
   }
-  .subtitle.fade-out { opacity: 0; }
+  .subtitle.fade-out { opacity: 0; transform: translateY(6px); transition-delay: 0ms; }
+
+  /* ── First-load entrance — lines rise while the portrait develops ── */
+  .nameplate.intro .tagline,
+  .nameplate.intro .prefix,
+  .nameplate.intro .descriptor,
+  .nameplate.intro .subtitle,
+  .nameplate.intro .chip-row {
+    animation: heroRise 640ms cubic-bezier(0.2, 0, 0, 1) both;
+  }
+  .nameplate.intro .tagline    { --rise-o: 0.5;  animation-delay: 0.55s; }
+  .nameplate.intro .prefix     { --rise-o: 1;    animation-delay: 0.7s; }
+  .nameplate.intro .descriptor { --rise-o: 1;    animation-delay: 0.82s; }
+  .nameplate.intro .subtitle   { --rise-o: 0.92; animation-delay: 1s; }
+  .nameplate.intro .chip-row   { --rise-o: 1;    animation-delay: 1.15s; }
+
+  @keyframes heroRise {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: var(--rise-o, 1); transform: translateY(0); }
+  }
 
   /* ── Sticker field ─────────────────────────────────────────── */
   .sticker-field {
@@ -271,14 +307,68 @@
     box-shadow: 0 1px 0 rgba(10,10,10,0.85);
   }
 
+  /* ── Mobile chip row — hidden on desktop (sticker field covers it) ── */
+  .chip-row { display: none; }
+
   /* ── Mobile ────────────────────────────────────────────────── */
   @media (max-width: 640px) {
     .nameplate {
       width: 94vw;
       bottom: clamp(36px, 7vh, 64px);
     }
-    .descriptor { font-size: clamp(2rem, 9vw, 3rem); }
+    .descriptor { font-size: clamp(2.2rem, 10vw, 3.2rem); }
     .subtitle { font-size: 0.72rem; max-width: 34ch; }
     .sticker-field { display: none; }
+
+    /* Stickers fold into a centred chip row under the subtitle so mobile
+       keeps the desk-marginalia charm without absolute positioning. */
+    .chip-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+      opacity: 0;
+      transition: opacity 250ms ease 120ms;
+    }
+    .chip-row.visible { opacity: 1; }
+
+    .chip {
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      padding: 3px 8px;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    .chip-stamp {
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 600;
+      text-transform: uppercase;
+      border: 0.8px solid var(--ink);
+      background: rgba(250,249,246,0.96);
+    }
+    .chip-stamp.chip-accent {
+      color: var(--vermilion);
+      border-color: var(--vermilion);
+    }
+    .chip-tape {
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      background: rgba(245,238,220,0.85);
+      border-top: 0.5px solid rgba(10,10,10,0.25);
+      border-bottom: 0.5px solid rgba(10,10,10,0.25);
+    }
+    .chip-sticker {
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-style: italic;
+      font-size: 11px;
+      letter-spacing: 0.02em;
+      border: 0.8px solid var(--ink);
+      border-radius: 2px;
+      background: rgba(250,249,246,0.96);
+      box-shadow: 0 1px 0 rgba(10,10,10,0.85);
+    }
   }
 </style>

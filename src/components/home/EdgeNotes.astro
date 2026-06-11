@@ -1,0 +1,45 @@
+---
+// src/components/home/EdgeNotes.astro
+// Left-edge editorial marginalia — a vertical spine slug balancing the dot
+// indicator on the right. Name, Tacloban coordinates, year. Desktop only;
+// fades with the rest of the hero chrome as the outro scrolls in.
+---
+
+<div class="edge-notes" aria-hidden="true">
+  <span class="edge-slug">Atelier · C.&thinsp;J.&thinsp;Uy &mdash; 11&deg;14&prime;&thinsp;N &middot; 125&deg;00&prime;&thinsp;E &mdash; MMXXVI</span>
+</div>
+
+<style>
+  .edge-notes {
+    position: fixed;
+    left: 30px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 4;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .edge-slug {
+    display: block;
+    writing-mode: vertical-rl;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8.5px;
+    font-weight: 600;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--ink);
+    opacity: 0;
+    white-space: nowrap;
+    animation: edgeNotesIn 900ms ease 1.6s both;
+  }
+
+  @keyframes edgeNotesIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 0.35; transform: translateY(0); }
+  }
+
+  @media (max-width: 1023px) {
+    .edge-notes { display: none; }
+  }
+</style>

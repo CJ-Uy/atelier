@@ -93,6 +93,9 @@
 
   .indicator.active .indicator-label { color: var(--ink); }
 
+  /* Hover preview: whisper the destination before commitment */
+  .indicator:hover:not(.active) .indicator-label { color: var(--mute-1); }
+
   .indicator:focus-visible { outline: 2px solid var(--vermilion); outline-offset: 3px; border-radius: 2px; }
 
   @media (max-width: 640px) {

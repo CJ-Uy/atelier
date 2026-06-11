@@ -240,6 +240,7 @@ export default function ContactPage() {
         <div className="wp-links">
           <a href="/" className="wp-link">Home</a>
           <a href="/works" className="wp-link">Works</a>
+          <a href="/notes" className="wp-link">Notes</a>
           <a href="/contact" className="wp-link active">Contact</a>
         </div>
       </nav>
