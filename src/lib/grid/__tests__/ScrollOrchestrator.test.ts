@@ -18,6 +18,7 @@ const sections = (states: GridStateName[]) => states.map((gridState, id) => ({ i
 describe('ScrollOrchestrator', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    document.body.innerHTML = '';
     // Mock scroll-container for goToSection
     const mockContainer = document.createElement('div');
     mockContainer.className = 'scroll-container';
@@ -64,5 +65,83 @@ describe('ScrollOrchestrator', () => {
     // Simulate scroll event at position 0 (settled on section 0)
     container.dispatchEvent(new Event('scroll'));
     expect(eng.setCurrent).toHaveBeenCalledWith('graphPaper');
+  });
+
+  it('coalesces multiple scroll events into one progress update per frame', () => {
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', vi.fn((callback: FrameRequestCallback) => {
+      frames.push(callback);
+      return frames.length;
+    }));
+
+    const eng = mockEngine();
+    const requestRender = vi.fn();
+    const o = new ScrollOrchestrator(
+      eng as any,
+      sections(['graphPaper', 'keyboard']),
+      requestRender,
+    );
+    const container = document.createElement('div');
+    Object.defineProperty(container, 'clientHeight', { value: 800 });
+    Object.defineProperty(container, 'scrollTop', { value: 240, writable: true });
+    o.init(container);
+    eng.setProgress.mockClear();
+    requestRender.mockClear();
+
+    container.dispatchEvent(new Event('scroll'));
+    container.dispatchEvent(new Event('scroll'));
+    container.dispatchEvent(new Event('scroll'));
+
+    expect(eng.setProgress).not.toHaveBeenCalled();
+    frames.shift()?.(16);
+    expect(eng.setProgress).toHaveBeenCalledTimes(1);
+    expect(requestRender).toHaveBeenCalledTimes(1);
+  });
+
+  it('cancels a running snap when new wheel input arrives', () => {
+    vi.stubGlobal('requestAnimationFrame', vi.fn(() => 42));
+    vi.stubGlobal('cancelAnimationFrame', vi.fn());
+
+    const container = document.querySelector('.scroll-container') as HTMLElement;
+    Object.defineProperty(container, 'clientHeight', { value: 800 });
+    Object.defineProperty(container, 'scrollTop', { value: 120, writable: true });
+    const o = new ScrollOrchestrator(
+      mockEngine() as any,
+      sections(['graphPaper', 'keyboard']),
+    );
+    o.init(container);
+    o.goToSection(1);
+
+    container.dispatchEvent(new WheelEvent('wheel'));
+
+    expect(cancelAnimationFrame).toHaveBeenCalledWith(42);
+  });
+
+  it('waits through brief trackpad pauses before starting a snap', () => {
+    vi.useFakeTimers();
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', vi.fn((callback: FrameRequestCallback) => {
+      frames.push(callback);
+      return frames.length;
+    }));
+
+    const container = document.createElement('div');
+    Object.defineProperty(container, 'clientHeight', { value: 800 });
+    Object.defineProperty(container, 'scrollTop', { value: 240, writable: true });
+    const o = new ScrollOrchestrator(
+      mockEngine() as any,
+      sections(['graphPaper', 'keyboard']),
+    );
+    o.init(container);
+    container.dispatchEvent(new Event('scroll'));
+    frames.shift()?.(16);
+    vi.mocked(requestAnimationFrame).mockClear();
+
+    vi.advanceTimersByTime(150);
+    expect(requestAnimationFrame).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(30);
+    expect(requestAnimationFrame).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
   });
 });

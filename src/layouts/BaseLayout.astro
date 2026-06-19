@@ -96,32 +96,38 @@ const {
     <!-- Grid engine bootstrap: home only (canvas doesn't exist on other pages) -->
     <script>
       import { GridEngine } from '../lib/grid/GridEngine';
-      import { AmbientAnimation } from '../lib/grid/AmbientAnimation';
+      import { RenderScheduler } from '../lib/grid/RenderScheduler';
+      import { readRenderEnvironment, selectRenderQuality } from '../lib/grid/RenderQuality';
       import { ScrollOrchestrator } from '../lib/grid/ScrollOrchestrator';
       import { SECTIONS } from '../components/home/sections';
 
       const canvas = document.getElementById('grid-canvas') as HTMLCanvasElement;
       if (canvas) {
-        const engine = new GridEngine(canvas);
-        const ambient = new AmbientAnimation(engine);
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-        if (reduceMotion) {
-          // Freeze the time uniform (no idle drift) but keep rendering so the
-          // scroll-driven morph — user-initiated motion — still works.
-          const renderStill = () => { engine.render(); requestAnimationFrame(renderStill); };
-          requestAnimationFrame(renderStill);
-        } else {
-          ambient.start();
-        }
+        const quality = selectRenderQuality(readRenderEnvironment());
+        document.documentElement.dataset.renderQuality = quality.name;
+        const engine = new GridEngine(canvas, quality);
+        let animationStart = 0;
+        const scheduler = new RenderScheduler((timestamp) => {
+          if (!animationStart) animationStart = timestamp;
+          engine.setTime((timestamp - animationStart) / 1000);
+          engine.render();
+        }, {
+          idleFps: quality.idleFps,
+          decorativeMotion: engine.hasActiveDecorations() && !reduceMotion,
+        });
+        scheduler.start();
+        scheduler.requestRender();
 
         const scrollContainer = document.querySelector('.scroll-container') as HTMLElement | null;
+        let orchestrator: ScrollOrchestrator | null = null;
         if (scrollContainer) {
-          const orchestrator = new ScrollOrchestrator(engine, SECTIONS);
+          orchestrator = new ScrollOrchestrator(engine, SECTIONS, () => scheduler.requestRender());
 
           window.addEventListener('atelier:jump-to-section', (e) => {
             const detail = (e as CustomEvent<{ index: number }>).detail;
-            orchestrator.goToSection(detail.index);
+            if (!ritualDone) abortRitual();
+            orchestrator?.goToSection(detail.index);
           });
 
           // ── Opening ritual: the dot grid develops Charles's portrait, then
@@ -137,6 +143,7 @@ const {
             ritualDone = true;
             engine.setCurrent('face');
             engine.setProgress(0);
+            scheduler.requestRender();
             orchestrator.init(scrollContainer);
           }
 
@@ -151,6 +158,7 @@ const {
             // Promote face → current so the scroll morph starts from the portrait.
             engine.setCurrent('face');
             engine.setProgress(0);
+            scheduler.requestRender();
             orchestrator.init(scrollContainer!);
           }
 
@@ -235,6 +243,7 @@ const {
               if (scrollContainer!.scrollTop > 2) { abortRitual(); return; }
               const t = Math.min((now - t0) / dur, 1);
               engine.setProgress(ease(t));
+              scheduler.requestRender();
               if (t < 1) ritualRaf = requestAnimationFrame(step);
               else finishRitual();
             };
@@ -242,12 +251,21 @@ const {
           }
         }
 
-        document.addEventListener('pointermove', (e) => {
-          engine.setCursorPx(e.clientX, e.clientY);
-        }, { passive: true });
-        document.addEventListener('pointerleave', () => {
-          engine.setCursorInactive();
-        });
+        const onVisibilityChange = () => {
+          scheduler.setVisible(document.visibilityState !== 'hidden');
+        };
+        const onResize = () => scheduler.requestRender();
+        const cleanup = () => {
+          scheduler.destroy();
+          orchestrator?.destroy();
+          engine.destroy();
+          document.removeEventListener('visibilitychange', onVisibilityChange);
+          window.removeEventListener('resize', onResize);
+          window.removeEventListener('pagehide', cleanup);
+        };
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        window.addEventListener('resize', onResize, { passive: true });
+        window.addEventListener('pagehide', cleanup, { once: true });
       }
     </script>
   </body>
