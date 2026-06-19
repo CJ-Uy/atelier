@@ -1,0 +1,342 @@
+{
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\.remember\\tmp\\last-ndc.ts": {
+    "mtime": 1781150268.6754723,
+    "ast_hash": "bf89bf95ea476bcb90bdb0277e10db34",
+    "semantic_hash": "bf89bf95ea476bcb90bdb0277e10db34"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\.remember\\tmp\\last-save.json": {
+    "mtime": 1781150891.7345364,
+    "ast_hash": "25d0526a3f2503152629f8eb01594c5a",
+    "semantic_hash": "25d0526a3f2503152629f8eb01594c5a"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\.vscode\\extensions.json": {
+    "mtime": 1775164660.6547296,
+    "ast_hash": "e5a927efb2016222b8d8f64633c9a2f5",
+    "semantic_hash": "e5a927efb2016222b8d8f64633c9a2f5"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\.vscode\\launch.json": {
+    "mtime": 1775164660.6547296,
+    "ast_hash": "d26641d94ca7dab52420c3253b85a263",
+    "semantic_hash": "d26641d94ca7dab52420c3253b85a263"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\astro.config.mjs": {
+    "mtime": 1775365558.3857017,
+    "ast_hash": "6e167cb3ede3c86bc6316d51fb254667",
+    "semantic_hash": "6e167cb3ede3c86bc6316d51fb254667"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\package.json": {
+    "mtime": 1780211162.826366,
+    "ast_hash": "87f2e4c7d9973e98620a67463e38c8a1",
+    "semantic_hash": "87f2e4c7d9973e98620a67463e38c8a1"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\playwright.config.ts": {
+    "mtime": 1775365832.7626078,
+    "ast_hash": "145555731ea081f8f96996d71c9889fd",
+    "semantic_hash": "145555731ea081f8f96996d71c9889fd"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\public\\face-data.js": {
+    "mtime": 1780214168.5287404,
+    "ast_hash": "9bd81437207f573d22f9d4ed8c609bc9",
+    "semantic_hash": "9bd81437207f573d22f9d4ed8c609bc9"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\components\\contact\\ContactPage.tsx": {
+    "mtime": 1781151070.807366,
+    "ast_hash": "ce64fd4b770a31e1a8f59dcf761f593d",
+    "semantic_hash": "ce64fd4b770a31e1a8f59dcf761f593d"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\components\\contact\\ContactPage.vue": {
+    "mtime": 1780211834.2660637,
+    "ast_hash": "041232b1226b8462a3c24817208608cc",
+    "semantic_hash": "041232b1226b8462a3c24817208608cc"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\components\\home\\CornerMarks.astro": {
+    "mtime": 1780216398.9668612,
+    "ast_hash": "bd144d6448cb6076578a89f9e9f7862f",
+    "semantic_hash": "bd144d6448cb6076578a89f9e9f7862f"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\components\\home\\DotIndicator.svelte": {
+    "mtime": 1781151839.8910763,
+    "ast_hash": "e62da8eb67745c07722d1e7c2764d752",
+    "semantic_hash": "e62da8eb67745c07722d1e7c2764d752"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\components\\home\\EdgeNotes.astro": {
+    "mtime": 1781151660.2295742,
+    "ast_hash": "0b0011c3e0fa702b4a2dea61437e84d1",
+    "semantic_hash": "0b0011c3e0fa702b4a2dea61437e84d1"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\components\\home\\FacetDiagram.svelte": {
+    "mtime": 1781853451.2112806,
+    "ast_hash": "7821c970c2e62587fb3cd098230a6d2f",
+    "semantic_hash": "7821c970c2e62587fb3cd098230a6d2f"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\components\\home\\HeroText.svelte": {
+    "mtime": 1781853451.8998487,
+    "ast_hash": "4e649900193eef1494cc56fba7a60633",
+    "semantic_hash": "4e649900193eef1494cc56fba7a60633"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\components\\home\\HomeOutro.svelte": {
+    "mtime": 1781151897.057309,
+    "ast_hash": "f044a5bb5fa8ebfb072cac2aa85899ad",
+    "semantic_hash": "f044a5bb5fa8ebfb072cac2aa85899ad"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\components\\home\\ScrollHint.svelte": {
+    "mtime": 1781151814.8361452,
+    "ast_hash": "13648edb599c3c1d46224158dae4f5d2",
+    "semantic_hash": "13648edb599c3c1d46224158dae4f5d2"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\components\\home\\__tests__\\sections.test.ts": {
+    "mtime": 1780239485.223357,
+    "ast_hash": "9674719e9b2f811a8be2b57ddbe41fa3",
+    "semantic_hash": "9674719e9b2f811a8be2b57ddbe41fa3"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\components\\home\\sections.ts": {
+    "mtime": 1781150517.919573,
+    "ast_hash": "b2e24fa4cc33183f408e76892345c5f8",
+    "semantic_hash": "b2e24fa4cc33183f408e76892345c5f8"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\components\\notes\\NotesIndex.vue": {
+    "mtime": 1781151078.3120232,
+    "ast_hash": "77d807a301326ec9b8938e5076ef9a32",
+    "semantic_hash": "77d807a301326ec9b8938e5076ef9a32"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\components\\shared\\MagicCircle.tsx": {
+    "mtime": 1780453552.5902472,
+    "ast_hash": "3dd8a2f20f04368a10d398f2e1c3a92d",
+    "semantic_hash": "3dd8a2f20f04368a10d398f2e1c3a92d"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\components\\shared\\Navbar.astro": {
+    "mtime": 1781151920.8702524,
+    "ast_hash": "3f392465a8d8a6d426b5bff292a1d82c",
+    "semantic_hash": "3f392465a8d8a6d426b5bff292a1d82c"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\components\\shared\\ThemeToggle.svelte": {
+    "mtime": 1775411296.2375858,
+    "ast_hash": "f07c2fcd7ab05c011f5205c9faca279a",
+    "semantic_hash": "f07c2fcd7ab05c011f5205c9faca279a"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\components\\works\\MangaGrid.svelte": {
+    "mtime": 1775953965.0683076,
+    "ast_hash": "b792904de988b5b53146fe98d14ae560",
+    "semantic_hash": "b792904de988b5b53146fe98d14ae560"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\components\\works\\WorksPage.tsx": {
+    "mtime": 1781151064.4591136,
+    "ast_hash": "8b146a233a94907b1d32f57798c38cac",
+    "semantic_hash": "8b146a233a94907b1d32f57798c38cac"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\content.config.ts": {
+    "mtime": 1781150851.6706166,
+    "ast_hash": "3846042e3c4258f197574405c7c1b424",
+    "semantic_hash": "3846042e3c4258f197574405c7c1b424"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\env.d.ts": {
+    "mtime": 1780213769.4430983,
+    "ast_hash": "79c26ea9fb1674d7ac576732948a3e4d",
+    "semantic_hash": "79c26ea9fb1674d7ac576732948a3e4d"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\layouts\\BaseLayout.astro": {
+    "mtime": 1781854023.2073324,
+    "ast_hash": "beb0c002eb9e74547aa262b1801e05d7",
+    "semantic_hash": "beb0c002eb9e74547aa262b1801e05d7"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\layouts\\Layout.astro": {
+    "mtime": 1775164660.6586246,
+    "ast_hash": "f05bb1361a075965c3a5c0f30af20ce5",
+    "semantic_hash": "f05bb1361a075965c3a5c0f30af20ce5"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\lib\\grid\\AmbientAnimation.ts": {
+    "mtime": 1775366637.247519,
+    "ast_hash": "454813c5c7fee77c62116270a9183521",
+    "semantic_hash": "454813c5c7fee77c62116270a9183521"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\lib\\grid\\GridEngine.ts": {
+    "mtime": 1781853337.0989714,
+    "ast_hash": "8cc597f0bddb80c34da46c81256b7c34",
+    "semantic_hash": "8cc597f0bddb80c34da46c81256b7c34"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\lib\\grid\\GridStates.ts": {
+    "mtime": 1780451882.3785038,
+    "ast_hash": "a43232edfad0d147f1ca66dee99e86c8",
+    "semantic_hash": "a43232edfad0d147f1ca66dee99e86c8"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\lib\\grid\\ScrollOrchestrator.ts": {
+    "mtime": 1781854097.8950577,
+    "ast_hash": "f8ed83e24b2482c1aa57cc555ccfd7eb",
+    "semantic_hash": "f8ed83e24b2482c1aa57cc555ccfd7eb"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\lib\\grid\\__tests__\\GridStates.test.ts": {
+    "mtime": 1780239477.59151,
+    "ast_hash": "4c7df3b108fdd3bbebcb753a461f60f0",
+    "semantic_hash": "4c7df3b108fdd3bbebcb753a461f60f0"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\lib\\grid\\__tests__\\ScrollOrchestrator.test.ts": {
+    "mtime": 1781854082.7420113,
+    "ast_hash": "d7aa7bb3c5aaf43647524ad28f4a8c7a",
+    "semantic_hash": "d7aa7bb3c5aaf43647524ad28f4a8c7a"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\lib\\grid\\types.ts": {
+    "mtime": 1780214175.5286865,
+    "ast_hash": "708f48f81d939c1ba359ddb1a22d6a77",
+    "semantic_hash": "708f48f81d939c1ba359ddb1a22d6a77"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\pages\\contact.astro": {
+    "mtime": 1780213012.0279672,
+    "ast_hash": "10db839fb41e4b3f67c3420e6b17a712",
+    "semantic_hash": "10db839fb41e4b3f67c3420e6b17a712"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\pages\\index.astro": {
+    "mtime": 1775954014.2417996,
+    "ast_hash": "7c30c55295d342fc7b8f3eff40167a70",
+    "semantic_hash": "7c30c55295d342fc7b8f3eff40167a70"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\pages\\notes\\[...slug].astro": {
+    "mtime": 1781151008.863448,
+    "ast_hash": "56287b0d08b880256f25c679e573482f",
+    "semantic_hash": "56287b0d08b880256f25c679e573482f"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\pages\\notes\\index.astro": {
+    "mtime": 1781151084.7769954,
+    "ast_hash": "0c2a434df15978b3a77fe9e93472f8ad",
+    "semantic_hash": "0c2a434df15978b3a77fe9e93472f8ad"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\pages\\works.astro": {
+    "mtime": 1780212755.4032505,
+    "ast_hash": "d01295c3080b781ed29eb1f666744f62",
+    "semantic_hash": "d01295c3080b781ed29eb1f666744f62"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\tests\\homepage.spec.ts": {
+    "mtime": 1781853472.6646519,
+    "ast_hash": "852e565fbf4695e9405d116bb354f6e0",
+    "semantic_hash": "852e565fbf4695e9405d116bb354f6e0"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\tsconfig.json": {
+    "mtime": 1775164660.6586246,
+    "ast_hash": "03aee21f84633e7034530dea313f4710",
+    "semantic_hash": "03aee21f84633e7034530dea313f4710"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\vitest.config.ts": {
+    "mtime": 1775365898.789773,
+    "ast_hash": "42c0b5c5bac2d52099fdd851b0440b9d",
+    "semantic_hash": "42c0b5c5bac2d52099fdd851b0440b9d"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\.remember\\archive.md": {
+    "mtime": 1781150272.6434805,
+    "ast_hash": "90e73df067265acb3ec128a91e8cfa81",
+    "semantic_hash": "90e73df067265acb3ec128a91e8cfa81"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\.remember\\now.md": {
+    "mtime": 1781150891.1437807,
+    "ast_hash": "824a8bf235d6505d3f9901d0c20d0f5a",
+    "semantic_hash": "824a8bf235d6505d3f9901d0c20d0f5a"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\.remember\\recent.md": {
+    "mtime": 1781150272.5808036,
+    "ast_hash": "698b78c153e2741ec1ade1a61884e2ee",
+    "semantic_hash": "698b78c153e2741ec1ade1a61884e2ee"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\.remember\\today-2026-05-31.done.md": {
+    "mtime": 1780234253.6414752,
+    "ast_hash": "4f7a8c06a4f649b2b41bf0838930ba4a",
+    "semantic_hash": "4f7a8c06a4f649b2b41bf0838930ba4a"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\.remember\\today-2026-06-03.done.md": {
+    "mtime": 1780454833.0691903,
+    "ast_hash": "58482c3f30fd891f7c36d24fc5ec11d4",
+    "semantic_hash": "58482c3f30fd891f7c36d24fc5ec11d4"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\.remember\\today-2026-06-11.md": {
+    "mtime": 1781150296.761404,
+    "ast_hash": "3f5a38cdee86334a10b1c6e94f2c5508",
+    "semantic_hash": "3f5a38cdee86334a10b1c6e94f2c5508"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\DESIGN.md": {
+    "mtime": 1780211533.5202658,
+    "ast_hash": "992b72cc587a32b7a5cbb7aec92549f6",
+    "semantic_hash": "992b72cc587a32b7a5cbb7aec92549f6"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\README.md": {
+    "mtime": 1781853510.0325618,
+    "ast_hash": "2f6cbc6c2a56008bbd48f852dafc0215",
+    "semantic_hash": "2f6cbc6c2a56008bbd48f852dafc0215"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\content\\notes\\on-building-with-constraints.md": {
+    "mtime": 1781150875.100891,
+    "ast_hash": "ba83d653ebfc1fe9b7a5ebdbf511999f",
+    "semantic_hash": "ba83d653ebfc1fe9b7a5ebdbf511999f"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\content\\notes\\the-grid-engine.md": {
+    "mtime": 1781150896.245879,
+    "ast_hash": "06fb3773fa29330d9d22ea6d906419c6",
+    "semantic_hash": "06fb3773fa29330d9d22ea6d906419c6"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\content\\notes\\three-frameworks-one-site.md": {
+    "mtime": 1781150916.7797916,
+    "ast_hash": "3c1044a83f87dc9afbf2956a5770fa8c",
+    "semantic_hash": "3c1044a83f87dc9afbf2956a5770fa8c"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\public\\favicon.svg": {
+    "mtime": 1775164660.656067,
+    "ast_hash": "2e60239ba96db0b94a6fedcc58e5631d",
+    "semantic_hash": "2e60239ba96db0b94a6fedcc58e5631d"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\assets\\astro.svg": {
+    "mtime": 1775164660.656067,
+    "ast_hash": "52d6644f37c036af02fc51ed974a854f",
+    "semantic_hash": "52d6644f37c036af02fc51ed974a854f"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\assets\\background.svg": {
+    "mtime": 1775164660.6581213,
+    "ast_hash": "27cb9c71fce88811e19cc29cf6386543",
+    "semantic_hash": "27cb9c71fce88811e19cc29cf6386543"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\lib\\grid\\RenderQuality.ts": {
+    "mtime": 1781853237.152229,
+    "ast_hash": "84afbeb57bf7997cabce227ff52ce4fc",
+    "semantic_hash": "84afbeb57bf7997cabce227ff52ce4fc"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\lib\\grid\\RenderScheduler.ts": {
+    "mtime": 1781853237.8630636,
+    "ast_hash": "52d5bd3f222892a7905270d1038e537a",
+    "semantic_hash": "52d5bd3f222892a7905270d1038e537a"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\lib\\grid\\__tests__\\GridEngine.test.ts": {
+    "mtime": 1781853263.0430126,
+    "ast_hash": "bf58ab5cd85c0eec6c8a9bd73b072fbe",
+    "semantic_hash": "bf58ab5cd85c0eec6c8a9bd73b072fbe"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\lib\\grid\\__tests__\\RenderQuality.test.ts": {
+    "mtime": 1781853199.865112,
+    "ast_hash": "fd9c47ac31ae96e5a569920970ede6b3",
+    "semantic_hash": "fd9c47ac31ae96e5a569920970ede6b3"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\src\\lib\\grid\\__tests__\\RenderScheduler.test.ts": {
+    "mtime": 1781853200.5526621,
+    "ast_hash": "2197fb4918eddcde7168665a007d7ee5",
+    "semantic_hash": "2197fb4918eddcde7168665a007d7ee5"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\test-results\\.last-run.json": {
+    "mtime": 1781854056.517596,
+    "ast_hash": "f196824657d8858bc7fa44eecbba38b1",
+    "semantic_hash": "f196824657d8858bc7fa44eecbba38b1"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\AGENTS.md": {
+    "mtime": 1781852694.4795952,
+    "ast_hash": "95533a7b976314669a242e75d3d1c228",
+    "semantic_hash": "95533a7b976314669a242e75d3d1c228"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\docs\\superpowers\\plans\\2026-06-19-homepage-performance.md": {
+    "mtime": 1781852697.019824,
+    "ast_hash": "3fa9eca910b5420a4dab07e025a631c7",
+    "semantic_hash": "3fa9eca910b5420a4dab07e025a631c7"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\docs\\superpowers\\specs\\2026-06-19-homepage-performance-design.md": {
+    "mtime": 1781852695.754083,
+    "ast_hash": "ec386ab7638bb9fb7d8619d3ddaefcab",
+    "semantic_hash": "ec386ab7638bb9fb7d8619d3ddaefcab"
+  },
+  "C:\\Users\\charl\\Documents\\GitHub\\atelier\\playwright-report\\index.html": {
+    "mtime": 1781854056.5165966,
+    "ast_hash": "b3ab61e655c100089342ebbef6a4e6d1",
+    "semantic_hash": "b3ab61e655c100089342ebbef6a4e6d1"
+  }
+}

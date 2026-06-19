@@ -20,13 +20,13 @@ test.describe('Homepage', () => {
     await expect(h1).toContainText('Charles', { timeout: 5000 });
   });
 
-  test('renders exactly 13 dot buttons', async ({ page }) => {
-    const dots = page.locator('nav[aria-label="Section navigation"] .dot');
-    await expect(dots).toHaveCount(13);
+  test('renders exactly 8 section indicators', async ({ page }) => {
+    const indicators = page.locator('nav[aria-label="Section navigation"] .indicator');
+    await expect(indicators).toHaveCount(8);
   });
 
-  test('first dot is active', async ({ page }) => {
-    const first = page.locator('.dot').first();
+  test('first section indicator is active', async ({ page }) => {
+    const first = page.locator('.indicator').first();
     await expect(first).toHaveClass(/active/);
   });
 
@@ -36,28 +36,33 @@ test.describe('Homepage', () => {
     await expect(nav).toContainText('atelier');
   });
 
-  test('theme toggle switches data-theme to light', async ({ page }) => {
-    const html = page.locator('html');
-    await expect(html).toHaveAttribute('data-theme', 'dark');
-    const toggle = page.locator('button[aria-label*="mode"]');
-    await toggle.click();
-    await expect(html).toHaveAttribute('data-theme', 'light');
+  test('publishes the selected render quality for diagnostics', async ({ page }) => {
+    await expect(page.locator('html')).toHaveAttribute(
+      'data-render-quality',
+      /^(high|balanced|economy)$/,
+    );
   });
 
-  test('clicking second dot updates active state', async ({ page }) => {
-    const second = page.locator('.dot').nth(1);
+  test('clicking second indicator updates active state', async ({ page }) => {
+    const second = page.locator('.indicator').nth(1);
     await second.click();
     await page.waitForTimeout(500);
     await expect(second).toHaveClass(/active/);
   });
 
-  test('scroll container has 13 section children', async ({ page }) => {
+  test('scroll container has 8 section children', async ({ page }) => {
     const sections = page.locator('.scroll-container .scroll-section');
-    await expect(sections).toHaveCount(13);
+    await expect(sections).toHaveCount(8);
   });
 
   test('meta description is set', async ({ page }) => {
     const meta = page.locator('meta[name="description"]');
     await expect(meta).toHaveAttribute('content', /Portfolio of Charles/);
   });
+});
+
+test('reduced motion selects economy rendering', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await expect(page.locator('html')).toHaveAttribute('data-render-quality', 'economy');
 });

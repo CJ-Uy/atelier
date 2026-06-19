@@ -260,6 +260,10 @@
     50%       { transform: translate(var(--baseX), var(--baseY)) rotate(calc(var(--baseRot) + 2deg)) translateY(-6px); }
   }
 
+  :global(html[data-render-quality='economy']) .sticker {
+    animation: stickerPop 0.4s cubic-bezier(0.5,0,0.2,1.2) both;
+  }
+
   /* ── Glyph sticker ─────────────────────────────────────────── */
   .sticker-glyph {
     font-family: 'Instrument Serif', Georgia, serif;

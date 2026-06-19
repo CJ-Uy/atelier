@@ -1,46 +1,65 @@
-# Astro Starter Kit: Basics
+# Atelier
+
+Charles's personal portfolio: an editorial ink-on-paper site built around a
+Canvas 2D grid that transforms into a portrait, web, planisphere, waveform,
+banig weave, blueprint, and other identity facets.
+
+## Stack
+
+- Astro 6 with the Cloudflare Workers adapter
+- Svelte for the scroll-driven home experience
+- React for Works and Contact
+- Vue for Notes and a retained contact experiment
+- Tailwind CSS 4
+- Vitest and Playwright
+
+The multi-framework setup is intentional. Astro supplies the shared shell and
+hydrates each interactive surface as an isolated client island.
+
+## Development
+
+Requires Node 22.12 or newer and pnpm.
 
 ```sh
-pnpm create astro@latest -- --template basics
+pnpm install
+pnpm dev
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+The local site runs at `http://localhost:4321`.
 
-## 🚀 Project Structure
+## Verification
 
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
+```sh
+pnpm test
+pnpm test:e2e
+pnpm build
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+The Cloudflare adapter uses Wrangler during development and builds. It needs
+write access to Wrangler's user-level log and registry directories.
 
-## 🧞 Commands
+## Homepage Architecture
 
-All commands are run from the root of the project, from a terminal:
+The homepage pipeline lives in `src/lib/grid`:
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`             | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
+- `GridStates.ts` generates the fixed 56 by 40 geometry states.
+- `GridEngine.ts` interpolates and renders them with Canvas 2D.
+- `RenderQuality.ts` chooses adaptive fidelity from hardware and motion hints.
+- `RenderScheduler.ts` owns demand-driven and idle canvas frames.
+- `ScrollOrchestrator.ts` maps scrolling to morph progress and section events.
 
-## 👀 Want to learn more?
+`src/layouts/BaseLayout.astro` wires that runtime to the Svelte hero,
+annotations, section controls, and closing band.
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Do not change the grid dimensions without regenerating
+`public/face-data.js`, which contains portrait data for exactly 57 by 41
+vertices.
+
+See [DESIGN.md](DESIGN.md) for the visual system and [AGENTS.md](AGENTS.md) for
+the implementation guide.
+
+## Graphify
+
+The structural code graph is generated in `graphify-out/`. Open
+`graphify-out/graph.html` for the interactive view or read
+`graphify-out/GRAPH_REPORT.md` for the architecture summary.

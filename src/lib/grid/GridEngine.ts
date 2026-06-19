@@ -14,30 +14,21 @@
 
 import type { GridStateName, GridState } from './types';
 import { getGridState, graphPaper } from './GridStates';
+import type { RenderQualityProfile } from './RenderQuality';
 
 export const COLS = 56;
 export const ROWS = 40;
 
-// ── Point representation ─────────────────────────────────────────
+const ALPHA_BUCKETS = 6;
 
-interface Pt { x: number; y: number; a: number; }
-
-function toPoints(state: GridState): Pt[] {
-  const n = state.alphas.length;
-  const pts: Pt[] = new Array(n);
-  for (let i = 0; i < n; i++) {
-    pts[i] = { x: state.positions[i * 2], y: state.positions[i * 2 + 1], a: state.alphas[i] };
-  }
-  return pts;
-}
-
-function lerpPoints(from: Pt[], to: Pt[], t: number): Pt[] {
-  return from.map((f, i) => ({
-    x: f.x + (to[i].x - f.x) * t,
-    y: f.y + (to[i].y - f.y) * t,
-    a: f.a + (to[i].a - f.a) * t,
-  }));
-}
+const DEFAULT_QUALITY: RenderQualityProfile = {
+  name: 'balanced',
+  dprCap: 1.35,
+  idleFps: 30,
+  sparkleCount: 14,
+  wobbleAmplitude: 0.0012,
+  motionPulse: true,
+};
 
 // ── Sparkle particles ─────────────────────────────────────────────
 
@@ -86,8 +77,12 @@ export class GridEngine {
   private ctx: CanvasRenderingContext2D;
   private ro: ResizeObserver;
 
-  private currentPts: Pt[];
-  private targetPts: Pt[];
+  private currentState: GridState;
+  private targetState: GridState;
+  private screenX: Float32Array;
+  private screenY: Float32Array;
+  private screenAlpha: Float32Array;
+  private quality: RenderQualityProfile;
 
   private progress = 0;
   private time = 0;
@@ -107,53 +102,45 @@ export class GridEngine {
   private gridOpacity = 0.55;
   private lineWeight = 0.8;
   private showPoints = true;
-  private sparklesEnabled = true;
-  private motionPulse = true;
-
-  private rafId: number | null = null;
-
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, quality: RenderQualityProfile = DEFAULT_QUALITY) {
     this.canvas = canvas;
+    this.quality = quality;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('[GridEngine] Canvas 2D not supported');
     this.ctx = ctx;
 
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = canvas.clientWidth * dpr;
-    canvas.height = canvas.clientHeight * dpr;
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.resizeCanvas();
 
     this.ro = new ResizeObserver(() => {
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = canvas.clientWidth * dpr;
-      canvas.height = canvas.clientHeight * dpr;
-      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      this.resizeCanvas();
     });
     this.ro.observe(canvas);
 
-    const base = toPoints(graphPaper(COLS, ROWS));
-    this.currentPts = base;
-    this.targetPts = [...base];
+    const base = graphPaper(COLS, ROWS);
+    this.currentState = base;
+    this.targetState = base;
+    const pointCount = base.alphas.length;
+    this.screenX = new Float32Array(pointCount);
+    this.screenY = new Float32Array(pointCount);
+    this.screenAlpha = new Float32Array(pointCount);
   }
 
   // ── Public API (same surface as old WebGL engine) ──────────────
 
   setTarget(name: GridStateName): void {
-    const prev = this.targetPts;
-    this.targetPts = toPoints(getGridState(name, COLS, ROWS));
+    this.targetState = getGridState(name, COLS, ROWS);
     // Trigger pulse if we were settled
     if (Math.abs(this.progress - 1) < 0.02 || Math.abs(this.progress) < 0.02) {
       this._triggerPulse();
     }
-    void prev;
   }
 
   setCurrent(name: GridStateName): void {
-    this.currentPts = toPoints(getGridState(name, COLS, ROWS));
+    this.currentState = getGridState(name, COLS, ROWS);
   }
 
   promoteTargetToCurrent(): void {
-    this.currentPts = [...this.targetPts];
+    this.currentState = this.targetState;
   }
 
   setProgress(v: number): void {
@@ -174,6 +161,12 @@ export class GridEngine {
 
   render(): void { this._draw(); }
 
+  hasActiveDecorations(): boolean {
+    return this.quality.wobbleAmplitude > 0
+      || this.quality.sparkleCount > 0
+      || this.quality.motionPulse;
+  }
+
   // Backwards compat aliases
   setTargetState(name: GridStateName): void { this.setTarget(name); }
   setCurrentState(name: GridStateName): void { this.setCurrent(name); }
@@ -184,17 +177,26 @@ export class GridEngine {
   }
 
   destroy(): void {
-    if (this.rafId !== null) cancelAnimationFrame(this.rafId);
     this.ro.disconnect();
   }
 
   // ── Internal ───────────────────────────────────────────────────
 
   private _triggerPulse(): void {
+    if (!this.quality.motionPulse) return;
     const w = this.canvas.clientWidth, h = this.canvas.clientHeight;
     this.pulseStart = performance.now();
     this.pulseX = w / 2;
     this.pulseY = h / 2;
+  }
+
+  private resizeCanvas(): void {
+    const dpr = Math.min(window.devicePixelRatio || 1, this.quality.dprCap);
+    const width = Math.max(1, Math.round(this.canvas.clientWidth * dpr));
+    const height = Math.max(1, Math.round(this.canvas.clientHeight * dpr));
+    if (this.canvas.width !== width) this.canvas.width = width;
+    if (this.canvas.height !== height) this.canvas.height = height;
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
   private _draw(): void {
@@ -213,58 +215,79 @@ export class GridEngine {
     const fadeMul = introEased;
 
     const prog = this.progress;
-    const pts = lerpPoints(this.currentPts, this.targetPts, prog);
     const cx = w / 2, cy = h / 2;
     const scale = Math.min(w, h) * 0.48;
 
-    // ── Screen-space points with idle wobble only ──
-    const screenPts = pts.map((p) => {
-      const wobX = Math.sin(time * 0.8 + p.x * 3.14159) * 0.002;
-      const wobY = Math.sin(time * 0.6 + p.y * 3.14159 + 1.5708) * 0.002;
-      const sx = cx + (p.x + wobX) * scale;
-      const sy = cy - (p.y + wobY) * scale;
-      return { sx, sy, a: p.a };
-    });
+    // Reuse typed buffers so the hot loop creates no point objects or arrays.
+    const currentPositions = this.currentState.positions;
+    const targetPositions = this.targetState.positions;
+    const currentAlphas = this.currentState.alphas;
+    const targetAlphas = this.targetState.alphas;
+    const wobble = this.quality.wobbleAmplitude;
+    for (let i = 0; i < this.screenAlpha.length; i++) {
+      const pi = i * 2;
+      const x = currentPositions[pi] + (targetPositions[pi] - currentPositions[pi]) * prog;
+      const y = currentPositions[pi + 1] + (targetPositions[pi + 1] - currentPositions[pi + 1]) * prog;
+      const wobX = wobble > 0 ? Math.sin(time * 0.8 + x * Math.PI) * wobble : 0;
+      const wobY = wobble > 0 ? Math.sin(time * 0.6 + y * Math.PI + Math.PI / 2) * wobble : 0;
+      this.screenX[i] = cx + (x + wobX) * scale;
+      this.screenY[i] = cy - (y + wobY) * scale;
+      this.screenAlpha[i] = currentAlphas[i] + (targetAlphas[i] - currentAlphas[i]) * prog;
+    }
 
     const gridColor = this.gridColor;
     const baseOpacity = this.gridOpacity * fadeMul;
     const lineW = this.lineWeight;
 
-    // ── Draw lines ──
+    // Draw a bounded number of paths instead of issuing thousands of
+    // beginPath/stroke/fill calls per frame.
     ctx.lineWidth = lineW;
-    for (let r = 0; r <= ROWS; r++) {
-      for (let c = 0; c <= COLS; c++) {
-        const idx = r * (COLS + 1) + c;
-        const p = screenPts[idx];
-        if (c < COLS) {
-          const next = screenPts[idx + 1];
-          const a = Math.min(p.a, next.a) * baseOpacity;
-          if (a > 0.01) {
-            ctx.strokeStyle = gridColor;
-            ctx.globalAlpha = a;
-            ctx.beginPath();
-            ctx.moveTo(p.sx, p.sy);
-            ctx.lineTo(next.sx, next.sy);
-            ctx.stroke();
+    ctx.strokeStyle = gridColor;
+    for (let bucket = 0; bucket < ALPHA_BUCKETS; bucket++) {
+      ctx.beginPath();
+      let hasSegments = false;
+      for (let r = 0; r <= ROWS; r++) {
+        for (let c = 0; c <= COLS; c++) {
+          const idx = r * (COLS + 1) + c;
+          if (c < COLS) {
+            const next = idx + 1;
+            const alpha = Math.min(this.screenAlpha[idx], this.screenAlpha[next]);
+            if (this.alphaBucket(alpha) === bucket) {
+              ctx.moveTo(this.screenX[idx], this.screenY[idx]);
+              ctx.lineTo(this.screenX[next], this.screenY[next]);
+              hasSegments = true;
+            }
+          }
+          if (r < ROWS) {
+            const below = idx + COLS + 1;
+            const alpha = Math.min(this.screenAlpha[idx], this.screenAlpha[below]);
+            if (this.alphaBucket(alpha) === bucket) {
+              ctx.moveTo(this.screenX[idx], this.screenY[idx]);
+              ctx.lineTo(this.screenX[below], this.screenY[below]);
+              hasSegments = true;
+            }
           }
         }
-        if (r < ROWS) {
-          const below = screenPts[idx + COLS + 1];
-          const a = Math.min(p.a, below.a) * baseOpacity;
-          if (a > 0.01) {
-            ctx.strokeStyle = gridColor;
-            ctx.globalAlpha = a;
-            ctx.beginPath();
-            ctx.moveTo(p.sx, p.sy);
-            ctx.lineTo(below.sx, below.sy);
-            ctx.stroke();
-          }
+      }
+      if (hasSegments) {
+        ctx.globalAlpha = ((bucket + 0.5) / ALPHA_BUCKETS) * baseOpacity;
+        ctx.stroke();
+      }
+    }
+
+    if (this.showPoints) {
+      ctx.fillStyle = gridColor;
+      for (let bucket = 0; bucket < ALPHA_BUCKETS; bucket++) {
+        ctx.beginPath();
+        let hasPoints = false;
+        for (let i = 0; i < this.screenAlpha.length; i++) {
+          if (this.screenAlpha[i] <= 0.05 || this.alphaBucket(this.screenAlpha[i]) !== bucket) continue;
+          ctx.moveTo(this.screenX[i] + 1.2, this.screenY[i]);
+          ctx.arc(this.screenX[i], this.screenY[i], 1.2, 0, Math.PI * 2);
+          hasPoints = true;
         }
-        if (this.showPoints && p.a > 0.05) {
-          ctx.globalAlpha = p.a * baseOpacity * 1.2;
-          ctx.fillStyle = gridColor;
-          ctx.beginPath();
-          ctx.arc(p.sx, p.sy, 1.2, 0, Math.PI * 2);
+        if (hasPoints) {
+          ctx.globalAlpha = ((bucket + 0.5) / ALPHA_BUCKETS) * baseOpacity * 1.2;
           ctx.fill();
         }
       }
@@ -274,8 +297,8 @@ export class GridEngine {
     // ── Sparkle particles ──
     // Density: strongest when a morph just settled (prog near 0 or 1)
     const settle = 1 - 4 * prog * (1 - prog);
-    if (this.sparklesEnabled && fadeMul > 0.05) {
-      const targetCount = Math.round(34 * (0.3 + 0.7 * settle));
+    if (this.quality.sparkleCount > 0 && fadeMul > 0.05) {
+      const targetCount = Math.round(this.quality.sparkleCount * (0.3 + 0.7 * settle));
       while (this.sparks.length < targetCount) {
         this.sparks.push(makeSpark(cx, cy, scale));
       }
@@ -300,7 +323,7 @@ export class GridEngine {
     }
 
     // ── Motion pulse ring ──
-    if (this.motionPulse && this.pulseStart > 0) {
+    if (this.quality.motionPulse && this.pulseStart > 0) {
       const dt = (performance.now() - this.pulseStart) / 1000;
       if (dt >= 0 && dt < 0.9) {
         const pe = dt / 0.9;
@@ -316,5 +339,10 @@ export class GridEngine {
       }
     }
 
+  }
+
+  private alphaBucket(alpha: number): number {
+    if (alpha <= 0.01) return -1;
+    return Math.min(ALPHA_BUCKETS - 1, Math.floor(Math.min(alpha, 1) * ALPHA_BUCKETS));
   }
 }

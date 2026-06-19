@@ -495,4 +495,7 @@
     from { transform: rotate(0deg); }
     to   { transform: rotate(360deg); }
   }
+  :global(html[data-render-quality='economy']) .spin {
+    animation: none;
+  }
 </style>

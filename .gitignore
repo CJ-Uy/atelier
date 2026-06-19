@@ -32,3 +32,5 @@ pnpm-debug.log*
 # Claude Code
 .claude/
 .playwright-mcp/
+playwright-report/
+test-results/

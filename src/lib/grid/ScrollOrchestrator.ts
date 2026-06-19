@@ -23,45 +23,58 @@ export class ScrollOrchestrator {
   private loadedFrom = -1;
   private loadedTo = -1;
   private lastDispatchedIndex = -1;
+  private requestRender: () => void;
+  private container: HTMLElement | null = null;
+  private scrollRaf = 0;
 
   // JS snap: debounce timer for scroll-end detection
   private snapTimer = 0;
   private isSnapping = false;
   private snapRaf = 0;
-  private static readonly SNAP_DELAY = 120; // ms after last scroll event
+  private static readonly SNAP_DELAY = 180; // tolerate brief trackpad pauses
   private static readonly SNAP_DURATION = 350; // ms for snap animation
 
-  constructor(engine: GridEngine, sections: SectionDef[]) {
+  constructor(engine: GridEngine, sections: SectionDef[], requestRender: () => void = () => {}) {
     this.engine = engine;
     this.sections = sections;
+    this.requestRender = requestRender;
   }
 
   get currentIndex(): number { return this._currentIndex; }
 
   init(scrollContainer: HTMLElement): void {
-    scrollContainer.addEventListener('scroll', () => {
-      // Cancel any in-progress snap animation (user took over)
-      if (this.isSnapping) {
-        cancelAnimationFrame(this.snapRaf);
-        this.isSnapping = false;
-      }
-
-      this._onScroll(scrollContainer);
-
-      // Reset snap timer on every scroll event
-      clearTimeout(this.snapTimer);
-      this.snapTimer = window.setTimeout(() => {
-        this._snapToNearest(scrollContainer);
-      }, ScrollOrchestrator.SNAP_DELAY);
-    }, { passive: true });
+    if (this.container === scrollContainer) return;
+    this.destroy();
+    this.container = scrollContainer;
+    scrollContainer.addEventListener('scroll', this.onScroll, { passive: true });
+    scrollContainer.addEventListener('wheel', this.cancelSnap, { passive: true });
+    scrollContainer.addEventListener('touchstart', this.cancelSnap, { passive: true });
+    scrollContainer.addEventListener('pointerdown', this.cancelSnap, { passive: true });
 
     // Initial render
     this._onScroll(scrollContainer);
+    this.requestRender();
+  }
+
+  destroy(): void {
+    if (this.container) {
+      this.container.removeEventListener('scroll', this.onScroll);
+      this.container.removeEventListener('wheel', this.cancelSnap);
+      this.container.removeEventListener('touchstart', this.cancelSnap);
+      this.container.removeEventListener('pointerdown', this.cancelSnap);
+    }
+    this.container = null;
+    clearTimeout(this.snapTimer);
+    if (this.scrollRaf) window.cancelAnimationFrame(this.scrollRaf);
+    if (this.isSnapping) window.cancelAnimationFrame(this.snapRaf);
+    this.scrollRaf = 0;
+    this.isSnapping = false;
   }
 
   /** Programmatic jump (from dot indicator clicks) */
   goToSection(index: number): void {
-    const container = document.querySelector('.scroll-container') as HTMLElement | null;
+    const container = this.container
+      ?? document.querySelector('.scroll-container') as HTMLElement | null;
     if (!container) return;
     const clamped = Math.max(0, Math.min(index, this.sections.length - 1));
     this._animateScrollTo(container, clamped * container.clientHeight);
@@ -119,6 +132,30 @@ export class ScrollOrchestrator {
     }));
   }
 
+  private readonly onScroll = (): void => {
+    if (!this.container || this.isSnapping) return;
+
+    if (!this.scrollRaf) {
+      this.scrollRaf = window.requestAnimationFrame(() => {
+        this.scrollRaf = 0;
+        if (!this.container) return;
+        this._onScroll(this.container);
+        this.requestRender();
+      });
+    }
+
+    clearTimeout(this.snapTimer);
+    this.snapTimer = window.setTimeout(() => {
+      if (this.container) this._snapToNearest(this.container);
+    }, ScrollOrchestrator.SNAP_DELAY);
+  };
+
+  private readonly cancelSnap = (): void => {
+    if (!this.isSnapping) return;
+    window.cancelAnimationFrame(this.snapRaf);
+    this.isSnapping = false;
+  };
+
   /** Smooth-scroll to nearest section after user stops scrolling */
   private _snapToNearest(container: HTMLElement): void {
     const h = container.clientHeight;
@@ -147,16 +184,19 @@ export class ScrollOrchestrator {
       const eased = 1 - Math.pow(1 - t, 3);
 
       container.scrollTop = start + distance * eased;
+      this._onScroll(container);
+      this.requestRender();
 
       if (t < 1) {
-        this.snapRaf = requestAnimationFrame(tick);
+        this.snapRaf = window.requestAnimationFrame(tick);
       } else {
         this.isSnapping = false;
         container.scrollTop = target; // exact final position
         this._onScroll(container); // final state
+        this.requestRender();
       }
     };
 
-    this.snapRaf = requestAnimationFrame(tick);
+    this.snapRaf = window.requestAnimationFrame(tick);
   }
 }
