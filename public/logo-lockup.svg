@@ -1,5 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" role="img" aria-label="CJ-Uy">
-  <circle cx="50" cy="50" r="50" fill="#faf9f6"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 138" fill="none" role="img" aria-label="CJ-Uy">
   <g stroke="#0a0a0a" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="50" cy="50" r="46" stroke-width="2.4"/>
     <path d="M41.8 10.9 A40 40 0 0 0 10.9 41.8" stroke-width="1.5"/>
@@ -16,4 +15,7 @@
     <path d="M50 18 V44 M46.2 18 H53.8 M50 56 V82 M46.2 82 H53.8" stroke-width="2.4"/>
   </g>
   <path fill="#e34234" d="M50 45.3 54 53H46Z"/>
+  <text x="50" y="127" fill="#0a0a0a" text-anchor="middle"
+        font-family="'Instrument Serif', Georgia, 'Times New Roman', serif"
+        font-size="27" letter-spacing="0.6">CJ-Uy</text>
 </svg>
