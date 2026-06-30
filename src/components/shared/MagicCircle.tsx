@@ -208,9 +208,27 @@ function Lens({ cx, cy, r }: { cx: number; cy: number; r: number }) {
   );
 }
 
+// Orrery — tilted orbital ellipses around a core, each carrying a node. Reads as
+// the study / observation of a system; used for research (replaces the vesica lens).
+function Orrery({ cx, cy, r }: { cx: number; cy: number; r: number }) {
+  const rx = r * 0.95, ry = r * 0.38;
+  return (
+    <g>
+      {[0, 60, 120].map((deg, i) => (
+        <g key={i} transform={`rotate(${deg} ${cx} ${cy})`}>
+          <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="none" stroke="currentColor" strokeWidth="0.7" opacity={0.85 - i * 0.12} />
+          <circle cx={cx + rx} cy={cy} r={r * 0.05} fill="currentColor" />
+        </g>
+      ))}
+      <circle cx={cx} cy={cy} r={r * 0.4} fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.5" />
+      <circle cx={cx} cy={cy} r={r * 0.08} fill="currentColor" />
+    </g>
+  );
+}
+
 // ── Inner shape selector ──────────────────────────────────────────
 
-type Variant = 'casting' | 'bloom' | 'lattice' | 'wheel' | 'sigil' | 'summoning' | 'binding' | 'lens';
+type Variant = 'casting' | 'bloom' | 'lattice' | 'wheel' | 'sigil' | 'summoning' | 'binding' | 'lens' | 'orrery';
 
 function InnerShape({ variant, cx, cy, r }: { variant: Variant; cx: number; cy: number; r: number }) {
   switch (variant) {
@@ -222,6 +240,7 @@ function InnerShape({ variant, cx, cy, r }: { variant: Variant; cx: number; cy: 
     case 'summoning': return <SummoningInner cx={cx} cy={cy} r={r} />;
     case 'binding':   return <Binding cx={cx} cy={cy} r={r} />;
     case 'lens':      return <Lens cx={cx} cy={cy} r={r} />;
+    case 'orrery':    return <Orrery cx={cx} cy={cy} r={r} />;
   }
 }
 
@@ -288,6 +307,97 @@ function GlyphRing({ cx, cy, r }: { cx: number; cy: number; r: number }) {
   );
 }
 
+// ── Overlay layers (additive aspect marks composed on top of the base) ────────
+// A work's rich attribute tags are reduced (in works.data.ts) to this small set,
+// so two projects with the same base shape still read differently.
+
+const VERMILION = '#dc3522';
+const PAPER = '#faf9f6';
+
+export type Overlay = 'seal' | 'orbit' | 'ticks' | 'circuit' | 'nodes';
+
+// award → a static vermilion wax-seal stamp at the top of the band. THE accent.
+function SealMark({ cx, cy, r }: { cx: number; cy: number; r: number }) {
+  const sx = cx, sy = cy - r, sr = r * 0.135;
+  return (
+    <g>
+      <path d={`M ${sx - sr * 0.55} ${sy} L ${sx} ${sy + sr * 1.7} L ${sx + sr * 0.55} ${sy} Z`} fill={VERMILION} opacity="0.85" />
+      <circle cx={sx} cy={sy} r={sr} fill={VERMILION} />
+      <circle cx={sx} cy={sy} r={sr * 0.6} fill="none" stroke={PAPER} strokeWidth="0.9" />
+      <circle cx={sx} cy={sy} r={sr * 0.16} fill={PAPER} />
+    </g>
+  );
+}
+
+// community / teaching / leadership / civic / team → satellite nodes orbiting outside.
+function OrbitNodes({ cx, cy, r }: { cx: number; cy: number; r: number }) {
+  const orb = r * 1.12, dot = r * 0.05;
+  return (
+    <g opacity="0.7">
+      {polarPts(cx, cy, orb, 6).map((p, i) => (
+        <circle key={i} cx={p[0]} cy={p[1]} r={dot} fill="none" stroke="currentColor" strokeWidth="0.9" />
+      ))}
+    </g>
+  );
+}
+
+// research / data → drafting corner brackets + a row of measure ticks.
+function TickBrackets({ cx, cy, r }: { cx: number; cy: number; r: number }) {
+  const br = r * 1.07, len = r * 0.1;
+  const corner = (a: number) => {
+    const px = cx + Math.cos(a) * br, py = cy + Math.sin(a) * br;
+    const tx = Math.cos(a + Math.PI / 2), ty = Math.sin(a + Math.PI / 2);
+    const rx = Math.cos(a), ry = Math.sin(a);
+    return `M ${px - tx * len} ${py - ty * len} L ${px} ${py} L ${px - rx * len} ${py - ry * len}`;
+  };
+  return (
+    <g opacity="0.6">
+      {[1, 3, 5, 7].map((k) => (
+        <path key={k} d={corner((k / 4) * Math.PI)} fill="none" stroke="currentColor" strokeWidth="0.8" />
+      ))}
+    </g>
+  );
+}
+
+// systems / commerce / ocr / realtime → short circuit traces ending in node pads.
+function CircuitTrace({ cx, cy, r }: { cx: number; cy: number; r: number }) {
+  const pad = r * 0.045;
+  return (
+    <g opacity="0.55">
+      {[0.2, 0.85, 1.55].map((frac, i) => {
+        const a = frac * Math.PI * 2;
+        const x1 = cx + Math.cos(a) * (r * 0.7), y1 = cy + Math.sin(a) * (r * 0.7);
+        const x2 = cx + Math.cos(a) * r, y2 = cy + Math.sin(a) * r;
+        const tx = x2 + Math.cos(a + Math.PI / 2) * (r * 0.18), ty = y2 + Math.sin(a + Math.PI / 2) * (r * 0.18);
+        return (
+          <g key={i}>
+            <path d={`M ${x1} ${y1} L ${x2} ${y2} L ${tx} ${ty}`} fill="none" stroke="currentColor" strokeWidth="0.7" />
+            <rect x={tx - pad} y={ty - pad} width={pad * 2} height={pad * 2} fill="none" stroke="currentColor" strokeWidth="0.7" />
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+// ai → a webbed interior node-mesh with one lit decision path.
+function NodesMesh({ cx, cy, r }: { cx: number; cy: number; r: number }) {
+  const pts = polarPts(cx, cy, r * 0.72, 5, -Math.PI / 2 + 0.3);
+  return (
+    <g opacity="0.7">
+      {pts.map((p, i) => {
+        const q = pts[(i + 2) % pts.length];
+        return <line key={`e${i}`} x1={p[0]} y1={p[1]} x2={q[0]} y2={q[1]} stroke="currentColor" strokeWidth="0.4" opacity="0.5" />;
+      })}
+      <path
+        d={`M ${pts[0][0]} ${pts[0][1]} L ${pts[2][0]} ${pts[2][1]} L ${pts[4][0]} ${pts[4][1]}`}
+        fill="none" stroke="currentColor" strokeWidth="1.1"
+      />
+      {pts.map((p, i) => <circle key={`n${i}`} cx={p[0]} cy={p[1]} r={r * 0.05} fill="currentColor" />)}
+    </g>
+  );
+}
+
 // ── Main MagicCircle component ────────────────────────────────────
 
 interface MagicCircleProps {
@@ -302,6 +412,14 @@ interface MagicCircleProps {
   runes?: boolean;
   /** Show geometric cardinal marks (diamonds) just outside the ring */
   showCardinals?: boolean;
+  /** Additive aspect layers stacked on top of the base shape */
+  overlays?: Overlay[];
+  /** Lifecycle → stroke style: archived fades, prototype/in-progress adds a dashed construction ring */
+  state?: 'live' | 'prototype' | 'archived' | 'in-progress';
+  /** Complexity 0–2 → extra concentric sub-rings + denser glyph band */
+  intensity?: 0 | 1 | 2;
+  /** Early-work "first spell" → a rougher ghosted base ring */
+  origin?: boolean;
   style?: React.CSSProperties;
   className?: string;
 }
@@ -314,6 +432,10 @@ export default function MagicCircle({
   reverseInner = false,
   runes = true,
   showCardinals = false,
+  overlays = [],
+  state = 'live',
+  intensity = 0,
+  origin = false,
   style,
   className,
 }: MagicCircleProps) {
@@ -321,6 +443,11 @@ export default function MagicCircle({
   const outerR = c * 0.88;
   const bandR = c * 0.78;
   const innerR = c * 0.58;
+
+  const faded = state === 'archived';
+  const dashed = state === 'prototype' || state === 'in-progress';
+  const showRunes = runes || intensity > 0;
+  const has = (o: Overlay) => overlays.includes(o);
 
   const outerAnim: React.CSSProperties = {
     transformOrigin: `${c}px ${c}px`,
@@ -335,7 +462,7 @@ export default function MagicCircle({
     <svg
       width={size} height={size} viewBox={`0 0 ${size} ${size}`}
       fill="none" overflow="visible" aria-hidden="true"
-      style={{ color: '#0a0a0a', display: 'block', ...style }}
+      style={{ color: '#0a0a0a', display: 'block', opacity: faded ? 0.5 : 1, ...style }}
       className={className}
     >
       <style>{`
@@ -362,15 +489,43 @@ export default function MagicCircle({
           );
         })}
         {/* Abstract glyph inscription band (no text) */}
-        {runes && <GlyphRing cx={c} cy={c} r={bandR} />}
+        {showRunes && <GlyphRing cx={c} cy={c} r={bandR} />}
+        {/* origin "first spell" → a rougher ghosted ring offset off the true circle */}
+        {origin && (
+          <circle cx={c + 1.4} cy={c + 1} r={outerR} stroke="currentColor" strokeWidth="0.6" opacity="0.3" />
+        )}
       </g>
+
+      {/* complexity → extra static concentric sub-rings between inner and band */}
+      {Array.from({ length: intensity }, (_, i) => (
+        <circle key={`int-${i}`} cx={c} cy={c}
+          r={innerR + ((i + 1) * (bandR - innerR)) / (intensity + 1)}
+          stroke="currentColor" strokeWidth="0.35" opacity="0.3" strokeDasharray="1.5 3" />
+      ))}
+
+      {/* prototype / in-progress → dashed construction ring */}
+      {dashed && (
+        <circle cx={c} cy={c} r={outerR * 1.02} stroke="currentColor" strokeWidth="0.7" opacity="0.6" strokeDasharray="5 4" />
+      )}
 
       {/* Inner shape (counter-rotating or same direction) */}
       <g style={innerAnim}>
         <InnerShape variant={variant} cx={c} cy={c} r={innerR} />
+        {has('nodes') && <NodesMesh cx={c} cy={c} r={innerR} />}
       </g>
 
+      {/* Overlays — circuit/ticks static; orbit on its own slow spin; seal last + upright */}
+      {has('circuit') && <CircuitTrace cx={c} cy={c} r={bandR} />}
+      {has('ticks') && <TickBrackets cx={c} cy={c} r={outerR} />}
+      {has('orbit') && (
+        <g style={{ transformOrigin: `${c}px ${c}px`, animation: 'mc-rotate 140s linear infinite' }}>
+          <OrbitNodes cx={c} cy={c} r={outerR} />
+        </g>
+      )}
+
       {showCardinals && <CardinalMarks cx={c} cy={c} r={c * 0.95} />}
+
+      {has('seal') && <SealMark cx={c} cy={c} r={outerR} />}
     </svg>
   );
 }
