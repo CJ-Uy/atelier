@@ -120,7 +120,7 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
             </div>
             <div className="pm-head-text">
               <div className="pm-meta-row">
-                <span className="pm-opus">OPUS · {p.n} / {p.year}</span>
+                <span className="pm-opus">WORK · {p.n} / {p.year}</span>
                 <span className="pm-spell" style={{ borderColor: accent ? VERMILION : INK, color: accent ? VERMILION : INK }}>{p.spell}</span>
                 <StatusPill status={p.state} />
               </div>
@@ -267,7 +267,7 @@ function WPCard({ p, index, onOpen }: { p: Project; index: number; onOpen: (p: P
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', flex: 1, gap: compact ? 7 : 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
           <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, letterSpacing: '0.26em', fontWeight: 700, opacity: 0.55, textTransform: 'uppercase' as const }}>
-            OPUS · {p.n} / {p.year}
+            WORK · {p.n} / {p.year}
           </span>
           <span style={{
             fontFamily: "'IBM Plex Mono', monospace", fontSize: 8, letterSpacing: '0.2em', fontWeight: 700,

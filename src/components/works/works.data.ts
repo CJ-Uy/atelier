@@ -155,8 +155,8 @@ export const WORKS: Work[] = [
     blurb: 'Two agents, one bracket — Ally cleared the heats, Meera was conjured for the finals. Third in the nation.',
     role: 'AI / agents', period: 'KPMG · R.G. Manabat AIC 2026', org: 'AIC 2026 — 2nd Runner-Up',
     casting: [
-      'For the KPMG / R.G. Manabat Academic Innovation Challenge we built Ally for the eliminations, then re-forged it into Meera for the finals — a two-phase agent system that grew between rounds.',
-      'Third place nationally. The transformation between phases is the story: same lineage, sharper instincts.',
+      "Two separate builds for the KPMG / R.G. Manabat Academic Innovation Challenge — Ally for the eliminations, Meera for the finals. The prompts were completely different, so they're distinct projects: same team, same competition, a deliberate evolution from one round to the next.",
+      'Second runner-up — third in the nation. The jump from Ally to Meera is the story: what we learned in the heats, rebuilt for the final stage.',
     ],
     tags: ['Agents', 'LLM', 'Next.js'], plates: 2,
     // Q10: add teammates
@@ -219,7 +219,7 @@ export const WORKS: Work[] = [
       'Hackfest 2026, second runner-up.',
     ],
     tags: ['Next.js', 'Reader', 'API'], plates: 2,
-    // Q2: public name — "Schrollar" vs "Ad Multo" (repo hackfest26-admulto). Using Schrollar.
+    // repo: hackfest26-admulto (was titled "Ad Multo" in the original page)
   },
   {
     slug: 'klutch', title: 'Klutch', year: '2025', cat: 'ai', weight: 'strong', era: 'college',
@@ -281,9 +281,7 @@ export const WORKS: Work[] = [
     state: 'archived', layers: ['award', 'community'], spell: 'breach',
     blurb: 'Capture-the-flag at Ateneo. Second runner-up.',
     role: 'Competitor (team Cicada Too)', org: 'Ateneo · Oct 2025', period: 'CTF',
-    tags: ['Security', 'CTF'], plates: 0,
-    // Q3: confirm official event name + year ("Cicada Too", Oct 22–25 2025?)
-  },
+    tags: ['Security', 'CTF'], plates: 0,  },
   {
     slug: 'learn2dev', title: 'Learn2Dev', year: '2026', cat: 'practice', weight: 'strong', era: 'college',
     state: 'live', layers: ['teaching', 'community'], spell: 'tutelage',
@@ -479,18 +477,16 @@ export const WORKS: Work[] = [
   {
     slug: 'dna-barcode-generator', title: 'DNA Barcode Generator', year: '2024', cat: 'research', weight: 'supporting', era: 'highschool',
     state: 'live', layers: ['research', 'data'], spell: 'sequence',
-    blurb: 'Fetches mtDNA from NCBI and visualizes it as a barcode.',
+    blurb: 'Fetches mtDNA from NCBI and visualizes it as a barcode — grew out of an earlier team version.',
     role: 'Developer', period: 'Bioinformatics tool',
     tags: ['Bioinformatics', 'Viz'], plates: 0,
-    // Q7: possible merge with DNA Barcoder (archive)
   },
   {
     slug: 'navio', title: 'Navio', year: '2025', cat: 'systems', weight: 'supporting', era: 'college',
-    state: 'prototype', layers: ['map', 'hardware'], spell: 'wayfinding',
-    blurb: 'GPS tracking and lost-and-found — find what (or who) wandered off.',
+    state: 'prototype', layers: ['map', 'hardware', 'realtime'], spell: 'wayfinding',
+    blurb: 'A wearable GPS tracker — know where someone (or something) is, in real time.',
     role: 'Developer', period: 'Prototype',
-    tags: ['GPS', 'Maps'], plates: 0,
-    // Q4: final identity — wearable GPS tracker vs lost-item geotag (a.k.a. Find Mine)?
+    tags: ['GPS', 'Hardware'], plates: 0,
   },
   {
     slug: 'artest-of-fate', title: 'ArTest of Fate', year: '2022', cat: 'editorial', weight: 'supporting', era: 'highschool',
@@ -581,10 +577,16 @@ export const WORKS: Work[] = [
     blurb: 'A survey that restyles itself based on your answers.', period: 'Early web',
   },
   {
-    slug: 'csci-midterms', title: 'CSCI Midterm Projects', year: '2024', cat: 'tools', weight: 'archive', era: 'college',
+    slug: 'csci-30-midterm', title: 'CSCI 30 Midterm', year: '2024', cat: 'tools', weight: 'archive', era: 'college',
     state: 'archived', layers: [], spell: 'coursework',
-    blurb: 'Class midterm projects, kept for the record.', period: 'Class project',
-    // Q7: two repos — merge into one card (done) or split?
+    blurb: 'A CSCI 30 midterm project.', period: 'Class project',
+    // TODO: distinguish from the other CSCI midterm — add specifics
+  },
+  {
+    slug: 'csci-midterm', title: 'CSCI Midterm Project', year: '2024', cat: 'tools', weight: 'archive', era: 'college',
+    state: 'archived', layers: [], spell: 'coursework',
+    blurb: 'A CSCI midterm project.', period: 'Class project',
+    // TODO: distinguish from the CSCI 30 midterm — add specifics
   },
   {
     slug: 'recipebook', title: 'Recipebook', year: '2024', cat: 'tools', weight: 'archive', era: 'college',
@@ -602,33 +604,27 @@ export const WORKS: Work[] = [
     blurb: 'A small document-automation utility for sample PDFs/forms.', period: 'Utility',
   },
   {
-    slug: 'dna-barcoder', title: 'DNA Barcoder', year: '2023', cat: 'research', weight: 'archive', era: 'highschool',
-    state: 'archived', layers: ['research', 'data', 'origin'], spell: 'sequence-prime',
-    blurb: 'An earlier/team version of the DNA barcode tool.', period: 'Bioinformatics',
-    // Q7: candidate to merge with DNA Barcode Generator
-  },
-  {
     slug: 'dont-leaf-it-to-chance', title: "Don't Leaf It to Chance", year: '2023', cat: 'research', weight: 'archive', era: 'highschool',
     state: 'archived', layers: ['research', 'origin'], spell: 'toxicology',
-    blurb: 'DNA-barcoding toxicology research (from CV).', period: 'Research',
-    // Q6: text-only — keep as link-less archive card, or drop?
-  },
+    blurb: 'DNA-barcoding toxicology research (from CV).', period: 'Research',  },
   {
     slug: 'tab-propellers', title: 'TaB Propellers', year: '2022', cat: 'research', weight: 'archive', era: 'highschool',
     state: 'archived', layers: ['research', 'hardware', 'origin'], spell: 'thrust',
-    blurb: 'Physics/engineering research on propellers and flow (from CV).', period: 'Research',
-    // Q6: text-only
-  },
+    blurb: 'Physics/engineering research on propellers and flow (from CV).', period: 'Research',  },
   {
     slug: 'spin-battery', title: 'SPIn Battery', year: '2022', cat: 'research', weight: 'archive', era: 'highschool',
     state: 'archived', layers: ['research', 'hardware', 'origin'], spell: 'inertia',
-    blurb: 'An energy-storage mechanical concept (from CV).', period: 'Research',
-    // Q6: text-only
-  },
+    blurb: 'An energy-storage mechanical concept (from CV).', period: 'Research',  },
   {
     slug: 'good-bad-medium', title: 'The Good, the Bad, and the Medium', year: '2023', cat: 'research', weight: 'archive', era: 'highschool',
     state: 'archived', layers: ['research', 'origin'], spell: 'study',
     blurb: 'An education / social-study research piece (from CV).', period: 'Research',
-    // Q6: text-only
+  },
+  {
+    slug: 'botos', title: 'Botos', year: '2022', cat: 'systems', weight: 'archive', era: 'highschool',
+    state: 'archived', layers: ['civic', 'community', 'origin'], spell: 'suffrage',
+    blurb: 'A Django election system I forked and self-hosted so the whole school could run its elections.',
+    role: 'Forked & self-hosted', period: 'School elections · G11–12',
+    tags: ['Django', 'Self-hosted'], plates: 0,
   },
 ];
