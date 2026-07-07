@@ -9,9 +9,18 @@ const SOCIAL_REDIRECTS: Record<string, string> = {
   'facebook.cjuy.dev': 'https://www.facebook.com/charlesjoshua.uy/',
 };
 
-export const onRequest = defineMiddleware((context, next) => {
+const CV_ASSET_PATH = '/cv/CV_Charles_Joshua_Uy.pdf';
+const CV_DOWNLOAD_NAME = 'CV_CJ-Uy_Updated_2026-07-07.pdf';
+
+export const onRequest = defineMiddleware(async (context, next) => {
   if (context.url.hostname.toLowerCase() === 'cv.cjuy.dev' && context.url.pathname === '/') {
-    return context.redirect('/cv.pdf', 302);
+    const asset = await fetch(new URL(CV_ASSET_PATH, context.url));
+    const headers = new Headers(asset.headers);
+
+    headers.set('content-type', 'application/pdf');
+    headers.set('content-disposition', `inline; filename="${CV_DOWNLOAD_NAME}"`);
+
+    return new Response(asset.body, { status: asset.status, headers });
   }
 
   const destination = SOCIAL_REDIRECTS[context.url.hostname.toLowerCase()];
