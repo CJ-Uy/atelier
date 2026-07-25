@@ -10,7 +10,7 @@ const SOCIAL_REDIRECTS: Record<string, string> = {
 };
 
 const CV_ASSET_PATH = '/cv/CV_Charles_Joshua_Uy.pdf';
-const CV_DOWNLOAD_NAME = 'CV_CJ-Uy_Updated_2026-07-07.pdf';
+const CV_DOWNLOAD_NAME = 'CV_CJ-Uy_Updated_2026-07-25.pdf';
 
 export const onRequest = defineMiddleware(async (context, next) => {
   if (context.url.hostname.toLowerCase() === 'cv.cjuy.dev' && context.url.pathname === '/') {

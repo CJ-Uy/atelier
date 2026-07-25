@@ -38,6 +38,18 @@ pnpm build
 The Cloudflare adapter uses Wrangler during development and builds. It needs
 write access to Wrangler's user-level log and registry directories.
 
+## CV Publishing
+
+Edit `public/cv/CV_Charles_Joshua_Uy.docx`, export it to
+`public/cv/CV_Charles_Joshua_Uy.pdf`, then update the dated download names in
+`src/middleware.ts`, `src/pages/cv.pdf.ts`, and `src/pages/cv.docx.ts`. Confirm
+the PDF page count and text extraction, run the verification commands above,
+and deploy with `pnpm deploy`.
+
+The stable assets are served by the Astro Worker. The `cv.cjuy.dev` custom
+domain maps to that Worker, whose middleware serves the PDF inline at `/`;
+`/cv.pdf` provides the same inline PDF from the portfolio domain.
+
 ## Homepage Architecture
 
 The homepage pipeline lives in `src/lib/grid`:

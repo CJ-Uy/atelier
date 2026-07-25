@@ -3,7 +3,7 @@ import type { APIContext } from 'astro';
 export const prerender = false;
 
 const ASSET_PATH = '/cv/CV_Charles_Joshua_Uy.pdf';
-const DOWNLOAD_NAME = 'CV_CJ-Uy_Updated_2026-07-07.pdf';
+const DOWNLOAD_NAME = 'CV_CJ-Uy_Updated_2026-07-25.pdf';
 
 export async function GET({ request }: APIContext) {
   const asset = await fetch(new URL(ASSET_PATH, request.url));
