@@ -16,7 +16,7 @@
  *   lens      · hatched vesica / aperture      (was: all-seeing eye)
  */
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 function polarPts(cx: number, cy: number, r: number, n: number, startAngle = -Math.PI / 2) {
   const pts: [number, number][] = [];
@@ -439,6 +439,24 @@ export default function MagicCircle({
   style,
   className,
 }: MagicCircleProps) {
+  const element = useRef<SVGSVGElement>(null);
+  useEffect(() => {
+    const svg = element.current;
+    if (!svg) return;
+    let visible = false;
+    const update = () => { svg.dataset.motionPaused = String(!visible || document.hidden); };
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      update();
+    });
+    observer.observe(svg);
+    document.addEventListener('visibilitychange', update);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener('visibilitychange', update);
+    };
+  }, []);
+
   const c = size / 2;
   const outerR = c * 0.88;
   const bandR = c * 0.78;
@@ -460,12 +478,14 @@ export default function MagicCircle({
 
   return (
     <svg
+      ref={element} data-motion-paused="true"
       width={size} height={size} viewBox={`0 0 ${size} ${size}`}
       fill="none" overflow="visible" aria-hidden="true"
       style={{ color: '#0a0a0a', display: 'block', opacity: faded ? 0.5 : 1, ...style }}
       className={className}
     >
       <style>{`
+        svg[data-motion-paused="true"] g { animation-play-state: paused !important; }
         @keyframes mc-rotate     { from { transform: rotate(0deg);    } to { transform: rotate(360deg);  } }
         @keyframes mc-rotate-rev { from { transform: rotate(0deg);    } to { transform: rotate(-360deg); } }
         @keyframes mc-appear     { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }

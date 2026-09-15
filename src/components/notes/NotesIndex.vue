@@ -6,7 +6,7 @@
       <div class="wp-links">
         <a href="/" class="wp-link">Home</a>
         <a href="/works" class="wp-link">Works</a>
-        <a href="/notes" class="wp-link active">Notes</a>
+        <a href="/notes" class="wp-link active" aria-current="page">Notes</a>
         <a href="/contact" class="wp-link">Contact</a>
       </div>
     </nav>
@@ -23,6 +23,7 @@
       <button
         class="fn-chip"
         :class="{ active: activeTag === null }"
+        :aria-pressed="activeTag === null"
         @click="activeTag = null"
       >All</button>
       <button
@@ -30,6 +31,7 @@
         :key="tag"
         class="fn-chip"
         :class="{ active: activeTag === tag }"
+        :aria-pressed="activeTag === tag"
         @click="activeTag = activeTag === tag ? null : tag"
       >{{ tag }}</button>
     </div>
@@ -109,7 +111,7 @@ function formatDate(iso: string) {
   z-index: 1;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 /* ── Tag filter ── */
@@ -119,11 +121,12 @@ function formatDate(iso: string) {
   gap: 8px;
   max-width: 720px;
   margin: 0 auto;
-  padding: 0 32px 40px;
+  padding: 16px 32px 32px;
   animation: cmFadeUp 700ms cubic-bezier(0.4,0,0.2,1) 80ms both;
 }
 
 .fn-chip {
+  min-height: 44px;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 9px;
   font-weight: 700;
@@ -172,6 +175,7 @@ function formatDate(iso: string) {
 .fn-entry-meta {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 14px;
   margin-bottom: 10px;
 }
@@ -197,7 +201,7 @@ function formatDate(iso: string) {
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  opacity: 0.45;
+  opacity: 0.65;
   border: 1px solid rgba(10,10,10,0.25);
   padding: 2px 7px;
 }
@@ -226,7 +230,7 @@ function formatDate(iso: string) {
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  opacity: 0.45;
+  opacity: 0.65;
   transition: opacity 0.15s;
 }
 .fn-entry:hover .fn-read { opacity: 1; }
@@ -246,8 +250,9 @@ function formatDate(iso: string) {
 .fn-fade-leave-to { opacity: 0; transform: translateY(8px); }
 
 @media (max-width: 600px) {
-  .fn-filters { padding: 0 20px 32px; }
+  .fn-filters { padding: 16px 20px 32px; }
   .fn-list { padding: 0 20px 40px; }
   .fn-entry { padding: 18px 14px; }
+  .fn-excerpt { font-size: 0.875rem; }
 }
 </style>

@@ -125,14 +125,16 @@ const {
 
         const scrollContainer = document.querySelector('.scroll-container') as HTMLElement | null;
         let orchestrator: ScrollOrchestrator | null = null;
+        let cleanupHome = () => {};
         if (scrollContainer) {
           orchestrator = new ScrollOrchestrator(engine, SECTIONS, () => scheduler.requestRender());
 
-          window.addEventListener('atelier:jump-to-section', (e) => {
+          const onJump = (e: Event) => {
             const detail = (e as CustomEvent<{ index: number }>).detail;
             if (!ritualDone) abortRitual();
             orchestrator?.goToSection(detail.index);
-          });
+          };
+          window.addEventListener('atelier:jump-to-section', onJump);
 
           // ── Opening ritual: the dot grid develops Charles's portrait, then
           // holds. graphPaper → face over ~2.4s, eased. A real scroll/key aborts
@@ -174,7 +176,7 @@ const {
           const edgeNotes = document.querySelector('.edge-notes') as HTMLElement | null;
           const progressBar = document.querySelector('.scroll-progress') as HTMLElement | null;
           const heroMax = SECTIONS.length - 1;
-          scrollContainer!.addEventListener('scroll', () => {
+          const onOutroScroll = () => {
             const h = scrollContainer!.clientHeight;
             if (!h) return;
             const fraction = scrollContainer!.scrollTop / h;
@@ -190,15 +192,16 @@ const {
               const max = scrollContainer!.scrollHeight - scrollContainer!.clientHeight;
               progressBar.style.transform = `scaleX(${max > 0 ? scrollContainer!.scrollTop / max : 0})`;
             }
-          }, { passive: true });
+          };
+          scrollContainer.addEventListener('scroll', onOutroScroll, { passive: true });
 
           // ── Keyboard wayfinding — arrows/page keys step the facets,
           // Home/End jump to the ends. The outro (one viewport past the last
           // facet) is reachable so its links stay in the keyboard flow.
-          window.addEventListener('keydown', (e) => {
+          const onNavigate = (e: KeyboardEvent) => {
             if (!ritualDone || e.altKey || e.ctrlKey || e.metaKey) return;
             const t = e.target as HTMLElement | null;
-            if (t && ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName)) return;
+            if (t?.closest('a, button, input, textarea, select, [contenteditable]')) return;
             const h = scrollContainer!.clientHeight;
             if (!h) return;
             const last = SECTIONS.length - 1;
@@ -217,7 +220,8 @@ const {
             } else {
               orchestrator.goToSection(orchestrator.currentIndex + dir);
             }
-          });
+          };
+          window.addEventListener('keydown', onNavigate);
 
           function abortRitual() {
             if (ritualDone) return;
@@ -253,6 +257,18 @@ const {
             };
             ritualRaf = requestAnimationFrame(step);
           }
+
+          cleanupHome = () => {
+            ritualDone = true;
+            clearTimeout(startTimer);
+            cancelAnimationFrame(ritualRaf);
+            scrollContainer.removeEventListener('wheel', abortRitual);
+            scrollContainer.removeEventListener('touchstart', abortRitual);
+            scrollContainer.removeEventListener('scroll', onOutroScroll);
+            window.removeEventListener('keydown', onKey);
+            window.removeEventListener('keydown', onNavigate);
+            window.removeEventListener('atelier:jump-to-section', onJump);
+          };
         }
 
         const onVisibilityChange = () => {
@@ -260,6 +276,7 @@ const {
         };
         const onResize = () => scheduler.requestRender();
         const cleanup = () => {
+          cleanupHome();
           scheduler.destroy();
           orchestrator?.destroy();
           engine.destroy();

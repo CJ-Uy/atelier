@@ -141,7 +141,7 @@ body:not(.page-home)::after {
 .wp-nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 50;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 32px;
+  padding: max(10px, env(safe-area-inset-top)) max(32px, env(safe-area-inset-right)) 10px max(32px, env(safe-area-inset-left));
   background: var(--paper);
   border-bottom: 1px solid var(--mute-2);
 }
@@ -229,8 +229,10 @@ body:not(.page-home)::after {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
 }

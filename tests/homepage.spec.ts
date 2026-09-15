@@ -80,6 +80,23 @@ test('reduced motion selects economy rendering', async ({ page }) => {
   await expect(page.locator('html')).toHaveAttribute('data-render-quality', 'economy');
 });
 
+test('Space activates the focused section and reduced-motion jumps are immediate', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  const developer = page.getByRole('button', { name: 'Go to developer', exact: true });
+  await expect(developer).toBeVisible();
+  await page.getByRole('button', { name: 'Go to big dreamer', exact: true }).click();
+  await expect(page.locator('.descriptor')).toHaveText('big dreamer');
+  await developer.focus();
+  await page.keyboard.press('Space');
+  await expect(developer).toHaveAttribute('aria-current', 'true');
+  await expect(developer).toBeFocused();
+  expect(await page.evaluate(() => {
+    (document.querySelector('.indicator') as HTMLButtonElement).click();
+    return document.querySelector('.scroll-container')!.scrollTop;
+  })).toBe(0);
+});
+
 test('mobile navigation fits and provides touch-sized targets', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 740 });
   await page.goto('/');

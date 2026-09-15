@@ -172,6 +172,14 @@ export class ScrollOrchestrator {
 
   /** Animate scroll position to target with easing */
   private _animateScrollTo(container: HTMLElement, target: number): void {
+    this.cancelSnap();
+    clearTimeout(this.snapTimer);
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      container.scrollTop = target;
+      this._onScroll(container);
+      this.requestRender();
+      return;
+    }
     this.isSnapping = true;
     const start = container.scrollTop;
     const distance = target - start;

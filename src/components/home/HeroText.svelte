@@ -329,7 +329,7 @@
   @media (max-width: 640px) {
     .nameplate {
       width: calc(100% - 64px);
-      bottom: max(28px, env(safe-area-inset-bottom));
+      bottom: calc(28px + env(safe-area-inset-bottom));
     }
     .descriptor { font-size: clamp(2.2rem, 10vw, 3.2rem); }
     .subtitle { font-size: 0.8125rem; max-width: 34ch; margin-top: 12px; }

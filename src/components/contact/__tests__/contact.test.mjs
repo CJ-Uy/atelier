@@ -68,12 +68,20 @@ test('contact preserves native links and completes or cancels one touch ritual',
   let reducedMotion = false;
   dom.window.matchMedia = (query) => ({
     matches: query.includes('prefers-reduced-motion') ? reducedMotion : query.includes('hover: none'),
+    addEventListener() {}, removeEventListener() {},
   });
   const frames = new Map();
+  const observers = [];
   let nextFrame = 0;
   for (const [key, value] of Object.entries({
     requestAnimationFrame: (callback) => { frames.set(++nextFrame, callback); return nextFrame; },
     cancelAnimationFrame: (id) => frames.delete(id),
+    IntersectionObserver: class {
+      constructor(callback) { this.callback = callback; observers.push(this); }
+      observe(element) { this.element = element; }
+      disconnect() { this.disconnected = true; }
+      intersect(isIntersecting) { this.callback([{ target: this.element, isIntersecting }]); }
+    },
   })) {
     saved.set(key, Object.getOwnPropertyDescriptor(globalThis, key));
     Object.defineProperty(globalThis, key, { configurable: true, writable: true, value });
@@ -123,17 +131,42 @@ test('contact preserves native links and completes or cancels one touch ritual',
   };
   const advance = (ms) => act(async () => t.mock.timers.tick(ms));
   const busy = () => find('.cm-apparatus').getAttribute('aria-busy');
+  const svg = find('.cm-circle > svg');
+  assert.equal(svg.getAttribute('data-motion-paused'), 'true', 'circles must start paused before visibility is known');
+  assert.equal(observers.length, 1);
+  observers[0].intersect(true);
+  assert.equal(svg.getAttribute('data-motion-paused'), 'false', 'visible circles may animate');
+  observers[0].intersect(false);
+  assert.equal(svg.getAttribute('data-motion-paused'), 'true', 'offscreen circles must pause');
+  observers[0].intersect(true);
 
   assert.equal(await tap('[data-channel="github"]'), true);
   assert.equal(busy(), 'true');
   assert.match(find('[role="status"]').textContent, /Channelling GitHub/);
+  assert.equal(frames.size, 0, 'charging must wait until the circle is visible');
+  const chargeObserver = observers.at(-1);
+  chargeObserver.intersect(true);
+  assert.equal(frames.size, 1, 'visible charging must schedule one frame');
+  chargeObserver.intersect(false);
+  assert.equal(frames.size, 0, 'offscreen charging must cancel its frame');
+  assert.equal(find('.cm-apparatus').dataset.paused, 'true');
+  assert.equal(busy(), 'true', 'scrolling offscreen must preserve the pending destination');
+  chargeObserver.intersect(true);
+  assert.equal(frames.size, 1, 're-entering the viewport must resume charging');
+  assert.equal(find('.cm-apparatus').dataset.paused, 'false');
   await advance(1499);
   assert.equal(opened.length, 0, 'destination must wait for the full ritual');
   assert.equal(await tap('[data-channel="linkedin"]'), true);
-  assert.match(find('[role="status"]').textContent, /GitHub/, 'repeat tap must keep the first channel');
+  assert.match(find('[role="status"]').textContent, /LinkedIn/, 'selecting another sigil must replace the first channel');
+  assert.equal(chargeObserver.disconnected, true, 'changing channels must clean up the previous charge observer');
+  await advance(1);
+  assert.equal(opened.length, 0, 'replaced channel must never open');
+  await advance(1498);
+  assert.equal(opened.length, 0, 'new channel must receive the full ritual');
+  assert.equal(await tap('[data-channel="linkedin"]'), true);
   await advance(1);
   assert.deepEqual(opened, [['about:blank', '_blank']]);
-  assert.deepEqual(destinations, [expectedLinks.github]);
+  assert.deepEqual(destinations, [expectedLinks.linkedin]);
   assert.equal(popup.opener, null);
   assert.equal(busy(), 'false');
   assert.equal(frames.size, 0);
@@ -156,6 +189,8 @@ test('contact preserves native links and completes or cancels one touch ritual',
   reducedMotion = false;
   assert.equal(await tap('[data-channel="github"]', { detail: 0 }), false, 'keyboard links remain native');
   assert.equal(await tap('[data-channel="github"]', { ctrlKey: true }), false, 'modified links remain native');
+  await tap('[data-channel="linkedin"]');
+  assert.equal(await tap('[data-channel="github"]', { detail: 0 }), false, 'keyboard activation must cancel a pending touch ritual');
   await advance(1500);
   assert.equal(opened.length, completedOpenings);
 
@@ -181,7 +216,13 @@ test('contact preserves native links and completes or cancels one touch ritual',
   await advance(1500);
   assert.equal(busy(), 'false');
   assert.equal(opened.length, completedOpenings, 'backgrounding must cancel the ritual');
+  assert.equal(svg.getAttribute('data-motion-paused'), 'true', 'hidden documents must pause visible circles');
+  observers[0].intersect(false);
   Object.defineProperty(dom.window.document, 'hidden', { configurable: true, value: false });
+  dom.window.document.dispatchEvent(new dom.window.Event('visibilitychange'));
+  assert.equal(svg.getAttribute('data-motion-paused'), 'true', 'returning to the tab must not start offscreen circles');
+  observers[0].intersect(true);
+  assert.equal(svg.getAttribute('data-motion-paused'), 'false');
 
   await tap('[data-channel="github"]');
   await act(async () => root.unmount());
@@ -189,4 +230,8 @@ test('contact preserves native links and completes or cancels one touch ritual',
   await advance(1500);
   assert.equal(opened.length, completedOpenings, 'unmount must clear the opening timer');
   assert.equal(frames.size, 0, 'unmount must cancel animation frames');
+  assert.equal(observers[0].disconnected, true, 'unmount must disconnect the circle observer');
+  svg.setAttribute('data-motion-paused', 'unmounted');
+  dom.window.document.dispatchEvent(new dom.window.Event('visibilitychange'));
+  assert.equal(svg.getAttribute('data-motion-paused'), 'unmounted', 'unmount must remove the visibility listener');
 });

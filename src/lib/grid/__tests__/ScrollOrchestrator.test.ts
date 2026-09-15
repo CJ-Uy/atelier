@@ -18,6 +18,7 @@ const sections = (states: GridStateName[]) => states.map((gridState, id) => ({ i
 describe('ScrollOrchestrator', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: false })));
     document.body.innerHTML = '';
     // Mock scroll-container for goToSection
     const mockContainer = document.createElement('div');
@@ -32,7 +33,7 @@ describe('ScrollOrchestrator', () => {
 
   it('goToSection scrolls the container (does not throw)', () => {
     const o = new ScrollOrchestrator(mockEngine() as any, sections(['graphPaper', 'keyboard']));
-    // goToSection now delegates to scrollIntoView — should not throw
+    // Programmatic navigation tolerates a zero-height container.
     expect(() => o.goToSection(1)).not.toThrow();
     o.destroy();
   });
@@ -146,5 +147,29 @@ describe('ScrollOrchestrator', () => {
     vi.advanceTimersByTime(30);
     expect(requestAnimationFrame).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
+  });
+
+  it('jumps without animation when reduced motion is requested', () => {
+    vi.mocked(window.matchMedia).mockReturnValue({ matches: true } as MediaQueryList);
+    vi.stubGlobal('requestAnimationFrame', vi.fn(() => 42));
+    const container = document.querySelector('.scroll-container') as HTMLElement;
+    Object.defineProperty(container, 'clientHeight', { value: 800 });
+    const o = new ScrollOrchestrator(mockEngine() as any, sections(['graphPaper', 'web']));
+    o.init(container);
+    o.goToSection(1);
+    expect(container.scrollTop).toBe(800);
+    expect(o.currentIndex).toBe(1);
+    expect(requestAnimationFrame).not.toHaveBeenCalled();
+    o.destroy();
+  });
+
+  it('cancels the previous animation when another section is selected', () => {
+    vi.stubGlobal('requestAnimationFrame', vi.fn(() => 42));
+    vi.stubGlobal('cancelAnimationFrame', vi.fn());
+    const o = new ScrollOrchestrator(mockEngine() as any, sections(['graphPaper', 'web']));
+    o.goToSection(1);
+    o.goToSection(0);
+    expect(cancelAnimationFrame).toHaveBeenCalledWith(42);
+    o.destroy();
   });
 });

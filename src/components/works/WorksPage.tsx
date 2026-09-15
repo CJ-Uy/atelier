@@ -39,10 +39,15 @@ function useModal() {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const dialog = ref.current;
+    const opener = document.activeElement as HTMLElement | null;
     dialog?.showModal();
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { dialog?.close(); document.body.style.overflow = prev; };
+    return () => {
+      dialog?.close();
+      document.body.style.overflow = prev;
+      opener?.focus({ preventScroll: true });
+    };
   }, []);
   return ref;
 }
@@ -95,7 +100,7 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
       <div className="pm-panel">
         {crossPos.map((pos, i) => <span key={i} className="pm-cross" style={pos}>+</span>)}
 
-        <button className="pm-close" onClick={onClose} aria-label="Close" autoFocus>
+        <button className="pm-close" onClick={onClose} aria-label="Close">
           <span>ESC</span>
           <svg width="13" height="13" viewBox="0 0 14 14">
             <path d="M2 2 L12 12 M12 2 L2 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" fill="none"/>
@@ -200,8 +205,8 @@ const WPCard = React.memo(function WPCard({ p, index, onOpen }: { p: Project; in
   return (
     <article className={`wp-panel wp-panel--${p.weight}`}
       style={{ '--panel-delay': `${index % 4 * 65}ms` } as React.CSSProperties}>
-      <svg className="wp-panel-frame" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <rect x="0.35" y="0.35" width="99.3" height="99.3" pathLength="100" />
+      <svg className="wp-panel-frame" aria-hidden="true">
+        <rect x="1.2" y="1.2" width="calc(100% - 2.4px)" height="calc(100% - 2.4px)" pathLength="100" />
       </svg>
       <div className="wp-panel-scene" aria-hidden="true">
         <span className="wp-panel-opus">{p.n}</span>
@@ -329,7 +334,7 @@ function LegendModal({ onClose }: { onClose: () => void }) {
         {[{ top: 10, left: 10 }, { top: 10, right: 10 }, { bottom: 10, left: 10 }, { bottom: 10, right: 10 }].map((pos, i) => (
           <span key={i} className="pm-cross" style={pos}>+</span>
         ))}
-        <button className="pm-close" onClick={onClose} aria-label="Close" autoFocus>
+        <button className="pm-close" onClick={onClose} aria-label="Close">
           <span>ESC</span>
           <svg width="13" height="13" viewBox="0 0 14 14"><path d="M2 2 L12 12 M12 2 L2 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" fill="none" /></svg>
         </button>

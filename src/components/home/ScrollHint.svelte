@@ -15,6 +15,7 @@
       window.removeEventListener('atelier:section-change', hide);
     };
     window.addEventListener('atelier:section-change', hide);
+    return () => window.removeEventListener('atelier:section-change', hide);
   });
 </script>
 
@@ -39,7 +40,7 @@
     align-items: center;
     gap: 7px;
     pointer-events: none;
-    color: #9a9a96;
+    color: #686865;
     animation: hintFadeIn 1s ease 2.4s both;
   }
 
@@ -81,6 +82,11 @@
     0%   { transform: translate(-50%, -4px); opacity: 0; }
     35%  { opacity: 0.6; }
     100% { transform: translate(-50%, 23px); opacity: 0; }
+  }
+
+  @media (max-width: 640px) {
+    .hint { bottom: calc(6px + env(safe-area-inset-bottom)); }
+    .hint-track { display: none; }
   }
 
   /* Short viewports: the nameplate needs every pixel — drop the hint */

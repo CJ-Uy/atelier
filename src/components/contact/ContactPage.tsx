@@ -29,6 +29,7 @@ export default function ContactPage() {
     timer.current = null;
     setPending(null);
     setHovered(null);
+    setReady(null);
     setMessage('');
   }
 
@@ -56,13 +57,14 @@ export default function ContactPage() {
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const animations = wrap.getAnimations?.({ subtree: true }) ?? [];
     animations.forEach((animation) => { animation.playbackRate = active && !motion.matches ? 4.2 : 1; });
-    if (!active || motion.matches || document.hidden) return;
+    if (!active || document.hidden) return;
 
     const nodes = wrap.querySelectorAll<SVGCircleElement>('.mc-summon-node');
     const target = board.querySelector<HTMLElement>(`[data-channel="${active.id}"] .cm-sigil-disc`);
     let frame = 0;
+    let visible = false;
     const draw = () => {
-      if (document.hidden || motion.matches || !target) return;
+      if (!visible || document.hidden || motion.matches || !target) return;
       const bounds = board.getBoundingClientRect();
       const end = target.getBoundingClientRect();
       const scale = 680 / bounds.width;
@@ -79,9 +81,24 @@ export default function ContactPage() {
       });
       frame = requestAnimationFrame(draw);
     };
-    frame = requestAnimationFrame(draw);
+    const update = () => {
+      cancelAnimationFrame(frame);
+      board.dataset.paused = String(!visible || document.hidden);
+      animations.forEach((animation) => { animation.playbackRate = motion.matches ? 1 : 4.2; });
+      if (visible && !document.hidden && !motion.matches) frame = requestAnimationFrame(draw);
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      update();
+    });
+    observer.observe(wrap);
+    motion.addEventListener('change', update);
+    update();
     return () => {
       cancelAnimationFrame(frame);
+      observer.disconnect();
+      motion.removeEventListener('change', update);
+      board.dataset.paused = String(document.hidden);
       animations.forEach((animation) => { animation.playbackRate = 1; });
     };
   }, [active]);
@@ -91,9 +108,13 @@ export default function ContactPage() {
     const touch = (event.nativeEvent as PointerEvent).pointerType === 'touch'
       || window.matchMedia('(hover: none) and (pointer: coarse)').matches;
     if (!touch || event.detail === 0 || event.button !== 0 || event.metaKey || event.ctrlKey
-      || event.shiftKey || event.altKey || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      || event.shiftKey || event.altKey || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      cancel();
+      return;
+    }
     event.preventDefault();
-    if (timer.current !== null) return;
+    if (pending?.id === channel.id) return;
+    if (timer.current !== null) clearTimeout(timer.current);
     setPending(channel);
     setReady(null);
     setMessage(`Channelling ${channel.label}…`);
@@ -176,7 +197,6 @@ export default function ContactPage() {
           })}
         </div>
         <div className="cm-channel-status">
-          <p className="cm-instruction"><span className="cm-touch-hint">Tap a sigil. Let the circle charge.</span><span className="cm-pointer-hint">Hover to channel. Select to connect.</span></p>
           <p role="status" aria-live="polite" aria-atomic="true">{message || (active ? `${active.label} · ${active.handle}` : 'Six ways to get in touch.')}</p>
           {pending && <button type="button" className="cm-cancel" onClick={cancel}>Cancel</button>}
           {ready && <a className="cm-open-channel" href={ready.href} target={ready.href.startsWith('https:') ? '_blank' : undefined} rel="noopener noreferrer">Open {ready.label} ↗</a>}

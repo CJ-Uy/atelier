@@ -61,8 +61,6 @@ import ContactPage from '../components/contact/ContactPage';
   .cm-label-short { display: none; }
   .cm-channel-status { width: min(100%, 520px); min-height: 108px; padding-top: 12px; text-align: center; }
   .cm-channel-status p { margin: 0; overflow-wrap: anywhere; font: 13px/1.7 var(--font-mono); color: #555; }
-  .cm-channel-status .cm-instruction { margin-bottom: 5px; color: var(--ink); font: italic 20px/1.4 var(--font-serif); }
-  .cm-touch-hint { display: none; }
   .cm-cancel, .cm-open-channel {
     display: inline-flex; min-height: 44px; align-items: center; justify-content: center;
     margin-top: 8px; padding: 8px 16px; border: 1px solid var(--ink);
@@ -70,11 +68,7 @@ import ContactPage from '../components/contact/ContactPage';
   }
   .cm-open-channel { text-underline-offset: 4px; }
   .cm-apparatus[data-paused="true"] * { animation-play-state: paused !important; }
-  @media (hover: none) and (pointer: coarse) {
-    .cm-touch-hint { display: inline; }
-    .cm-pointer-hint { display: none; }
-  }
-  @media (max-width: 819px) {
+  @media (max-width: 819px), (max-height: 500px) and (orientation: landscape) {
     .cm-header { padding: 104px 24px 8px; }
     .cm-header .ph-eyebrow { font-size: 9px; letter-spacing: 0.16em; margin-bottom: 16px; }
     .cm-header .ph-title { font-size: clamp(3.2rem, 11vw, 4.6rem); margin-bottom: 18px; }
@@ -93,6 +87,9 @@ import ContactPage from '../components/contact/ContactPage';
     .cm-label-short { display: inline; }
     .cm-channel-status { padding-top: 20px; min-height: 120px; }
     .cm-foot { padding-top: 12px; text-align: center; line-height: 1.8; letter-spacing: 0.12em; }
+  }
+  @media (max-height: 500px) and (orientation: landscape) {
+    .cm-apparatus { max-width: max(300px, calc(100dvh - 64px)); }
   }
   @media (max-width: 359px) {
     .cm-stage { padding-inline: 14px; }

@@ -27,7 +27,7 @@ import WorksPage from '../components/works/WorksPage';
     grid-area: sub; font: 12px/1.7 'IBM Plex Mono', monospace; color: #454545;
     max-width: 68ch; margin: 0;
   }
-  .wp-filterbar { position: relative; z-index: 2; max-width: 1120px; padding: 0 32px 24px; margin: 32px auto 0; }
+  .wp-filterbar { position: relative; z-index: 2; width: 100%; max-width: 1120px; padding: 0 32px 24px; margin: 32px auto 0; }
   .wp-searchrow { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; }
   .wp-search { position: relative; flex: 1; max-width: 430px; min-width: 0; }
   .wp-search input {
@@ -56,7 +56,7 @@ import WorksPage from '../components/works/WorksPage';
   .wp-panel--major:nth-child(6n) { grid-column: span 7; }
   .wp-panel--archive { grid-column: span 4; }
   .wp-panel-frame { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; overflow: visible; }
-  .wp-panel-frame rect { fill: none; stroke: var(--ink); stroke-width: 2.4px; vector-effect: non-scaling-stroke; stroke-dasharray: 100; stroke-dashoffset: 0; }
+  .wp-panel-frame rect { fill: none; stroke: var(--ink); stroke-width: 2.4px; stroke-dasharray: 100; stroke-dashoffset: 0; }
   .wp-panel-scene {
     position: relative; overflow: hidden; height: 186px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center; padding: 18px;
@@ -83,7 +83,7 @@ import WorksPage from '../components/works/WorksPage';
   .wp-panel:nth-child(even) .wp-panel-circle { transform: rotate(12deg); }
   .wp-panel-circle svg { max-width: 100%; }
   .wp-panel-scene svg g { animation-play-state: paused !important; }
-  .wp-panel:focus-within .wp-panel-scene svg g { animation-play-state: running !important; }
+  .wp-panel:focus-within .wp-panel-scene svg:not([data-motion-paused="true"]) g { animation-play-state: running !important; }
   .wp-panel-spell {
     position: absolute; top: 13px; right: 14px; max-width: calc(100% - 28px); padding: 5px 8px;
     background: var(--paper); border: 1px solid currentColor;
@@ -114,11 +114,11 @@ import WorksPage from '../components/works/WorksPage';
     .wp-panel[data-reveal="pending"] .wp-panel-frame rect { stroke-dashoffset: 100; }
     .wp-panel[data-reveal="pending"] :is(.wp-panel-scene, .wp-panel-copy) { opacity: 0; }
     .wp-panel[data-reveal="ready"] .wp-panel-frame rect { animation: wpInkTrace 560ms cubic-bezier(0.16,1,0.3,1) var(--panel-delay) both; }
-    .wp-panel[data-reveal="ready"] :is(.wp-panel-scene, .wp-panel-copy) { animation: wpPanelPrint 440ms cubic-bezier(0.16,1,0.3,1) calc(var(--panel-delay) + 150ms) backwards; }
-    .wp-panel:focus-within :is(.wp-panel-scene, .wp-panel-copy) { opacity: 1; animation: none; }
+    .wp-panel[data-reveal="ready"] :is(.wp-panel-scene, .wp-panel-copy) { animation: wpPanelPrint 440ms cubic-bezier(0.16,1,0.3,1) calc(var(--panel-delay) + 560ms) backwards; }
+    .wp-panel:focus-within :is(.wp-panel-scene, .wp-panel-copy) { opacity: 1; clip-path: none !important; }
   }
   @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-    .wp-panel:hover .wp-panel-scene svg g { animation-play-state: running !important; }
+    .wp-panel:hover .wp-panel-scene svg:not([data-motion-paused="true"]) g { animation-play-state: running !important; }
     .wp-panel:hover .wp-panel-circle { transform: rotate(0) scale(1.04); }
     .wp-panel:hover .wp-panel-hint { color: var(--vermilion); }
   }
@@ -127,7 +127,7 @@ import WorksPage from '../components/works/WorksPage';
     .wp-panel-copy { padding: 20px; }
   }
   @media (max-width: 680px) {
-    .ph-header { padding: 96px 18px 0; grid-template-columns: minmax(0, 1fr) 64px; gap: 16px; }
+    .ph-header { padding: 96px 18px 0; grid-template-columns: minmax(0, 1fr) 64px; grid-template-areas: "title mark" "sub sub"; gap: 16px; }
     .ph-circlemark svg { width: 64px; height: 64px; }
     .ph-title { font-size: clamp(2.7rem, 10.5vw, 3.6rem); }
     .ph-sub { grid-column: 1 / -1; font-size: 12px; }

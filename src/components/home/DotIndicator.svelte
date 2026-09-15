@@ -102,9 +102,14 @@
 
   .indicator:focus-visible { outline: 2px solid var(--vermilion); outline-offset: 3px; border-radius: 2px; }
 
+  @media (pointer: coarse) {
+    .indicator { min-height: 44px; min-width: 44px; }
+  }
+
   @media (max-width: 640px) {
     .dot-nav { right: env(safe-area-inset-right, 0px); }
     .indicator { width: 44px; height: 44px; padding: 0 12px; }
+    .indicator:focus-visible { outline-offset: -3px; }
     .indicator-label { display: none; }
     .indicator-line { width: 18px; transform: scaleX(0.444); }
   }
@@ -115,6 +120,7 @@
       transform: translateX(-50%); flex-direction: row;
     }
     .indicator { width: 44px; height: 44px; padding: 0 8px; }
+    .indicator:focus-visible { outline-offset: -3px; }
     .indicator-label { display: none; }
   }
 </style>
