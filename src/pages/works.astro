@@ -5,81 +5,155 @@ import WorksPage from '../components/works/WorksPage';
 ---
 
 <BaseLayout title="Works — Atelier" description="A working index of projects, experiments and small spells — research, interfaces, sound and tools.">
-  <WorksPage client:only="react" />
+  <WorksPage client:load />
 </BaseLayout>
 
-<!-- CSS from Works.html exactly: nav, page header, filter, grid, modal, footer -->
+<!-- Page-specific collection and project dialog styles. -->
 <style is:global>
-  /* ── Animations ── */
-  @keyframes mcAppear { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
-  @keyframes mcRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-  @keyframes mcRotateRev { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
-  @keyframes wpFadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-
-  /* ── Nav ── */
-  .wp-nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 20px 32px; mix-blend-mode: multiply;
-  }
-  .wp-brand {
-    font-family: 'Instrument Serif', Georgia, serif; font-style: italic;
-    font-size: 22px; color: #0a0a0a; text-decoration: none; letter-spacing: -0.02em;
-  }
-  .wp-links { display: flex; gap: 22px; align-items: center; }
-  .wp-link {
-    font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600;
-    letter-spacing: 0.12em; text-transform: uppercase; color: #0a0a0a;
-    text-decoration: none; opacity: 0.5; transition: opacity 0.2s;
-  }
-  .wp-link:hover { opacity: 1; }
-  .wp-link.active { opacity: 1; border-bottom: 1.5px solid #0a0a0a; padding-bottom: 2px; }
-
-  /* ── Page header ── */
+  /* The collection reads as a printed manga page: varied frames, broad gutters,
+     halftone scenes and an ink-first reveal. The story order stays in the DOM. */
   .ph-header {
-    position: relative; z-index: 1; text-align: center;
-    max-width: 720px; margin: 0 auto; padding: 124px 32px 8px;
-    animation: wpFadeUp 700ms cubic-bezier(0.4,0,0.2,1) both;
+    position: relative; z-index: 1; display: grid;
+    grid-template-columns: minmax(0, 1fr) 112px; grid-template-areas: "title mark" "sub mark";
+    gap: 16px 32px; max-width: 1120px; margin: 0 auto; padding: 120px 32px 0; text-align: left;
   }
-  .ph-circlemark { display: flex; justify-content: center; margin-bottom: 24px; opacity: 0.9; }
-  .ph-eyebrow {
-    font-size: 10px; letter-spacing: 0.34em; font-weight: 700;
-    opacity: 0.55; text-transform: uppercase; margin-bottom: 18px;
-    font-family: 'IBM Plex Mono', monospace;
-  }
+  .ph-circlemark { grid-area: mark; align-self: center; justify-self: end; }
   .ph-title {
-    font-family: 'Instrument Serif', Georgia, serif; font-weight: 400;
-    font-size: clamp(2.8rem, 6.5vw, 4.6rem); letter-spacing: -0.04em;
-    line-height: 0.98; margin-bottom: 20px; color: #0a0a0a;
+    grid-area: title; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400;
+    font-size: clamp(3.2rem, 6.5vw, 4.6rem); letter-spacing: -0.04em;
+    line-height: 0.98; margin: 0; color: var(--ink); text-wrap: balance;
   }
   .ph-sub {
-    font-size: clamp(0.74rem, 1vw, 0.82rem); line-height: 1.65; color: #454545;
-    max-width: 52ch; margin: 0 auto; letter-spacing: 0.01em;
-    font-family: 'IBM Plex Mono', monospace;
+    grid-area: sub; font: 12px/1.7 'IBM Plex Mono', monospace; color: #454545;
+    max-width: 68ch; margin: 0;
   }
+  .wp-filterbar { position: relative; z-index: 2; max-width: 1120px; padding: 0 32px 24px; margin: 32px auto 0; }
+  .wp-searchrow { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; }
+  .wp-search { position: relative; flex: 1; max-width: 430px; min-width: 0; }
+  .wp-search input {
+    width: 100%; min-height: 44px; padding: 10px 44px 10px 30px;
+    font: 12px 'IBM Plex Mono', monospace; letter-spacing: 0.04em;
+    background: transparent; color: var(--ink); border: 1.4px solid var(--ink);
+  }
+  .wp-search input::placeholder { color: #65635f; opacity: 1; }
+  .wp-search input::-webkit-search-cancel-button { display: none; }
+  .wp-clear { position: absolute; right: 0; top: 0; width: 44px; height: 44px; border: 0; background: transparent; color: var(--ink); cursor: pointer; }
+  .wp-categories, .wp-attributes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .wp-attributes { margin-top: 8px; }
+  .wp-categories button, .wp-attributes button, .wp-legend-button { min-height: 44px; flex-shrink: 0; }
+  .wp-filterbar button { touch-action: manipulation; }
+  .wp-filterbar :is(button, input):focus-visible, .wp-empty button:focus-visible { outline: 2px solid var(--vermilion); outline-offset: 3px; }
 
-  /* ── Filter ── */
-  .wp-filterbar {
-    position: sticky; top: 0; z-index: 40;
-    padding: 26px 32px 22px; margin-top: 40px;
-    background: linear-gradient(#faf9f6 62%, rgba(250,249,246,0));
+  .wp-gridwrap { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; padding: 0 32px 40px; }
+  .wp-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+  .wp-panel {
+    position: relative; grid-column: span 6; min-width: 0; display: flex; flex-direction: column;
+    padding: 3px; isolation: isolate; background: var(--paper);
   }
+  .wp-panel--major:nth-child(6n + 1), .wp-panel--major:nth-child(6n + 4) { grid-column: span 7; }
+  .wp-panel--major:nth-child(6n + 2), .wp-panel--major:nth-child(6n + 3) { grid-column: span 5; }
+  .wp-panel--major:nth-child(6n + 5) { grid-column: span 5; }
+  .wp-panel--major:nth-child(6n) { grid-column: span 7; }
+  .wp-panel--archive { grid-column: span 4; }
+  .wp-panel-frame { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; overflow: visible; }
+  .wp-panel-frame rect { fill: none; stroke: var(--ink); stroke-width: 2.4px; vector-effect: non-scaling-stroke; stroke-dasharray: 100; stroke-dashoffset: 0; }
+  .wp-panel-scene {
+    position: relative; overflow: hidden; height: 186px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; padding: 18px;
+    background: radial-gradient(circle, rgba(10,10,10,0.23) 0.65px, transparent 0.95px) 0 0 / 5px 5px;
+  }
+  .wp-panel--major .wp-panel-scene { height: 230px; }
+  .wp-panel--archive .wp-panel-scene { height: 124px; }
+  .wp-panel-scene::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(112deg, var(--paper) 5%, rgba(250,249,246,0.2) 78%);
+  }
+  .wp-panel-scene::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 13px; background: var(--ink);
+    clip-path: polygon(0 72%, 100% 0, 100% 24%, 0 100%);
+  }
+  .wp-panel:nth-child(even) .wp-panel-scene::after { transform: scaleX(-1); }
+  .wp-panel-opus {
+    position: absolute; left: 14px; bottom: -10px; font: italic 126px/1 'Instrument Serif', Georgia, serif;
+    letter-spacing: -0.04em; color: var(--ink); opacity: 0.09;
+  }
+  .wp-panel--major .wp-panel-opus { font-size: 170px; }
+  .wp-panel--archive .wp-panel-opus { font-size: 94px; }
+  .wp-panel-circle { position: relative; transform: rotate(-9deg); transition: transform 220ms ease-out; }
+  .wp-panel:nth-child(even) .wp-panel-circle { transform: rotate(12deg); }
+  .wp-panel-circle svg { max-width: 100%; }
+  .wp-panel-scene svg g { animation-play-state: paused !important; }
+  .wp-panel:focus-within .wp-panel-scene svg g { animation-play-state: running !important; }
+  .wp-panel-spell {
+    position: absolute; top: 13px; right: 14px; max-width: calc(100% - 28px); padding: 5px 8px;
+    background: var(--paper); border: 1px solid currentColor;
+    font: 600 9px/1.4 'IBM Plex Mono', monospace; letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .wp-panel-copy { position: static; display: flex; flex-direction: column; flex: 1; gap: 12px; padding: 22px 24px 20px; }
+  .wp-panel-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; color: #65635f; font: 500 9px/1.5 'IBM Plex Mono', monospace; letter-spacing: 0.1em; text-transform: uppercase; }
+  .wp-panel-title { margin: 0; font: 400 clamp(1.9rem, 3vw, 2.7rem)/1.02 'Instrument Serif', Georgia, serif; letter-spacing: -0.03em; text-wrap: balance; }
+  .wp-panel-open { padding: 0; border: 0; background: none; color: var(--ink); font: inherit; letter-spacing: inherit; text-align: left; cursor: pointer; }
+  .wp-panel-open::after { content: ''; position: absolute; inset: 0; z-index: 5; }
+  .wp-panel-open:focus { outline: none; }
+  .wp-panel-open:focus-visible::after { outline: 2px solid var(--vermilion); outline-offset: 4px; }
+  .wp-panel-blurb { margin: 0; font: italic 1.12rem/1.5 'Instrument Serif', Georgia, serif; color: #454545; max-width: 52ch; }
+  .wp-panel-bottom { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; justify-content: space-between; margin-top: auto; padding-top: 8px; }
+  .wp-panel-tags { display: flex; flex-wrap: wrap; gap: 5px 12px; font: 10px/1.6 'IBM Plex Mono', monospace; color: #65635f; }
+  .wp-panel-hint { display: inline-flex; align-items: center; gap: 7px; margin-left: auto; color: var(--ink); font: 500 10px/1.6 'IBM Plex Mono', monospace; white-space: nowrap; }
+  .wp-panel--archive .wp-panel-copy { padding: 18px; }
+  .wp-panel--archive .wp-panel-title { font-size: 1.75rem; }
+  .wp-panel--archive .wp-panel-blurb { font-size: 1rem; }
+  .wp-count { text-align: center; margin-top: 32px; color: #65635f; font: 500 10px/1.6 'IBM Plex Mono', monospace; letter-spacing: 0.12em; text-transform: uppercase; }
+  .wp-empty { padding: 60px 16px; border-block: 1px solid var(--ink); text-align: center; }
+  .wp-empty p { font: 1.8rem/1.2 'Instrument Serif', Georgia, serif; }
+  .wp-empty button { margin-top: 20px; min-height: 44px; padding: 10px 16px; color: var(--paper); background: var(--ink); border: 0; font: 11px 'IBM Plex Mono', monospace; cursor: pointer; }
 
-  /* ── Grid ── */
-  .wp-gridwrap { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 6px 32px 40px; }
-  .wp-grid {
-    display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;
-    align-items: stretch; animation: wpFadeUp 480ms cubic-bezier(0.4,0,0.2,1) both;
+  @keyframes wpInkTrace { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+  @keyframes wpPanelPrint { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+  @media (prefers-reduced-motion: no-preference) {
+    .wp-panel[data-reveal="pending"] .wp-panel-frame rect { stroke-dashoffset: 100; }
+    .wp-panel[data-reveal="pending"] :is(.wp-panel-scene, .wp-panel-copy) { opacity: 0; }
+    .wp-panel[data-reveal="ready"] .wp-panel-frame rect { animation: wpInkTrace 560ms cubic-bezier(0.16,1,0.3,1) var(--panel-delay) both; }
+    .wp-panel[data-reveal="ready"] :is(.wp-panel-scene, .wp-panel-copy) { animation: wpPanelPrint 440ms cubic-bezier(0.16,1,0.3,1) calc(var(--panel-delay) + 150ms) backwards; }
+    .wp-panel:focus-within :is(.wp-panel-scene, .wp-panel-copy) { opacity: 1; animation: none; }
   }
-  .wp-count {
-    text-align: center; margin-top: 34px;
-    font-size: 9.5px; letter-spacing: 0.24em; font-weight: 600;
-    opacity: 0.5; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace;
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .wp-panel:hover .wp-panel-scene svg g { animation-play-state: running !important; }
+    .wp-panel:hover .wp-panel-circle { transform: rotate(0) scale(1.04); }
+    .wp-panel:hover .wp-panel-hint { color: var(--vermilion); }
   }
-
-  @media (max-width: 760px) {
-    .wp-grid { grid-template-columns: 1fr; }
-    .wp-grid article { grid-column: span 1 !important; flex-direction: column !important; }
+  @media (max-width: 900px) {
+    .wp-panel--archive { grid-column: span 6; }
+    .wp-panel-copy { padding: 20px; }
+  }
+  @media (max-width: 680px) {
+    .ph-header { padding: 96px 18px 0; grid-template-columns: minmax(0, 1fr) 64px; gap: 16px; }
+    .ph-circlemark svg { width: 64px; height: 64px; }
+    .ph-title { font-size: clamp(2.7rem, 10.5vw, 3.6rem); }
+    .ph-sub { grid-column: 1 / -1; font-size: 12px; }
+    .wp-filterbar { padding: 0 18px 20px; margin-top: 26px; }
+    .wp-searchrow { gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .wp-search { flex-basis: 100%; max-width: none; }
+    .wp-search input { font-size: 16px; }
+    .wp-search input::placeholder { font-size: 11px; letter-spacing: 0.04em; }
+    .wp-legend-button { margin-left: auto; }
+    .wp-categories { flex-wrap: nowrap; overflow-x: auto; padding: 3px 2px 8px; margin-inline: -2px; scrollbar-width: thin; }
+    .wp-gridwrap { padding: 0 18px 32px; }
+    .wp-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+    .wp-grid .wp-panel { grid-column: auto; }
+    .wp-panel--major .wp-panel-scene { height: 196px; }
+    .wp-panel-scene { height: 174px; }
+    .wp-panel-copy { padding: 20px; gap: 12px; }
+    .wp-panel-title { font-size: 2.15rem; }
+    .wp-panel-meta { font-size: 9px; letter-spacing: 0.06em; }
+    .wp-panel-blurb { font-size: 1.15rem; }
+    .wp-panel--archive .wp-panel-scene { height: 108px; }
+    .wp-panel--archive .wp-panel-copy { padding: 18px 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wp-panel *, .pm-backdrop, .pm-panel { animation: none !important; transition: none !important; }
+    .wp-panel :is(.wp-panel-scene, .wp-panel-copy) { opacity: 1; }
+    .wp-panel-frame rect { stroke-dashoffset: 0; }
   }
 
   /* ── Footer ── */
@@ -92,8 +166,9 @@ import WorksPage from '../components/works/WorksPage';
     font-size: clamp(1.4rem, 3vw, 2rem); margin-bottom: 12px;
   }
   .wp-foot-mail {
+    display: inline-flex; align-items: center; min-height: 44px;
     font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #faf9f6;
-    letter-spacing: 0.08em; text-decoration: none;
+    letter-spacing: 0.03em; text-decoration: none; overflow-wrap: anywhere; max-width: 100%;
     border-bottom: 1px solid rgba(250,249,246,0.4); padding-bottom: 2px;
   }
   .wp-colophon {
@@ -109,11 +184,14 @@ import WorksPage from '../components/works/WorksPage';
 
   .pm-backdrop {
     position: fixed; inset: 0; z-index: 200;
+    width: 100%; height: 100dvh; max-width: none; max-height: none; margin: 0;
+    border: 0; color: var(--ink);
     display: flex; align-items: flex-start; justify-content: center;
     padding: 48px 24px; overflow-y: auto;
-    background: rgba(28, 26, 22, 0.46); backdrop-filter: blur(4px);
+    background: transparent;
     animation: pmBackIn 240ms ease both;
   }
+  .pm-backdrop::backdrop { background: rgba(28, 26, 22, 0.46); }
   .pm-panel {
     position: relative; width: min(920px, 100%); margin: auto;
     background: #faf9f6; border: 1.6px solid #0a0a0a;
@@ -129,10 +207,12 @@ import WorksPage from '../components/works/WorksPage';
     position: absolute; top: 14px; right: 16px; z-index: 5;
     display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
     background: #faf9f6; border: 1.2px solid #0a0a0a; color: #0a0a0a;
+    min-height: 44px; min-width: 44px;
     padding: 6px 10px; font-family: 'IBM Plex Mono', monospace; font-size: 9px;
     font-weight: 700; letter-spacing: 0.18em; transition: all 160ms ease;
   }
   .pm-close:hover { background: #0a0a0a; color: #faf9f6; }
+  .pm-close:focus-visible, .pm-link:focus-visible { outline: 2px solid var(--vermilion); outline-offset: 3px; }
   .pm-scroll { position: relative; z-index: 2; padding: 52px clamp(28px, 5vw, 64px) 30px; }
   .pm-head { display: flex; gap: 32px; align-items: center; }
   .pm-circle { flex-shrink: 0; }
@@ -143,7 +223,7 @@ import WorksPage from '../components/works/WorksPage';
   .pm-title { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(2.6rem, 5vw, 3.7rem); letter-spacing: -0.04em; line-height: 0.96; margin-bottom: 10px; color: #0a0a0a; }
   .pm-rolerow { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: #555; text-transform: uppercase; }
   .pm-links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
-  .pm-link { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #0a0a0a; text-decoration: none; border: 1.2px solid #0a0a0a; padding: 8px 14px; transition: all 150ms ease; }
+  .pm-link { display: inline-flex; align-items: center; min-height: 44px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #0a0a0a; text-decoration: none; border: 1.2px solid #0a0a0a; padding: 8px 14px; transition: all 150ms ease; }
   .pm-link:hover { background: #0a0a0a; color: #faf9f6; }
   .pm-brief { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: clamp(1.2rem, 2vw, 1.5rem); line-height: 1.4; color: #2a2a28; margin: 30px 0 8px; }
   .pm-section { margin-top: 30px; }
@@ -173,7 +253,8 @@ import WorksPage from '../components/works/WorksPage';
     .pm-links { justify-content: center; }
     .pm-plates { grid-template-columns: 1fr; }
     .pm-plate-wide { grid-column: span 1; }
-    .pm-scroll { padding: 50px 22px 26px; }
+    .pm-scroll { padding: 72px 22px max(26px, env(safe-area-inset-bottom)); }
+    .pm-covenrow { flex-wrap: wrap; gap: 8px 12px; }
+    .pm-covenrole { width: 100%; padding-left: 46px; }
   }
-  @media (max-width: 600px) { .ph-header { padding-top: 100px; } }
 </style>

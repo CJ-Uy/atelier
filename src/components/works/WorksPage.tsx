@@ -34,22 +34,17 @@ function catLabel(id: string) {
   return c ? c.label : id;
 }
 
-// ── Reveal on scroll ──────────────────────────────────────────────
-function useReveal() {
-  const ref = useRef<HTMLElement>(null);
-  const [seen, setSeen] = useState(false);
+// Native dialogs supply keyboard containment, Escape and focus restoration.
+function useModal() {
+  const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      (es) => es.forEach((e) => { if (e.isIntersecting) setSeen(true); }),
-      { threshold: 0.12 },
-    );
-    io.observe(el);
-    const fb = setTimeout(() => setSeen(true), 1800);
-    return () => { io.disconnect(); clearTimeout(fb); };
+    const dialog = ref.current;
+    dialog?.showModal();
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { dialog?.close(); document.body.style.overflow = prev; };
   }, []);
-  return [ref, seen] as const;
+  return ref;
 }
 
 // ── Status pill ───────────────────────────────────────────────────
@@ -82,13 +77,7 @@ function SectionRule({ label }: { label: string }) {
 
 // ── Project modal — "The Plate" ───────────────────────────────────
 function ProjectModal({ project, onClose }: { project: Project; onClose: () => void }) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
-  }, [onClose]);
+  const dialogRef = useModal();
 
   const p = project;
   const cc = resolveCircle(p);
@@ -100,11 +89,13 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
   const roleLine = [p.role, p.period, catLabel(p.cat)].filter(Boolean).join(' · ');
 
   return (
-    <div className="pm-backdrop" onClick={onClose}>
-      <div className="pm-panel" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={p.title}>
+    <dialog ref={dialogRef} className="pm-backdrop" aria-label={p.title}
+      onCancel={(e) => { e.preventDefault(); onClose(); }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="pm-panel">
         {crossPos.map((pos, i) => <span key={i} className="pm-cross" style={pos}>+</span>)}
 
-        <button className="pm-close" onClick={onClose} aria-label="Close">
+        <button className="pm-close" onClick={onClose} aria-label="Close" autoFocus>
           <span>ESC</span>
           <svg width="13" height="13" viewBox="0 0 14 14">
             <path d="M2 2 L12 12 M12 2 L2 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" fill="none"/>
@@ -196,129 +187,57 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
           </div>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }
 
 // ── Project card ──────────────────────────────────────────────────
-function WPCard({ p, index, onOpen }: { p: Project; index: number; onOpen: (p: Project) => void }) {
-  const [ref, seen] = useReveal();
-  const [hover, setHover] = useState(false);
-
-  const big = p.weight === 'major';
-  const compact = p.weight === 'archive';
+const WPCard = React.memo(function WPCard({ p, index, onOpen }: { p: Project; index: number; onOpen: (p: Project) => void }) {
   const cc = resolveCircle(p);
   const accent = isAccent(p);
   const origin = p.layers.includes('origin') || p.era === 'highschool';
 
   return (
-    <article
-      ref={ref as React.RefObject<HTMLElement>}
-      onClick={() => onOpen(p)}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        gridColumn: big ? 'span 2' : 'span 1',
-        position: 'relative', background: PAPER, cursor: 'pointer',
-        border: `1.6px solid ${INK}`,
-        boxShadow: hover ? `0 3px 0 ${INK}, 0 18px 38px rgba(10,10,10,0.13)` : `0 2px 0 ${INK}`,
-        padding: big ? '34px 38px' : compact ? '18px 20px' : '28px 28px',
-        display: 'flex', flexDirection: big ? 'row' : 'column',
-        alignItems: big ? 'center' : 'stretch',
-        gap: big ? 34 : compact ? 12 : 18,
-        minHeight: big ? 300 : compact ? 208 : 360,
-        opacity: seen ? 1 : 0,
-        transform: seen ? (hover ? 'translateY(-5px)' : 'translateY(0)') : 'translateY(22px)',
-        transition: `opacity 560ms cubic-bezier(0.4,0,0.2,1) ${Math.min(index, 10) * 55}ms, transform 420ms cubic-bezier(0.34,1.1,0.64,1)`,
-        overflow: 'hidden',
-      }}
-    >
-      {/* halftone wash */}
-      <div style={{
-        position: 'absolute', inset: 0, opacity: 0.09,
-        backgroundImage: 'radial-gradient(circle, #0a0a0a 1.1px, transparent 1.4px)',
-        backgroundSize: '5px 5px',
-        maskImage: 'linear-gradient(210deg, black 0%, transparent 72%)',
-        WebkitMaskImage: 'linear-gradient(210deg, black 0%, transparent 72%)',
-        pointerEvents: 'none',
-      }} />
-
-      {/* crosshair corners */}
-      {([{ top: 7, left: 7 }, { top: 7, right: 7 }, { bottom: 7, left: 7 }, { bottom: 7, right: 7 }] as React.CSSProperties[]).map((pos, i) => (
-        <span key={i} style={{ position: 'absolute', ...pos, zIndex: 2, fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, opacity: 0.36, fontWeight: 700 }}>+</span>
-      ))}
-
-      {/* circle */}
-      <div style={{
-        flexShrink: 0, alignSelf: big ? 'center' : 'flex-start',
-        transform: hover ? 'scale(1.04)' : 'scale(1)',
-        transition: 'transform 480ms cubic-bezier(0.34,1.1,0.64,1)',
-        position: 'relative', zIndex: 1,
-      }}>
-        <MagicCircle variant={cc.base} overlays={cc.overlays} intensity={cc.intensity}
-          state={p.state} origin={origin}
-          size={big ? 184 : compact ? 80 : 120}
-          rotateSpeed={hover ? 16 : 92} innerRotateSpeed={hover ? 8 : 52}
-          reverseInner runes={hover} showCardinals
-          style={{ color: INK }} />
-      </div>
-
-      {/* text */}
-      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', flex: 1, gap: compact ? 7 : 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, letterSpacing: '0.26em', fontWeight: 700, opacity: 0.55, textTransform: 'uppercase' as const }}>
-            WORK · {p.n} / {p.year}
-          </span>
-          <span style={{
-            fontFamily: "'IBM Plex Mono', monospace", fontSize: 8, letterSpacing: '0.2em', fontWeight: 700,
-            textTransform: 'uppercase' as const, padding: '3px 8px', borderRadius: 2,
-            border: `0.8px solid ${accent ? VERMILION : INK}`,
-            color: accent ? VERMILION : INK, whiteSpace: 'nowrap' as const,
-          }}>{p.spell}</span>
+    <article className={`wp-panel wp-panel--${p.weight}`}
+      style={{ '--panel-delay': `${index % 4 * 65}ms` } as React.CSSProperties}>
+      <svg className="wp-panel-frame" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <rect x="0.35" y="0.35" width="99.3" height="99.3" pathLength="100" />
+      </svg>
+      <div className="wp-panel-scene" aria-hidden="true">
+        <span className="wp-panel-opus">{p.n}</span>
+        <div className="wp-panel-circle">
+          <MagicCircle variant={cc.base} overlays={cc.overlays} intensity={cc.intensity}
+            state={p.state} origin={origin} size={p.weight === 'archive' ? 100 : 184}
+            rotateSpeed={20} innerRotateSpeed={12} reverseInner runes={false} showCardinals
+            style={{ color: INK }} />
         </div>
-
-        <h3 style={{
-          fontFamily: "'Instrument Serif', Georgia, serif",
-          fontSize: big ? 'clamp(2.2rem, 3.4vw, 2.9rem)' : compact ? 'clamp(1.3rem, 1.9vw, 1.55rem)' : 'clamp(1.7rem, 2.4vw, 2.1rem)',
-          fontWeight: 400, letterSpacing: '-0.03em', lineHeight: 1.02, margin: 0, color: INK,
-        }}>{p.title}</h3>
-
-        <p style={{
-          fontFamily: "'Instrument Serif', Georgia, serif", fontStyle: 'italic',
-          fontSize: big ? 'clamp(1rem, 1.4vw, 1.15rem)' : compact ? 'clamp(0.85rem, 1vw, 0.92rem)' : 'clamp(0.92rem, 1.2vw, 1.02rem)',
-          color: '#454545', lineHeight: 1.44, margin: 0, maxWidth: '46ch',
-          flex: big ? '0 0 auto' : '1 0 auto',
-        }}>{p.blurb}</p>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' as const, marginTop: 'auto' }}>
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 8.5, letterSpacing: '0.18em', fontWeight: 700, opacity: 0.5 }}>
-            ※ {catLabel(p.cat).toUpperCase()}
-          </span>
-          {(p.tags ?? []).length > 0 && <span style={{ width: 1, height: 12, background: 'rgba(10,10,10,0.25)' }} />}
-          {(p.tags ?? []).map((t) => (
-            <span key={t} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 8.5, padding: '3px 8px', border: '1px solid rgba(10,10,10,0.3)', letterSpacing: '0.05em', whiteSpace: 'nowrap' as const }}>{t}</span>
-          ))}
-        </div>
+        <span className="wp-panel-spell" style={{ color: accent ? VERMILION : INK }}>{p.spell}</span>
       </div>
-
-      {/* cast hint on hover */}
-      <div style={{ position: 'absolute', bottom: 9, right: 13, zIndex: 3, fontFamily: "'IBM Plex Mono', monospace", fontSize: 8, letterSpacing: '0.18em', fontWeight: 700, opacity: hover ? 0.55 : 0, transition: 'opacity 280ms ease', textTransform: 'uppercase' as const }}>
-        cast ↗
+      <div className="wp-panel-copy">
+        <div className="wp-panel-meta"><span>WORK · {p.n}</span><span>{p.year} / {catLabel(p.cat)}</span></div>
+        <h2 className="wp-panel-title">
+          <button className="wp-panel-open" onClick={() => onOpen(p)} aria-haspopup="dialog">{p.title}</button>
+        </h2>
+        <p className="wp-panel-blurb">{p.blurb}</p>
+        <div className="wp-panel-bottom">
+          <div className="wp-panel-tags">{(p.tags ?? []).map((t) => <span key={t}>{t}</span>)}</div>
+          <span className="wp-panel-hint" aria-hidden="true">Read work <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" strokeWidth="1.3" /></svg></span>
+        </div>
       </div>
     </article>
   );
-}
+});
 
 // ── Filter chips (category, single-select) ────────────────────────
 function WPFilter({ active, onChange, counts }: { active: string; onChange: (id: string) => void; counts: Record<string, number> }) {
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 8, justifyContent: 'center' }}>
+    <div className="wp-categories" role="group" aria-label="Filter by discipline">
       {CATEGORIES.map((c) => {
         const isActive = c.id === active;
         const count = c.id === 'all' ? counts.all : (counts[c.id] || 0);
         if (c.id !== 'all' && count === 0) return null;
         return (
-          <button key={c.id} onClick={() => onChange(c.id)} style={{
+          <button key={c.id} onClick={() => onChange(c.id)} aria-pressed={isActive} style={{
             fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, fontWeight: 600,
             letterSpacing: '0.12em', textTransform: 'uppercase' as const, cursor: 'pointer',
             padding: '9px 15px', display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -339,13 +258,13 @@ function WPFilter({ active, onChange, counts }: { active: string; onChange: (id:
 // ── Attribute toggles (multi-select, AND-combined with category) ───
 function WPAttrFilter({ active, onToggle }: { active: Set<string>; onToggle: (id: string) => void }) {
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 7, justifyContent: 'center', marginTop: 10 }}>
+    <div className="wp-attributes" role="group" aria-label="Filter by mark">
       {ATTR_FILTERS.map((a) => {
         const on = active.has(a.id);
         const isAward = a.id === 'award';
         const tint = isAward ? VERMILION : INK;
         return (
-          <button key={a.id} onClick={() => onToggle(a.id)} style={{
+          <button key={a.id} onClick={() => onToggle(a.id)} aria-pressed={on} style={{
             fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, fontWeight: 700,
             letterSpacing: '0.16em', textTransform: 'uppercase' as const, cursor: 'pointer',
             padding: '6px 11px', display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -397,24 +316,20 @@ function LegendItem({ children, label, meaning }: { children: React.ReactNode; l
 }
 
 function LegendModal({ onClose }: { onClose: () => void }) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
-  }, [onClose]);
+  const dialogRef = useModal();
 
   const grid = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(148px, 1fr))', gap: '22px 14px', marginTop: 18 } as const;
   const mini = { color: INK } as React.CSSProperties;
 
   return (
-    <div className="pm-backdrop" onClick={onClose}>
-      <div className="pm-panel" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="How to read a circle">
+    <dialog ref={dialogRef} className="pm-backdrop" aria-label="How to read a circle"
+      onCancel={(e) => { e.preventDefault(); onClose(); }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="pm-panel">
         {[{ top: 10, left: 10 }, { top: 10, right: 10 }, { bottom: 10, left: 10 }, { bottom: 10, right: 10 }].map((pos, i) => (
           <span key={i} className="pm-cross" style={pos}>+</span>
         ))}
-        <button className="pm-close" onClick={onClose} aria-label="Close">
+        <button className="pm-close" onClick={onClose} aria-label="Close" autoFocus>
           <span>ESC</span>
           <svg width="13" height="13" viewBox="0 0 14 14"><path d="M2 2 L12 12 M12 2 L2 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" fill="none" /></svg>
         </button>
@@ -468,7 +383,7 @@ function LegendModal({ onClose }: { onClose: () => void }) {
           <div className="pm-foot"><span /><span>CLOSE · ESC</span><span /></div>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }
 
@@ -479,6 +394,7 @@ export default function WorksPage() {
   const [query, setQuery] = useState('');
   const [legendOpen, setLegendOpen] = useState(false);
   const [active, setActive] = useState<Project | null>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   const sorted = useMemo(() => sortWorks(WORKS), []);
 
@@ -502,6 +418,20 @@ export default function WorksPage() {
     });
   }, [filter, attrs, query, sorted]);
 
+  useEffect(() => {
+    const panels = gridRef.current?.querySelectorAll<HTMLElement>('.wp-panel:not([data-reveal="ready"])');
+    if (!panels?.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        (entry.target as HTMLElement).dataset.reveal = 'ready';
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.08 });
+    panels.forEach((panel) => { panel.dataset.reveal = 'pending'; observer.observe(panel); });
+    return () => observer.disconnect();
+  }, [shown]);
+
   const toggleAttr = (id: string) =>
     setAttrs((prev) => {
       const n = new Set(prev);
@@ -512,11 +442,11 @@ export default function WorksPage() {
   return (
     <>
       {/* Nav */}
-      <nav className="wp-nav">
+      <nav className="wp-nav" aria-label="Main navigation">
         <a href="/" className="wp-brand">atelier</a>
         <div className="wp-links">
           <a href="/" className="wp-link">Home</a>
-          <a href="/works" className="wp-link active">Works</a>
+          <a href="/works" className="wp-link active" aria-current="page">Works</a>
           <a href="/notes" className="wp-link">Notes</a>
           <a href="/contact" className="wp-link">Contact</a>
         </div>
@@ -527,30 +457,25 @@ export default function WorksPage() {
         <div className="ph-circlemark">
           <MagicCircle variant="casting" size={104} rotateSpeed={140} style={{ color: INK }} />
         </div>
-        <div className="ph-eyebrow">✦ THE GRIMOIRE · COLLECTED WORKS ✦</div>
         <h1 className="ph-title">Things I've conjured</h1>
-        <p className="ph-sub">A working index of everything I've made, won, led, taught or contributed to — projects, research, systems, games and small spells. Filter by discipline or mark; hover a card to spin up its circle.</p>
+        <p className="ph-sub">A working index of everything I've made, won, led, taught or contributed to — projects, research, systems, games and small spells. Filter by discipline or mark; open a panel to read its story.</p>
       </header>
 
       {/* Sticky filter bar */}
       <div className="wp-filterbar">
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' as const, marginBottom: 14 }}>
-          <div style={{ position: 'relative' }}>
+        <div className="wp-searchrow">
+          <div className="wp-search">
             <span style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', fontSize: 12, opacity: 0.45, pointerEvents: 'none' }}>⌕</span>
             <input
+              type="search"
               value={query} onChange={(e) => setQuery(e.target.value)}
               placeholder="SEARCH THE GRIMOIRE" aria-label="Search works"
-              style={{
-                fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase' as const,
-                padding: '9px 30px 9px 28px', width: 268, maxWidth: '72vw', background: 'transparent', color: INK,
-                border: `1.4px solid ${INK}`, outline: 'none',
-              }}
             />
             {query && (
-              <button onClick={() => setQuery('')} aria-label="Clear search" style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', background: 'none', border: 'none', color: INK, fontSize: 11, opacity: 0.5 }}>✕</button>
+              <button className="wp-clear" onClick={() => setQuery('')} aria-label="Clear search">✕</button>
             )}
           </div>
-          <button onClick={() => setLegendOpen(true)} style={{
+          <button className="wp-legend-button" onClick={() => setLegendOpen(true)} aria-haspopup="dialog" style={{
             fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const,
             cursor: 'pointer', padding: '9px 14px', display: 'inline-flex', alignItems: 'center', gap: 7,
             background: 'transparent', color: INK, border: `1.4px solid ${INK}`,
@@ -564,10 +489,14 @@ export default function WorksPage() {
 
       {/* Grid */}
       <main className="wp-gridwrap">
-        <div className="wp-grid" key={filter + '|' + [...attrs].sort().join(',')}>
+        <div className="wp-grid" ref={gridRef} key={filter + '|' + [...attrs].sort().join(',')}>
           {shown.map((p, i) => <WPCard key={p.slug} p={p} index={i} onOpen={setActive} />)}
         </div>
-        <div className="wp-count">
+        {shown.length === 0 && <div className="wp-empty">
+          <p>No works match these filters.</p>
+          <button onClick={() => { setFilter('all'); setAttrs(new Set()); setQuery(''); }}>Show all works</button>
+        </div>}
+        <div className="wp-count" role="status" aria-live="polite" aria-atomic="true">
           {shown.length} {shown.length === 1 ? 'work' : 'works'}{filter !== 'all' ? ` · ${catLabel(filter)}` : ''} · the grimoire grows
         </div>
       </main>

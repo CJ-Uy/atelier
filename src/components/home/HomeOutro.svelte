@@ -70,7 +70,7 @@
 
 <style>
   .outro {
-    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -140,6 +140,9 @@
   .cta:hover .cta-arrow { transform: translateX(4px); }
 
   .cta-alt {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
     font-family: 'Instrument Serif', Georgia, serif;
     font-style: italic;
     font-size: 1.05rem;
@@ -167,7 +170,10 @@
     opacity: 0.55;
     font-weight: 600;
   }
-  .mail a { color: var(--ink); text-decoration: none; }
+  .mail a {
+    display: inline-flex; align-items: center; min-height: 44px;
+    color: var(--ink); text-decoration: none;
+  }
   .mail a:hover { text-decoration: underline; text-underline-offset: 3px; }
   .rule { width: 26px; height: 1px; background: var(--ink); opacity: 0.5; }
 
@@ -197,4 +203,13 @@
   .armed.inview .cta-row   { opacity: 1; }
   .armed.inview .mail      { opacity: 0.55; }
   .armed.inview .colophon  { opacity: 0.38; }
+
+  @media (max-width: 640px) {
+    .outro { padding: 80px 24px max(40px, env(safe-area-inset-bottom)); }
+    .cta { font-size: 11px; padding-inline: 18px; letter-spacing: 0.08em; }
+    .mail { gap: 8px; max-width: 100%; letter-spacing: 0.08em; font-size: 10px; }
+    .mail a { overflow-wrap: anywhere; }
+    .rule { width: 14px; flex-shrink: 0; }
+    .colophon { font-size: 9px; line-height: 1.8; letter-spacing: 0.12em; }
+  }
 </style>

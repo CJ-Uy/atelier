@@ -34,16 +34,19 @@ describe('ScrollOrchestrator', () => {
     const o = new ScrollOrchestrator(mockEngine() as any, sections(['graphPaper', 'keyboard']));
     // goToSection now delegates to scrollIntoView — should not throw
     expect(() => o.goToSection(1)).not.toThrow();
+    o.destroy();
   });
 
   it('handles negative index gracefully', () => {
     const o = new ScrollOrchestrator(mockEngine() as any, sections(['graphPaper', 'keyboard']));
     expect(() => o.goToSection(-5)).not.toThrow();
+    o.destroy();
   });
 
   it('handles over-range index gracefully', () => {
     const o = new ScrollOrchestrator(mockEngine() as any, sections(['graphPaper', 'keyboard']));
     expect(() => o.goToSection(99)).not.toThrow();
+    o.destroy();
   });
 
   it('init attaches scroll listener without error', () => {

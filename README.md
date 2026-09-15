@@ -38,6 +38,21 @@ pnpm build
 The Cloudflare adapter uses Wrangler during development and builds. It needs
 write access to Wrangler's user-level log and registry directories.
 
+## Beta deployment
+
+The `beta` branch is published to the `atelier-beta` Worker at
+`https://beta.cjuy.dev`. Deploy it with:
+
+```sh
+pnpm deploy:beta --dry-run
+pnpm deploy:beta
+```
+
+The command builds with `CLOUDFLARE_ENV=beta`, checks the generated Worker name,
+account, and custom domain, then deploys that build. Beta uses its own session
+namespace and includes `noindex` metadata. The production deployment command
+remains `pnpm deploy`.
+
 ## CV Publishing
 
 Edit `public/cv/CV_Charles_Joshua_Uy.docx`, export it to

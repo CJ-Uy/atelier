@@ -50,6 +50,19 @@ test.describe('Homepage', () => {
     await expect(second).toHaveClass(/active/);
   });
 
+  test('hero follows the latest section when direction changes mid-transition', async ({ page }) => {
+    await expect(page.locator('.descriptor')).toContainText('Charles');
+    await page.evaluate(() => {
+      const change = (index: number) => window.dispatchEvent(
+        new CustomEvent('atelier:section-change', { detail: { index } }),
+      );
+      change(1);
+      setTimeout(() => change(0), 80);
+    });
+    await page.waitForTimeout(500);
+    await expect(page.locator('.descriptor')).toContainText('Charles');
+  });
+
   test('scroll container has 8 section children', async ({ page }) => {
     const sections = page.locator('.scroll-container .scroll-section');
     await expect(sections).toHaveCount(8);
@@ -65,4 +78,22 @@ test('reduced motion selects economy rendering', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('data-render-quality', 'economy');
+});
+
+test('mobile navigation fits and provides touch-sized targets', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.goto('/');
+  const links = page.locator('nav[aria-label="Main navigation"] a, .indicator');
+  await expect(page.locator('.indicator')).toHaveCount(8);
+  for (const link of await links.all()) {
+    const box = await link.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+    expect(box!.width).toBeGreaterThanOrEqual(44);
+    expect(box!.x).toBeGreaterThanOrEqual(0);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(320);
+  }
+  expect(await page.locator('.scroll-container').evaluate(
+    (element) => element.scrollWidth <= element.clientWidth,
+  )).toBe(true);
 });

@@ -7,9 +7,11 @@
   let active = $state(0);
 
   onMount(() => {
-    window.addEventListener('atelier:section-change', (e) => {
+    const onSectionChange = (e: Event) => {
       active = (e as CustomEvent<{ index: number }>).detail.index;
-    });
+    };
+    window.addEventListener('atelier:section-change', onSectionChange);
+    return () => window.removeEventListener('atelier:section-change', onSectionChange);
   });
 
   function jump(index: number) {
@@ -63,20 +65,22 @@
   .indicator-line {
     display: block;
     height: 2px;
-    width: 8px;
+    width: 28px;
     background: #bbb;
     border-radius: 1px;
-    transition: all 300ms cubic-bezier(0.4,0,0.2,1);
+    transform: scaleX(0.286);
+    transform-origin: right;
+    transition: transform 300ms cubic-bezier(0.4,0,0.2,1), background-color 300ms ease;
     flex-shrink: 0;
   }
 
   .indicator.active .indicator-line {
-    width: 28px;
+    transform: scaleX(1);
     background: var(--ink);
   }
 
   .indicator:hover:not(.active) .indicator-line {
-    width: 16px;
+    transform: scaleX(0.571);
     background: var(--mute-1);
   }
 
@@ -99,9 +103,18 @@
   .indicator:focus-visible { outline: 2px solid var(--vermilion); outline-offset: 3px; border-radius: 2px; }
 
   @media (max-width: 640px) {
-    .dot-nav { right: 12px; }
-    .indicator { padding: 9px 4px; }
+    .dot-nav { right: env(safe-area-inset-right, 0px); }
+    .indicator { width: 44px; height: 44px; padding: 0 12px; }
     .indicator-label { display: none; }
-    .indicator.active .indicator-line { width: 18px; }
+    .indicator-line { width: 18px; transform: scaleX(0.444); }
+  }
+
+  @media (max-height: 560px) and (orientation: landscape) {
+    .dot-nav {
+      top: auto; right: auto; left: 50%; bottom: env(safe-area-inset-bottom, 0px);
+      transform: translateX(-50%); flex-direction: row;
+    }
+    .indicator { width: 44px; height: 44px; padding: 0 8px; }
+    .indicator-label { display: none; }
   }
 </style>

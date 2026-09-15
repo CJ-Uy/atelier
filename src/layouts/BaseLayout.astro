@@ -25,8 +25,13 @@ const {
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content={description} />
+    {import.meta.env.MODE === 'beta' && <meta name="robots" content="noindex, nofollow" />}
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" sizes="any" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
@@ -39,7 +44,7 @@ const {
     {isHome && <script is:inline src="/face-data.js" defer></script>}
   </head>
   <body class:list={[{ 'page-home': isHome }]}
-    style={!isHome ? 'display:flex;flex-direction:column;min-height:100vh;' : ''}>
+    style={!isHome ? 'display:flex;flex-direction:column;min-height:100dvh;' : ''}>
     {isHome && (
       <>
         <!-- Ink texture + radial vignette: home only -->

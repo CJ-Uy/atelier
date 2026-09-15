@@ -20,11 +20,15 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 28px;
+    padding: 10px 28px;
     pointer-events: none;
   }
 
   .nav-brand {
+    display: inline-flex;
+    align-items: center;
+    min-width: 44px;
+    min-height: 44px;
     font-family: 'Instrument Serif', Georgia, serif;
     font-size: 1.15rem;
     font-weight: 400;
@@ -43,17 +47,21 @@
   }
 
   .nav-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
     position: relative;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.68rem;
     font-weight: 500;
     color: var(--ink);
     text-decoration: none;
-    opacity: 0.5;
+    opacity: 0.65;
     transition: opacity 0.2s;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    padding-bottom: 3px;
   }
 
   /* Hairline underline draws from the left on hover; stays for the
@@ -63,7 +71,7 @@
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: 8px;
     height: 1px;
     background: var(--ink);
     transform: scaleX(0);
@@ -78,9 +86,14 @@
   .nav-link[aria-current="page"]::after { transform: scaleX(1); }
 
   @media (max-width: 640px) {
-    .navbar { padding: 16px 20px; }
-    .nav-links { gap: 16px; }
-    .nav-link { font-size: 0.6rem; }
+    .navbar {
+      padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
+      gap: 12px;
+      background: var(--paper);
+      border-bottom: 1px solid var(--mute-2);
+    }
+    .nav-links { gap: 8px; }
+    .nav-link { font-size: 10px; letter-spacing: 0.06em; }
   }
 </style>
 

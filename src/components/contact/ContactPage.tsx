@@ -1,270 +1,188 @@
-/**
- * ContactPage — faithful port of contact-page.jsx from the design bundle.
- * CSS classes (.wp-*, .ph-*, .cm-*) are defined in contact.astro <style is:global>.
- * Framework: React (matches the design's React JSX).
- */
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import MagicCircle from '../shared/MagicCircle';
 
-const INKC = '#0a0a0a';
-const VERMC = '#dc3522';
-
 const CHANNELS = [
-  { id: 'email',    sigil: '✉',  label: 'Email',             handle: 'charlesjoshuauy@gmail.com',     href: 'mailto:charlesjoshuauy@gmail.com',                      angle: -90, accent: true  },
-  { id: 'github',   sigil: 'GH', label: 'GitHub',            handle: 'CJ-Uy',                          href: 'https://github.com/CJ-Uy',                              angle: -30 },
-  { id: 'linkedin', sigil: 'in', label: 'LinkedIn',          handle: 'in/charles-joshua-uy',            href: 'https://www.linkedin.com/in/charles-joshua-uy-920826274/', angle: 30 },
-  { id: 'phone',    sigil: '✆',  label: 'Phone',             handle: '+63 917 150 4686',                href: 'tel:+639171504686',                                     angle: 90  },
-  { id: 'cv',       sigil: 'CV', label: 'Curriculum Vitae',  handle: 'Open PDF ↗',                     href: 'https://cv.cjuy.dev',                                   angle: 150 },
-  { id: 'facebook', sigil: 'f',  label: 'Facebook',          handle: '/charlesjoshua.uy',               href: 'https://facebook.com/charlesjoshua.uy',                 angle: 210 },
+  { id: 'email', sigil: '✉', label: 'Email', handle: 'charlesjoshuauy@gmail.com', href: 'mailto:charlesjoshuauy@gmail.com', angle: -90 },
+  { id: 'github', sigil: 'GH', label: 'GitHub', handle: 'CJ-Uy', href: 'https://github.com/CJ-Uy', angle: -30 },
+  { id: 'linkedin', sigil: 'in', label: 'LinkedIn', handle: 'in/charles-joshua-uy', href: 'https://www.linkedin.com/in/charles-joshua-uy-920826274/', angle: 30 },
+  { id: 'phone', sigil: '✆', label: 'Phone', handle: '+63 917 150 4686', href: 'tel:+639171504686', angle: 90 },
+  { id: 'cv', sigil: 'CV', label: 'Curriculum Vitae', handle: 'Open PDF ↗', href: 'https://cv.cjuy.dev', angle: 150 },
+  { id: 'facebook', sigil: 'f', label: 'Facebook', handle: '/charlesjoshua.uy', href: 'https://facebook.com/charlesjoshua.uy', angle: 210 },
 ] as const;
 
 type Channel = typeof CHANNELS[number];
+const CHARGE_MS = 1500;
 
-// ── Sigil node positioned on circle perimeter ─────────────────────
-function SigilNode({ ch, hovered, onHover, dims }: {
-  ch: Channel;
-  hovered: string | null;
-  onHover: (id: string | null) => void;
-  dims: { nodeR: number; disc: number; labelGap: number };
-}) {
-  const { nodeR, disc, labelGap } = dims;
-  const rad = (ch.angle * Math.PI) / 180;
-  const ux = Math.cos(rad), uy = Math.sin(rad);
-  const nx = ux * nodeR, ny = uy * nodeR;
-  const labelW = 132, labelH = 44;
-  const proj = Math.abs(ux) * (labelW / 2) + Math.abs(uy) * (labelH / 2);
-  const labelDist = nodeR + disc / 2 + labelGap + proj;
-  const lx = ux * labelDist, ly = uy * labelDist;
-  const isHover = hovered === ch.id;
-  const live = isHover && ch.href;
-  const Tag = ch.href ? 'a' : 'div';
-  const props = ch.href
-    ? { href: ch.href, target: (ch.href.startsWith('http') ? '_blank' : undefined) as string | undefined, rel: 'noopener noreferrer' }
-    : {};
+export default function ContactPage() {
+  const [hovered, setHovered] = useState<Channel | null>(null);
+  const [pending, setPending] = useState<Channel | null>(null);
+  const [ready, setReady] = useState<Channel | null>(null);
+  const [message, setMessage] = useState('');
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stage = useRef<HTMLDivElement>(null);
+  const circle = useRef<HTMLDivElement>(null);
+  const lines = useRef<(SVGLineElement | null)[]>([]);
+  const active = pending ?? hovered;
 
-  return (
-    <Tag
-      {...props}
-      onMouseEnter={() => onHover(ch.id)}
-      onMouseLeave={() => onHover(null)}
-      style={{
-        position: 'absolute', left: '50%', top: '50%',
-        transform: 'translate(-50%, -50%)',
-        textDecoration: 'none', cursor: ch.href ? 'pointer' : 'default',
-        pointerEvents: 'auto', zIndex: 4,
-      }}
-    >
-      {/* disc */}
-      <div style={{
-        position: 'absolute', left: nx, top: ny, transform: `translate(-50%, -50%) scale(${live ? 1.12 : 1})`,
-        width: disc, height: disc, borderRadius: '50%',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: live ? VERMC : '#faf9f6',
-        border: `1.5px solid ${live ? VERMC : INKC}`,
-        color: live ? '#faf9f6' : INKC,
-        boxShadow: live ? '0 4px 14px rgba(220,53,34,0.3)' : `0 2px 0 ${INKC}`,
-        fontFamily: ch.sigil.length > 1 ? "'IBM Plex Mono', monospace" : 'Georgia, serif',
-        fontSize: ch.sigil.length > 1 ? disc * 0.34 : disc * 0.46,
-        fontWeight: 600, transition: 'all 220ms cubic-bezier(0.34,1.1,0.64,1)',
-        userSelect: 'none',
-      }}>{ch.sigil}</div>
-      {/* label */}
-      <div style={{
-        position: 'absolute', left: lx, top: ly,
-        transform: 'translate(-50%, -50%)',
-        width: labelW, textAlign: 'center', lineHeight: 1.25,
-      }}>
-        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: live ? VERMC : INKC, transition: 'color 200ms ease' }}>{ch.label}</div>
-        <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontStyle: 'italic', fontSize: 14, color: '#555', marginTop: 1, whiteSpace: 'nowrap' }}>{ch.handle}</div>
-      </div>
-    </Tag>
-  );
-}
-
-// ── Desktop summoning apparatus ───────────────────────────────────
-function SummoningCircle() {
-  const [hovered, setHovered] = useState<string | null>(null);
-  const hoveredRef = useRef<string | null>(null);
-  useEffect(() => { hoveredRef.current = hovered; }, [hovered]);
-
-  const charging = !!CHANNELS.find((x) => x.id === hovered && x.href);
-
-  const size = 680;
-  const circleSize = 372;
-  const dims = { nodeR: 238, disc: 52, labelGap: 16 };
-  const c = size / 2;
-  const N = 5;
-
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const lineRefs = useRef<(SVGLineElement | null)[]>([]);
-  const animsRef = useRef<Animation[] | null>(null);
-  const rateRef = useRef(1);
-
-  let hp: [number, number] | null = null;
-  if (charging) {
-    const ch = CHANNELS.find((x) => x.id === hovered)!;
-    const r = (ch.angle * Math.PI) / 180;
-    hp = [c + Math.cos(r) * dims.nodeR, c + Math.sin(r) * dims.nodeR];
+  function cancel() {
+    if (timer.current !== null) clearTimeout(timer.current);
+    timer.current = null;
+    setPending(null);
+    setHovered(null);
+    setMessage('');
   }
 
   useEffect(() => {
-    let raf: number;
-    const tick = () => {
-      try {
-        const hv = hoveredRef.current;
-        const ch = CHANNELS.find((x) => x.id === hv && x.href);
-        const targetRate = ch ? 4.2 : 1;
-        rateRef.current += (targetRate - rateRef.current) * 0.08;
-
-        if ((!animsRef.current || !animsRef.current.length) && wrapRef.current) {
-          const list = wrapRef.current.getAnimations({ subtree: true });
-          if (list && list.length) animsRef.current = list;
-        }
-        if (animsRef.current) {
-          for (const a of animsRef.current) { try { a.playbackRate = rateRef.current; } catch (_) {} }
-        }
-
-        if (ch && wrapRef.current) {
-          const crect = wrapRef.current.parentElement!.getBoundingClientRect();
-          const r = (ch.angle * Math.PI) / 180;
-          const tx = c + Math.cos(r) * dims.nodeR, ty = c + Math.sin(r) * dims.nodeR;
-          const nodes = wrapRef.current.querySelectorAll<SVGCircleElement>('.mc-summon-node');
-          for (let i = 0; i < N; i++) {
-            const ln = lineRefs.current[i];
-            const nd = nodes[i];
-            if (ln && nd) {
-              const nr = nd.getBoundingClientRect();
-              const nx = nr.left + nr.width / 2 - crect.left;
-              const ny = nr.top + nr.height / 2 - crect.top;
-              ln.setAttribute('x1', nx.toFixed(2)); ln.setAttribute('y1', ny.toFixed(2));
-              ln.setAttribute('x2', tx.toFixed(2)); ln.setAttribute('y2', ty.toFixed(2));
-            }
-          }
-        }
-      } catch (_) {}
-      raf = requestAnimationFrame(tick);
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') cancel(); };
+    const onVisibility = () => {
+      if (stage.current) stage.current.dataset.paused = String(document.hidden);
+      if (document.hidden) cancel();
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [c]);
-
-  return (
-    <div style={{ position: 'relative', width: size, height: size, margin: '0 auto' }}>
-      {/* charge lines */}
-      <svg width={size} height={size} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'visible', zIndex: 0 }} aria-hidden="true">
-        {charging && Array.from({ length: N }, (_, i) => (
-          <line key={i} ref={(el) => { lineRefs.current[i] = el; }}
-            x1={c} y1={c} x2={hp ? hp[0] : c} y2={hp ? hp[1] : c}
-            stroke={VERMC} strokeWidth="1.5" className="cm-flow"
-            style={{ animationDelay: `${i * 70}ms` }}
-          />
-        ))}
-        {hp && <circle cx={hp[0]} cy={hp[1]} r={dims.disc / 2 + 4} fill="none" stroke={VERMC} strokeWidth="1.3" className="cm-pulsering" />}
-      </svg>
-
-      {/* the circle */}
-      <div ref={wrapRef} style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', zIndex: 1 }}>
-        <MagicCircle variant="summoning" size={circleSize}
-          rotateSpeed={150} innerRotateSpeed={80}
-          reverseInner runes
-          style={{ color: INKC }} />
-      </div>
-
-      {/* core monogram — the disc is centred exactly on the ring's hub; the label
-          is floated out of flow below it so it can't pull the disc off-centre */}
-      <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: 102, height: 102, pointerEvents: 'none', zIndex: 3 }}>
-        <div style={{
-          width: 102, height: 102, borderRadius: '50%',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: '#faf9f6',
-          border: `1.5px solid ${charging ? VERMC : INKC}`,
-          boxShadow: charging ? `0 0 0 4px rgba(220,53,34,0.10), 0 2px 0 ${INKC}` : `0 2px 0 ${INKC}`,
-          transition: 'border-color 220ms ease, box-shadow 260ms ease',
-        }}>
-          <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 27, color: INKC, letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>CJ-Uy</span>
-        </div>
-        <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: 11, fontFamily: "'IBM Plex Mono', monospace", fontSize: 8.5, fontWeight: 700, letterSpacing: '0.3em', textIndent: '0.3em', color: charging ? VERMC : '#888', textTransform: 'uppercase', whiteSpace: 'nowrap', transition: 'color 200ms ease' }}>
-          {charging ? 'channelling' : 'summon'}
-        </div>
-      </div>
-
-      {/* nodes */}
-      {CHANNELS.map((ch) => <SigilNode key={ch.id} ch={ch} hovered={hovered} onHover={setHovered} dims={dims} />)}
-    </div>
-  );
-}
-
-// ── Mobile stacked list ───────────────────────────────────────────
-function SummoningList() {
-  return (
-    <div style={{ maxWidth: 420, margin: '0 auto', width: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 34 }}>
-        <MagicCircle variant="summoning" size={180} rotateSpeed={150} innerRotateSpeed={80} reverseInner style={{ color: INKC }} />
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        {CHANNELS.map((ch) => {
-          const Tag = ch.href ? 'a' : 'div';
-          const props = ch.href ? { href: ch.href, target: (ch.href.startsWith('http') ? '_blank' : undefined) as string | undefined, rel: 'noopener noreferrer' } : {};
-          return (
-            <Tag key={ch.id} {...props} className="cm-row" style={{ textDecoration: 'none', color: INKC }}>
-              <span className="cm-row-disc" style={{ fontFamily: ch.sigil.length > 1 ? "'IBM Plex Mono', monospace" : 'Georgia, serif', fontSize: ch.sigil.length > 1 ? 15 : 20 }}>{ch.sigil}</span>
-              <span style={{ flex: 1 }}>
-                <span style={{ display: 'block', fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' }}>{ch.label}</span>
-                <span style={{ display: 'block', fontFamily: "'Instrument Serif', Georgia, serif", fontStyle: 'italic', fontSize: 15, color: '#555' }}>{ch.handle}</span>
-              </span>
-              {ch.href && <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, opacity: 0.5 }}>↗</span>}
-            </Tag>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ── Page ──────────────────────────────────────────────────────────
-export default function ContactPage() {
-  const [narrow, setNarrow] = useState(
-    typeof window !== 'undefined' && window.innerWidth < 820,
-  );
-  useEffect(() => {
-    const on = () => setNarrow(window.innerWidth < 820);
-    window.addEventListener('resize', on);
-    return () => window.removeEventListener('resize', on);
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('visibilitychange', onVisibility);
+    onVisibility();
+    return () => {
+      if (timer.current !== null) clearTimeout(timer.current);
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, []);
+
+  // CSS owns idle rotation. Only a visible, charging circle needs JS frames.
+  useEffect(() => {
+    const wrap = circle.current;
+    const board = stage.current;
+    if (!wrap || !board) return;
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const animations = wrap.getAnimations?.({ subtree: true }) ?? [];
+    animations.forEach((animation) => { animation.playbackRate = active && !motion.matches ? 4.2 : 1; });
+    if (!active || motion.matches || document.hidden) return;
+
+    const nodes = wrap.querySelectorAll<SVGCircleElement>('.mc-summon-node');
+    const target = board.querySelector<HTMLElement>(`[data-channel="${active.id}"] .cm-sigil-disc`);
+    let frame = 0;
+    const draw = () => {
+      if (document.hidden || motion.matches || !target) return;
+      const bounds = board.getBoundingClientRect();
+      const end = target.getBoundingClientRect();
+      const scale = 680 / bounds.width;
+      const tx = (end.left + end.width / 2 - bounds.left) * scale;
+      const ty = (end.top + end.height / 2 - bounds.top) * scale;
+      nodes.forEach((node, index) => {
+        const line = lines.current[index];
+        if (!line) return;
+        const rect = node.getBoundingClientRect();
+        line.setAttribute('x1', String((rect.left + rect.width / 2 - bounds.left) * scale));
+        line.setAttribute('y1', String((rect.top + rect.height / 2 - bounds.top) * scale));
+        line.setAttribute('x2', String(tx));
+        line.setAttribute('y2', String(ty));
+      });
+      frame = requestAnimationFrame(draw);
+    };
+    frame = requestAnimationFrame(draw);
+    return () => {
+      cancelAnimationFrame(frame);
+      animations.forEach((animation) => { animation.playbackRate = 1; });
+    };
+  }, [active]);
+
+  function summon(event: React.MouseEvent<HTMLAnchorElement>, channel: Channel) {
+    // Preserve keyboard activation, modified clicks and native reduced-motion links.
+    const touch = (event.nativeEvent as PointerEvent).pointerType === 'touch'
+      || window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+    if (!touch || event.detail === 0 || event.button !== 0 || event.metaKey || event.ctrlKey
+      || event.shiftKey || event.altKey || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    event.preventDefault();
+    if (timer.current !== null) return;
+    setPending(channel);
+    setReady(null);
+    setMessage(`Channelling ${channel.label}…`);
+    timer.current = setTimeout(() => {
+      timer.current = null;
+      setPending(null);
+      setHovered(null);
+      if (channel.href.startsWith('https:')) {
+        // Some mobile browsers expire popup permission during the ritual.
+        // Keep a native link available when a delayed new tab is blocked.
+        const tab = window.open('about:blank', '_blank');
+        if (tab) {
+          tab.opener = null;
+          tab.location.replace(channel.href);
+          setMessage(`${channel.label} opened in a new tab.`);
+        } else {
+          setReady(channel);
+          setMessage('Channel ready. Tap below to continue.');
+        }
+      } else {
+        window.location.href = channel.href;
+        setReady(channel);
+        setMessage(`${channel.label} ready.`);
+      }
+    }, CHARGE_MS);
+  }
 
   return (
     <>
-      <nav className="wp-nav">
+      <nav className="wp-nav" aria-label="Main navigation">
         <a href="/" className="wp-brand">atelier</a>
         <div className="wp-links">
           <a href="/" className="wp-link">Home</a>
           <a href="/works" className="wp-link">Works</a>
           <a href="/notes" className="wp-link">Notes</a>
-          <a href="/contact" className="wp-link active">Contact</a>
+          <a href="/contact" className="wp-link active" aria-current="page">Contact</a>
         </div>
       </nav>
 
-      <header className="ph-header">
-        <div className="ph-circlemark">
-          <MagicCircle variant="summoning" size={104} rotateSpeed={140} innerRotateSpeed={70} reverseInner style={{ color: INKC }} />
-        </div>
+      <header className="ph-header cm-header">
         <div className="ph-eyebrow">✦ THE SUMMONING · RITE NO. VIII ✦</div>
         <h1 className="ph-title">Contact Me</h1>
-        <p className="ph-sub">Every circle on this site was cast for something. This one summons me — trace a sigil to open the channel.</p>
-        <div className="cm-status">
-          <span className="cm-dot" />
-          OPEN TO OPPORTUNITIES &amp; COLLABORATIONS
-        </div>
+        <p className="ph-sub">Every circle on this site was cast for something. This one summons me — choose a sigil to open the channel.</p>
+        <div className="cm-status"><span className="cm-dot" />OPEN TO OPPORTUNITIES &amp; COLLABORATIONS</div>
       </header>
 
-      <main className="cm-stage">
-        {narrow ? <SummoningList /> : <SummoningCircle />}
+      <main className="cm-stage" aria-label="Contact channels">
+        <div ref={stage} className={`cm-apparatus${active ? ' is-charging' : ''}`} aria-busy={!!pending}>
+          <svg className="cm-connections" viewBox="0 0 680 680" aria-hidden="true">
+            {active && Array.from({ length: 5 }, (_, i) => (
+              <line key={i} ref={(element) => { lines.current[i] = element; }}
+                x1="340" y1="340" x2="340" y2="340" className="cm-flow" />
+            ))}
+          </svg>
+          <div ref={circle} className="cm-circle">
+            <MagicCircle variant="summoning" size={372} rotateSpeed={150} innerRotateSpeed={80}
+              reverseInner runes style={{ width: '100%', height: '100%' }} />
+          </div>
+          <div className="cm-core" aria-hidden="true">
+            <span className="cm-monogram">CJ-Uy</span>
+            <span className="cm-core-label">{active ? 'channelling' : 'summon'}</span>
+          </div>
+          {CHANNELS.map((channel) => {
+            const radians = channel.angle * Math.PI / 180;
+            return (
+              <a key={channel.id} data-channel={channel.id}
+                className={`cm-sigil${active?.id === channel.id ? ' is-active' : ''}`}
+                href={channel.href} target={channel.href.startsWith('https:') ? '_blank' : undefined}
+                rel="noopener noreferrer" aria-label={`${channel.label}: ${channel.handle}${channel.href.startsWith('https:') ? ' (opens in a new tab)' : ''}`}
+                onPointerEnter={(event) => { if (event.pointerType === 'mouse') setHovered(channel); }}
+                onPointerLeave={() => setHovered(null)}
+                onFocus={() => setHovered(channel)} onBlur={() => setHovered(null)}
+                onClick={(event) => summon(event, channel)}
+                style={{ left: `${50 + Math.cos(radians) * 39}%`, top: `${50 + Math.sin(radians) * 39}%` }}>
+                <span className={`cm-sigil-disc${channel.sigil.length === 1 ? ' cm-glyph' : ''}`}>{channel.sigil}</span>
+                <span className="cm-sigil-label">{channel.id === 'cv' ? <><span className="cm-label-full">Curriculum Vitae</span><span className="cm-label-short">CV</span></> : channel.label}</span>
+                <span className="cm-sigil-handle">{channel.handle}</span>
+              </a>
+            );
+          })}
+        </div>
+        <div className="cm-channel-status">
+          <p className="cm-instruction"><span className="cm-touch-hint">Tap a sigil. Let the circle charge.</span><span className="cm-pointer-hint">Hover to channel. Select to connect.</span></p>
+          <p role="status" aria-live="polite" aria-atomic="true">{message || (active ? `${active.label} · ${active.handle}` : 'Six ways to get in touch.')}</p>
+          {pending && <button type="button" className="cm-cancel" onClick={cancel}>Cancel</button>}
+          {ready && <a className="cm-open-channel" href={ready.href} target={ready.href.startsWith('https:') ? '_blank' : undefined} rel="noopener noreferrer">Open {ready.label} ↗</a>}
+        </div>
       </main>
-
-      <footer className="cm-foot">
-        <span /><span>RESPONDS WITHIN A MOON&apos;S TURN · TYPICALLY ~48H</span><span />
-      </footer>
+      <footer className="cm-foot"><span /><span>RESPONDS WITHIN A MOON&apos;S TURN · TYPICALLY ~48H</span><span /></footer>
     </>
   );
 }

@@ -12,6 +12,7 @@
 		"astro": "astro",
 		"generate-types": "wrangler types",
 		"deploy": "astro build && wrangler deploy",
+		"deploy:beta": "node scripts/deploy-beta.mjs",
 		"cf-typegen": "wrangler types",
 		"test": "vitest run",
 		"test:watch": "vitest",

@@ -78,7 +78,7 @@ html[data-render-quality="economy"] .ink-texture {
 /* Non-home pages scroll naturally */
 body:not(.page-home) {
   overflow-y: auto;
-  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 /* ── Non-home page backgrounds (paper grain + graph paper) ───── */
@@ -141,20 +141,29 @@ body:not(.page-home)::after {
 .wp-nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 50;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 32px; mix-blend-mode: multiply;
+  padding: 10px 32px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--mute-2);
 }
 .wp-brand {
   font-family: 'Instrument Serif', Georgia, serif; font-style: italic;
   font-size: 22px; color: #0a0a0a; text-decoration: none; letter-spacing: -0.02em;
+  display: inline-flex; align-items: center; min-height: 44px;
 }
 .wp-links { display: flex; gap: 22px; align-items: center; }
 .wp-link {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 44px; position: relative;
   font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600;
   letter-spacing: 0.12em; text-transform: uppercase; color: #0a0a0a;
-  text-decoration: none; opacity: 0.5; transition: opacity 0.2s;
+  text-decoration: none; opacity: 0.65; transition: opacity 0.2s;
 }
 .wp-link:hover { opacity: 1; }
-.wp-link.active { opacity: 1; border-bottom: 1.5px solid #0a0a0a; padding-bottom: 2px; }
+.wp-link.active { opacity: 1; }
+.wp-link.active::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 8px;
+  height: 1.5px; background: var(--ink);
+}
 
 .ph-header {
   position: relative; z-index: 1; text-align: center;
@@ -186,6 +195,19 @@ body:not(.page-home)::after {
 }
 .cm-foot span:first-child,
 .cm-foot span:last-child { width: 30px; height: 1px; background: #0a0a0a; opacity: 0.5; display: inline-block; }
+
+@media (max-width: 640px) {
+  .wp-nav {
+    padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
+    gap: 12px;
+  }
+  .wp-links { gap: 8px; }
+  .wp-link { font-size: 10px; letter-spacing: 0.06em; }
+  .ph-header { padding-inline: 24px; }
+  .ph-header .ph-sub { font-size: 0.875rem; line-height: 1.7; }
+  .cm-foot { padding-inline: 20px; letter-spacing: 0.16em; text-align: center; }
+  .cm-foot span:first-child, .cm-foot span:last-child { flex-shrink: 0; width: 20px; }
+}
 
 /* ── Scroll progress hairline (home only) ─────────────────────── */
 .scroll-progress {

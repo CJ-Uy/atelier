@@ -15,23 +15,34 @@
 
   onMount(() => {
     // Trigger initial pop-in
-    setTimeout(() => { animateIn = true; }, 80);
+    let enterTimer = setTimeout(() => { animateIn = true; }, 80);
+    let transitionTimer: ReturnType<typeof setTimeout> | undefined;
     const introTimer = setTimeout(() => { intro = false; }, 2600);
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    window.addEventListener('atelier:section-change', (e) => {
+    const onSectionChange = (e: Event) => {
       const { index } = (e as CustomEvent<{ index: number }>).detail;
       const next = SECTIONS[index];
-      if (!next || next.id === current.id) return;
+      if (!next || (next.id === current.id && !exiting)) return;
       intro = false;
       clearTimeout(introTimer);
+      clearTimeout(transitionTimer);
+      clearTimeout(enterTimer);
       exiting = true;
       animateIn = false;
-      setTimeout(() => {
+      transitionTimer = setTimeout(() => {
         current = next;
         exiting = false;
-        setTimeout(() => { animateIn = true; }, 40);
-      }, 280);
-    });
+        enterTimer = setTimeout(() => { animateIn = true; }, reduceMotion ? 0 : 40);
+      }, reduceMotion ? 0 : 280);
+    };
+    window.addEventListener('atelier:section-change', onSectionChange);
+    return () => {
+      clearTimeout(introTimer);
+      clearTimeout(transitionTimer);
+      clearTimeout(enterTimer);
+      window.removeEventListener('atelier:section-change', onSectionChange);
+    };
   });
 
   function stickerStyle(s: Sticker): string {
@@ -317,11 +328,11 @@
   /* ── Mobile ────────────────────────────────────────────────── */
   @media (max-width: 640px) {
     .nameplate {
-      width: 94vw;
-      bottom: clamp(36px, 7vh, 64px);
+      width: calc(100% - 64px);
+      bottom: max(28px, env(safe-area-inset-bottom));
     }
     .descriptor { font-size: clamp(2.2rem, 10vw, 3.2rem); }
-    .subtitle { font-size: 0.72rem; max-width: 34ch; }
+    .subtitle { font-size: 0.8125rem; max-width: 34ch; margin-top: 12px; }
     .sticker-field { display: none; }
 
     /* Stickers fold into a centred chip row under the subtitle so mobile
@@ -374,5 +385,13 @@
       background: rgba(250,249,246,0.96);
       box-shadow: 0 1px 0 rgba(10,10,10,0.85);
     }
+  }
+
+  @media (max-height: 560px) and (orientation: landscape) {
+    .nameplate { bottom: calc(52px + env(safe-area-inset-bottom)); }
+    .descriptor { font-size: 2.4rem; }
+    .prefix { margin-top: 6px; }
+    .subtitle { margin-top: 8px; }
+    .tagline, .chip-row { display: none; }
   }
 </style>
