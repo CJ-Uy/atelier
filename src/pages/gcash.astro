@@ -16,7 +16,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <div class="buttons" aria-label="GCash QR actions">
       <a class="button save" id="save-qr" href="/gcash-qr.jpg" target="_blank" rel="noopener">↓ save QR to Photos</a>
       <a class="button" href="gcash://com.mynt.gcash/app">open GCash app ↗</a>
-      <a class="button" id="get-gcash" href="https://apps.apple.com/ph/app/gcash/id520020791" target="_blank" rel="noopener noreferrer">get GCash</a>
     </div>
     <button class="candle-button" id="candle-button" type="button"><span>🕯️ LIGHT A CANDLE</span><small>and help me summon more GCash plz</small></button>
     <div class="candles"><span id="candle-row" aria-hidden="true"></span><span id="candle-caption" aria-live="polite"></span></div>
@@ -50,11 +49,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         })
         .catch(() => {});
     }
-  }
-
-  const getGcash = document.querySelector<HTMLAnchorElement>('#get-gcash');
-  if (getGcash && /Android/i.test(navigator.userAgent)) {
-    getGcash.href = 'https://play.google.com/store/apps/details?id=com.globe.gcash.android';
   }
 
   const button = document.querySelector<HTMLButtonElement>('#candle-button');

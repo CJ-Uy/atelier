@@ -8,7 +8,7 @@ test('GCash page shows the real QR and candles remember clicks', async ({ page }
   await expect(page.getByRole('img', { name: /original GCash InstaPay QR/i })).toBeVisible();
   await expect(page.getByRole('img', { name: /summoning ritual meme/i })).toBeVisible();
   await expect(page.getByRole('link', { name: /open GCash app/i })).toHaveAttribute('href', 'gcash://com.mynt.gcash/app');
-  await expect(page.getByRole('link', { name: /get GCash/i })).toHaveAttribute('href', 'https://apps.apple.com/ph/app/gcash/id520020791');
+  await expect(page.getByRole('link', { name: /^get GCash$/i })).toHaveCount(0);
   await expect(page.getByText(/artist's impression|no magic|On one phone:/i)).toHaveCount(0);
 
   const candle = page.getByRole('button', { name: /light a candle.*summon more GCash plz/i });
