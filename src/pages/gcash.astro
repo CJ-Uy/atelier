@@ -1,5 +1,16 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+
+Astro.response.headers.set('Cache-Control', 'no-store');
+let visitors = '????';
+try {
+  const row = await Astro.locals.runtime.env.DB.prepare(
+    'INSERT INTO gcash_visits (id, visits) VALUES (1, 1) ON CONFLICT(id) DO UPDATE SET visits = visits + 1 RETURNING visits'
+  ).first<{ visits: number }>();
+  if (row) visitors = String(row.visits).padStart(4, '0');
+} catch (error) {
+  console.error('GCash visitor counter unavailable', error);
+}
 ---
 
 <BaseLayout
@@ -29,6 +40,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </div>
     <button class="candle-button" id="candle-button" type="button"><span>🕯️ LIGHT A CANDLE</span><small>and help me summon more GCash plz</small></button>
     <div class="candles"><span id="candle-row" aria-hidden="true"></span><span id="candle-caption" aria-live="polite"></span></div>
+    <p class="visitor-counter"><strong>{visitors}</strong> visitors answered the summoning call</p>
 
     <img class="meme" src="/gcash-meme.png" width="1254" height="1254" loading="lazy" alt="GCash summoning ritual meme with candles, a praying dog, a piggy bank, and bottom text" />
     <p class="footer"><a href="https://cjuy.dev">back to my actual site</a></p>
@@ -133,6 +145,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   .candles { display: grid; justify-items: center; gap: 4px; }
   #candle-row:not(:empty) { max-width: 540px; margin-top: 15px; font-size: 27px; line-height: 1.4; overflow-wrap: anywhere; }
   #candle-caption:not(:empty) { color: #666; font-size: 12px; }
+  .visitor-counter { display: inline-flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 20px auto 0; padding: 6px 9px; border: 3px outset #ddd; background: #eee; color: #111; font: bold 12px/1.2 'Courier New', monospace; }
+  .visitor-counter strong { padding: 3px 5px; border: 1px inset #555; background: #111; color: #00ff41; font: bold 19px/1 'Courier New', monospace; letter-spacing: .14em; text-shadow: 0 0 4px #00ff41; font-variant-numeric: tabular-nums; }
   .meme { display: block; width: min(100%, 550px); height: auto; margin: 60px auto 0; }
   .footer { margin: 25px auto 0; color: #666; font-size: 12px; line-height: 1.6; }
   .footer a { color: #075ce6; }

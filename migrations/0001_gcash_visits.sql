@@ -1,0 +1,4 @@
+CREATE TABLE gcash_visits (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  visits INTEGER NOT NULL DEFAULT 0
+);

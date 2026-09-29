@@ -8,6 +8,13 @@
 		"directory": "./dist",
 		"binding": "ASSETS"
 	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "atelier",
+			"database_id": "a5df7c83-97e4-48c3-a9e3-17f3c805b6f4"
+		}
+	],
 	"observability": {
 		"enabled": true
 	},
@@ -17,6 +24,13 @@
 			"account_id": "8527ec1369d46f55304a6f59ab5356e4",
 			"workers_dev": false,
 			"preview_urls": false,
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "atelier",
+					"database_id": "a5df7c83-97e4-48c3-a9e3-17f3c805b6f4"
+				}
+			],
 			"kv_namespaces": [
 				{
 					"binding": "SESSION",
