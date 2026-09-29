@@ -12,6 +12,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <a class="qr-link" href="/gcash-qr.jpg" target="_blank" rel="noopener" aria-label="Open the original GCash QR image">
       <img src="/gcash-qr.jpg" width="656" height="1312" alt="Charles's original GCash InstaPay QR code" fetchpriority="high" />
     </a>
+    <div class="number-block">
+      <span id="gcash-number">09171504686</span>
+      <button id="copy-number" type="button" aria-label="Copy GCash phone number" title="Copy number">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="8" y="8" width="12" height="12" rx="2" />
+          <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+        </svg>
+      </button>
+    </div>
+    <div id="copy-feedback" role="status" aria-live="polite"></div>
 
     <div class="buttons" aria-label="GCash QR actions">
       <a class="button save" id="save-qr" href="/gcash-qr.jpg" target="_blank" rel="noopener">↓ save QR to Photos</a>
@@ -26,6 +36,19 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 </BaseLayout>
 
 <script>
+  const copyButton = document.querySelector<HTMLButtonElement>('#copy-number');
+  const number = document.querySelector<HTMLElement>('#gcash-number');
+  const copyFeedback = document.querySelector<HTMLElement>('#copy-feedback');
+  copyButton?.addEventListener('click', async () => {
+    if (!number || !copyFeedback) return;
+    try {
+      await navigator.clipboard.writeText(number.textContent ?? '');
+      copyFeedback.textContent = 'copied to clipboard please send me the money now hehehhehe';
+    } catch {
+      copyFeedback.textContent = 'could not copy. pls copy the number above manually';
+    }
+  });
+
   const saveQr = document.querySelector<HTMLAnchorElement>('#save-qr');
   if (saveQr) {
     const onPhone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -92,6 +115,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   }
   .qr-link { display: block; width: min(100%, 320px); margin: auto; }
   .qr-link img { display: block; width: 100%; height: auto; }
+  .number-block { display: flex; align-items: center; justify-content: space-between; width: min(100%, 320px); min-height: 48px; margin: 14px auto 0; padding-left: 14px; border: 1px solid #ccc; border-radius: 8px; background: #f7f7f7; font: 700 20px/1 Arial, sans-serif; }
+  #copy-number { display: grid; place-items: center; width: 48px; height: 48px; border: 0; border-left: 1px solid #ccc; border-radius: 0 7px 7px 0; background: #f7f7f7; color: #333; cursor: pointer; }
+  #copy-number:hover { background: #e1efff; }
+  #copy-feedback:not(:empty) { max-width: 320px; margin: 8px auto 0; color: #075ce6; font: 700 13px/1.35 Arial, sans-serif; }
   .buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 620px; margin: 20px auto 0; }
   .button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 9px 14px; border: 1px solid #111; border-radius: 3px; color: #111; background: white; font: 700 13px/1.2 Arial, sans-serif; text-decoration: none; cursor: pointer; }
   .button:hover { background: #edf4ff; }
@@ -102,7 +129,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   .candle-button small { font-size: clamp(12px, 3.3vw, 17px); }
   .candle-button:hover { background: #ffca00; }
   .candle-button:disabled { background: #eee; color: #555; cursor: default; }
-  .qr-link:focus-visible, .button:focus-visible, .candle-button:focus-visible, .footer a:focus-visible { outline: 3px solid #075ce6; outline-offset: 4px; }
+  .qr-link:focus-visible, #copy-number:focus-visible, .button:focus-visible, .candle-button:focus-visible, .footer a:focus-visible { outline: 3px solid #075ce6; outline-offset: 4px; }
   .candles { display: grid; justify-items: center; gap: 4px; }
   #candle-row:not(:empty) { max-width: 540px; margin-top: 15px; font-size: 27px; line-height: 1.4; overflow-wrap: anywhere; }
   #candle-caption:not(:empty) { color: #666; font-size: 12px; }

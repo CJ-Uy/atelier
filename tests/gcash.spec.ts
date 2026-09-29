@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
 test('GCash page shows the real QR and candles remember clicks', async ({ page }) => {
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto('/gcash');
 
   await expect(page.getByRole('heading', { name: /^gcash summoning circle$/i })).toBeVisible();
@@ -10,6 +11,10 @@ test('GCash page shows the real QR and candles remember clicks', async ({ page }
   await expect(page.getByRole('link', { name: /open GCash app/i })).toHaveAttribute('href', 'gcash://com.mynt.gcash/app');
   await expect(page.getByRole('link', { name: /^get GCash$/i })).toHaveCount(0);
   await expect(page.getByText(/artist's impression|no magic|On one phone:/i)).toHaveCount(0);
+  await expect(page.locator('#gcash-number')).toHaveText('09171504686');
+  await page.getByRole('button', { name: 'Copy GCash phone number' }).click();
+  await expect(page.getByRole('status')).toHaveText('copied to clipboard please send me the money now hehehhehe');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('09171504686');
 
   const candle = page.getByRole('button', { name: /light a candle.*summon more GCash plz/i });
   await candle.click();
