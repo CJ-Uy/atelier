@@ -1,10 +1,11 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { env } from 'cloudflare:workers';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 let visitors = '????';
 try {
-  const row = await Astro.locals.runtime.env.DB.prepare(
+  const row = await env.DB.prepare(
     'INSERT INTO gcash_visits (id, visits) VALUES (1, 1) ON CONFLICT(id) DO UPDATE SET visits = visits + 1 RETURNING visits'
   ).first<{ visits: number }>();
   if (row) visitors = String(row.visits).padStart(4, '0');
