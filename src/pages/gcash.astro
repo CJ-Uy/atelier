@@ -1,0 +1,100 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="GCash summoning circle — CJ-Uy"
+  description="A real GCash QR, one questionable summoning ritual, and a very optional like button."
+>
+  <main class="gcash-page">
+    <h1>GCash summoning circle</h1>
+
+    <a class="qr-link" href="/gcash-qr.jpg" target="_blank" rel="noopener" aria-label="Open the original GCash QR image">
+      <img src="/gcash-qr.jpg" width="656" height="1312" alt="Charles's original GCash InstaPay QR code" fetchpriority="high" />
+    </a>
+
+    <div class="buttons" aria-label="GCash QR actions">
+      <a class="button save" href="/gcash-qr.jpg" download="CJ-Uy-GCash-QR.jpg">↓ save QR</a>
+      <a class="button" href="https://gcash.com/getting-started" target="_blank" rel="noopener noreferrer">open / get GCash ↗</a>
+      <button class="button" id="candle-button" type="button">🕯️ like / add a candle</button>
+    </div>
+    <div class="candles"><span id="candle-row" aria-hidden="true"></span><span id="candle-caption" aria-live="polite"></span></div>
+    <p class="help">On one phone: save the QR, open GCash, tap QR, then upload the image.<br />Check the recipient and amount before sending. If Save opens the photo, long-press it.</p>
+
+    <p class="meme-intro">artist's impression of me waiting for the notification ↓</p>
+    <img class="meme" src="/gcash-meme.jpg" width="1254" height="1254" loading="lazy" alt="A funny Pinoy GCash summoning circle meme with candles, a praying dog, a piggy bank and the plea for payment to arrive" />
+    <p class="footer">no magic. just a real QR and a concerning amount of hope. · <a href="https://cjuy.dev">back to my actual site</a></p>
+  </main>
+</BaseLayout>
+
+<script>
+  const button = document.querySelector<HTMLButtonElement>('#candle-button');
+  const row = document.querySelector<HTMLElement>('#candle-row');
+  const caption = document.querySelector<HTMLElement>('#candle-caption');
+
+  if (button && row && caption) {
+    let candles = 0;
+    try {
+      const saved = Number.parseInt(localStorage.getItem('gcash-candles') ?? '0', 10);
+      if (Number.isFinite(saved)) candles = Math.max(0, Math.min(saved, 24));
+    } catch { /* Storage can be unavailable. */ }
+    const render = () => {
+      row.textContent = '🕯️'.repeat(candles);
+      caption.textContent = candles ? `${candles} candle${candles === 1 ? '' : 's'} lit. still waiting for GCash.` : '';
+      button.disabled = candles === 24;
+      button.textContent = candles === 24 ? 'the altar is full. salamat' : '🕯️ like / add a candle';
+    };
+    render();
+    button.addEventListener('click', () => {
+      candles += 1;
+      try { localStorage.setItem('gcash-candles', String(candles)); } catch { /* The button still works. */ }
+      render();
+    });
+  }
+</script>
+
+<style>
+  :global(html:has(.gcash-page)) { scrollbar-gutter: auto; background: white; }
+  :global(body:has(.gcash-page)) { background: white; }
+  .gcash-page {
+    position: relative; z-index: 1; min-height: 100dvh; padding: 42px 16px 60px;
+    background: #fff; color: #111; text-align: center;
+    font-family: Arial, sans-serif;
+  }
+  h1 {
+    width: min(100%, 520px); margin: 0 auto 18px; color: #075ce6; text-align: left;
+    font: bold clamp(2rem, 6vw, 3.5rem)/1.05 Arial, sans-serif;
+    text-shadow: 3px 3px #ffe500; transform: translateX(-30px) rotate(-2deg);
+    animation: badly-colored 2s steps(1, end) infinite;
+  }
+  .qr-link { display: block; width: min(100%, 320px); margin: auto; }
+  .qr-link img { display: block; width: 100%; height: auto; }
+  .buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 620px; margin: 20px auto 0; }
+  .button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 9px 14px; border: 1px solid #111; border-radius: 3px; color: #111; background: white; font: 700 13px/1.2 Arial, sans-serif; text-decoration: none; cursor: pointer; }
+  .button:hover { background: #edf4ff; }
+  .button.save { color: #fff; background: #075ce6; border-color: #075ce6; }
+  .button.save:hover { background: #0049bd; }
+  .button:disabled { color: #777; cursor: default; }
+  .qr-link:focus-visible, .button:focus-visible, .footer a:focus-visible { outline: 3px solid #075ce6; outline-offset: 4px; }
+  .candles { display: grid; justify-items: center; gap: 4px; }
+  #candle-row:not(:empty) { max-width: 540px; margin-top: 15px; font-size: 27px; line-height: 1.4; overflow-wrap: anywhere; }
+  #candle-caption:not(:empty) { color: #666; font-size: 12px; }
+  .help { margin: 17px auto 65px; max-width: 51ch; color: #555; font-size: 12px; line-height: 1.6; }
+  .meme-intro { margin-bottom: 13px; font: italic 18px/1.3 'Comic Sans MS', 'Trebuchet MS', cursive; }
+  .meme { display: block; width: min(100%, 550px); height: auto; margin: auto; }
+  .footer { margin: 25px auto 0; color: #666; font-size: 12px; line-height: 1.6; }
+  .footer a { color: #075ce6; }
+  @keyframes badly-colored {
+    0%, 100% { color: #075ce6; text-shadow: 3px 3px #ffe500; }
+    25% { color: #f10083; text-shadow: 3px 3px #00ddff; }
+    50% { color: #139e00; text-shadow: 3px 3px #ff8c00; }
+    75% { color: #a100e8; text-shadow: 3px 3px #71ff00; }
+  }
+  @media (max-width: 450px) {
+    .gcash-page { padding-top: 30px; }
+    h1 { transform: translateX(-8px) rotate(-2deg); }
+    .qr-link { width: min(100%, 290px); }
+    .help { margin-bottom: 50px; }
+  }
+  @media (prefers-reduced-motion: reduce) { h1 { animation: none; } }
+</style>

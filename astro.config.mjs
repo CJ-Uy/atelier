@@ -17,5 +17,8 @@ export default defineConfig({
   ],
   vite: {
     plugins: [tailwindcss()],
+    server: {
+      allowedHosts: ['gcash.cjuy.dev', 'gcashqr.cjuy.dev', 'ig.cjuy.dev', 'igqr.cjuy.dev'],
+    },
   },
 });
