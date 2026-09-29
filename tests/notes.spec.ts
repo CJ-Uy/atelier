@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 test('mobile notes filters expose their state and support keyboard selection', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/notes');
+  await page.locator('astro-island[component-url*="NotesIndex"]:not([ssr])').waitFor();
   const all = page.getByRole('button', { name: 'All', exact: true });
   const vue = page.getByRole('button', { name: 'vue', exact: true });
   await expect(all).toHaveAttribute('aria-pressed', 'true');
