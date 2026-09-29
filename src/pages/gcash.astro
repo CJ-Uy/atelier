@@ -4,7 +4,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 <BaseLayout
   title="GCash summoning circle — CJ-Uy"
-  description="A real GCash QR, one questionable summoning ritual, and a very optional like button."
+  description="A real GCash QR and a questionable summoning ritual."
 >
   <main class="gcash-page">
     <h1>GCash summoning circle</h1>
@@ -14,20 +14,49 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </a>
 
     <div class="buttons" aria-label="GCash QR actions">
-      <a class="button save" href="/gcash-qr.jpg" download="CJ-Uy-GCash-QR.jpg">↓ save QR</a>
-      <a class="button" href="https://gcash.com/getting-started" target="_blank" rel="noopener noreferrer">open / get GCash ↗</a>
-      <button class="button" id="candle-button" type="button">🕯️ like / add a candle</button>
+      <a class="button save" id="save-qr" href="/gcash-qr.jpg" target="_blank" rel="noopener">↓ save QR to Photos</a>
+      <a class="button" href="gcash://com.mynt.gcash/app">open GCash app ↗</a>
+      <a class="button" id="get-gcash" href="https://apps.apple.com/ph/app/gcash/id520020791" target="_blank" rel="noopener noreferrer">get GCash</a>
     </div>
+    <button class="candle-button" id="candle-button" type="button"><span>🕯️ LIGHT A CANDLE</span><small>and help me summon more GCash plz</small></button>
     <div class="candles"><span id="candle-row" aria-hidden="true"></span><span id="candle-caption" aria-live="polite"></span></div>
-    <p class="help">On one phone: save the QR, open GCash, tap QR, then upload the image.<br />Check the recipient and amount before sending. If Save opens the photo, long-press it.</p>
 
-    <p class="meme-intro">artist's impression of me waiting for the notification ↓</p>
-    <img class="meme" src="/gcash-meme.jpg" width="1254" height="1254" loading="lazy" alt="A funny Pinoy GCash summoning circle meme with candles, a praying dog, a piggy bank and the plea for payment to arrive" />
-    <p class="footer">no magic. just a real QR and a concerning amount of hope. · <a href="https://cjuy.dev">back to my actual site</a></p>
+    <img class="meme" src="/gcash-meme.png" width="1254" height="1254" loading="lazy" alt="GCash summoning ritual meme with candles, a praying dog, a piggy bank, and bottom text" />
+    <p class="footer"><a href="https://cjuy.dev">back to my actual site</a></p>
   </main>
 </BaseLayout>
 
 <script>
+  const saveQr = document.querySelector<HTMLAnchorElement>('#save-qr');
+  if (saveQr) {
+    const onPhone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (!onPhone) {
+      saveQr.textContent = '↓ save QR';
+      saveQr.download = 'CJ-Uy-GCash-QR.jpg';
+      saveQr.removeAttribute('target');
+    } else if (navigator.canShare) {
+      fetch('/gcash-qr.jpg')
+        .then(async (response) => {
+          if (!response.ok) throw new Error('QR image unavailable');
+          const file = new File([await response.blob()], 'CJ-Uy-GCash-QR.jpg', { type: 'image/jpeg' });
+          if (!navigator.canShare({ files: [file] })) return;
+          saveQr.dataset.shareReady = 'true';
+          saveQr.addEventListener('click', (event) => {
+            event.preventDefault();
+            navigator.share({ files: [file] }).catch((error) => {
+              if (error?.name !== 'AbortError') window.location.href = '/gcash-qr.jpg';
+            });
+          });
+        })
+        .catch(() => {});
+    }
+  }
+
+  const getGcash = document.querySelector<HTMLAnchorElement>('#get-gcash');
+  if (getGcash && /Android/i.test(navigator.userAgent)) {
+    getGcash.href = 'https://play.google.com/store/apps/details?id=com.globe.gcash.android';
+  }
+
   const button = document.querySelector<HTMLButtonElement>('#candle-button');
   const row = document.querySelector<HTMLElement>('#candle-row');
   const caption = document.querySelector<HTMLElement>('#candle-caption');
@@ -42,7 +71,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       row.textContent = '🕯️'.repeat(candles);
       caption.textContent = candles ? `${candles} candle${candles === 1 ? '' : 's'} lit. still waiting for GCash.` : '';
       button.disabled = candles === 24;
-      button.textContent = candles === 24 ? 'the altar is full. salamat' : '🕯️ like / add a candle';
+      if (candles === 24) button.textContent = 'the altar is full. salamat 🙏';
     };
     render();
     button.addEventListener('click', () => {
@@ -75,13 +104,15 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   .button.save { color: #fff; background: #075ce6; border-color: #075ce6; }
   .button.save:hover { background: #0049bd; }
   .button:disabled { color: #777; cursor: default; }
-  .qr-link:focus-visible, .button:focus-visible, .footer a:focus-visible { outline: 3px solid #075ce6; outline-offset: 4px; }
+  .candle-button { display: grid; gap: 4px; width: min(100%, 430px); min-height: 92px; margin: 26px auto 12px; padding: 12px 18px; border: 3px solid #111; border-radius: 4px; background: #ffeb00; color: #111; box-shadow: 7px 7px #075ce6; transform: rotate(-1deg); font: 900 clamp(18px, 5vw, 27px)/1.1 Arial, sans-serif; cursor: pointer; }
+  .candle-button small { font-size: clamp(12px, 3.3vw, 17px); }
+  .candle-button:hover { background: #ffca00; }
+  .candle-button:disabled { background: #eee; color: #555; cursor: default; }
+  .qr-link:focus-visible, .button:focus-visible, .candle-button:focus-visible, .footer a:focus-visible { outline: 3px solid #075ce6; outline-offset: 4px; }
   .candles { display: grid; justify-items: center; gap: 4px; }
   #candle-row:not(:empty) { max-width: 540px; margin-top: 15px; font-size: 27px; line-height: 1.4; overflow-wrap: anywhere; }
   #candle-caption:not(:empty) { color: #666; font-size: 12px; }
-  .help { margin: 17px auto 65px; max-width: 51ch; color: #555; font-size: 12px; line-height: 1.6; }
-  .meme-intro { margin-bottom: 13px; font: italic 18px/1.3 'Comic Sans MS', 'Trebuchet MS', cursive; }
-  .meme { display: block; width: min(100%, 550px); height: auto; margin: auto; }
+  .meme { display: block; width: min(100%, 550px); height: auto; margin: 60px auto 0; }
   .footer { margin: 25px auto 0; color: #666; font-size: 12px; line-height: 1.6; }
   .footer a { color: #075ce6; }
   @keyframes badly-colored {
@@ -94,7 +125,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     .gcash-page { padding-top: 30px; }
     h1 { transform: translateX(-8px) rotate(-2deg); }
     .qr-link { width: min(100%, 290px); }
-    .help { margin-bottom: 50px; }
+    .meme { margin-top: 48px; }
   }
   @media (prefers-reduced-motion: reduce) { h1 { animation: none; } }
 </style>
