@@ -18,11 +18,16 @@
 
 import React, { useEffect, useRef } from 'react';
 
+// Node and browser trig can differ in the last few bits. Stable precision keeps
+// server-rendered SVG attributes identical during hydration (well below a pixel).
+const svgCos = (angle: number) => Math.round(Math.cos(angle) * 1e10) / 1e10;
+const svgSin = (angle: number) => Math.round(Math.sin(angle) * 1e10) / 1e10;
+
 function polarPts(cx: number, cy: number, r: number, n: number, startAngle = -Math.PI / 2) {
   const pts: [number, number][] = [];
   for (let i = 0; i < n; i++) {
     const a = startAngle + (i / n) * Math.PI * 2;
-    pts.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]);
+    pts.push([cx + svgCos(a) * r, cy + svgSin(a) * r]);
   }
   return pts;
 }
@@ -39,8 +44,8 @@ function CastingSpokes({ cx, cy, r, spokes = 12 }: { cx: number; cy: number; r: 
         const a = (i / spokes) * Math.PI * 2;
         return (
           <line key={i}
-            x1={cx + Math.cos(a) * inner} y1={cy + Math.sin(a) * inner}
-            x2={cx + Math.cos(a) * r}     y2={cy + Math.sin(a) * r}
+            x1={cx + svgCos(a) * inner} y1={cy + svgSin(a) * inner}
+            x2={cx + svgCos(a) * r}     y2={cy + svgSin(a) * r}
             stroke="currentColor" strokeWidth="1"
           />
         );
@@ -62,7 +67,7 @@ function Bloom({ cx, cy, r }: { cx: number; cy: number; r: number }) {
         const a = (i / n) * Math.PI * 2;
         return (
           <circle key={i}
-            cx={cx + Math.cos(a) * ring} cy={cy + Math.sin(a) * ring}
+            cx={cx + svgCos(a) * ring} cy={cy + svgSin(a) * ring}
             r={petal} fill="none" stroke="currentColor" strokeWidth="0.7" opacity="0.8"
           />
         );
@@ -103,15 +108,15 @@ function Wheel({ cx, cy, r }: { cx: number; cy: number; r: number }) {
       {[0,1,2,3].map(i => {
         const a = (i / 4) * Math.PI * 2;
         return <line key={`c-${i}`}
-          x1={cx + Math.cos(a) * innerR} y1={cy + Math.sin(a) * innerR}
-          x2={cx + Math.cos(a) * spokeR} y2={cy + Math.sin(a) * spokeR}
+          x1={cx + svgCos(a) * innerR} y1={cy + svgSin(a) * innerR}
+          x2={cx + svgCos(a) * spokeR} y2={cy + svgSin(a) * spokeR}
           stroke="currentColor" strokeWidth="1.2" />;
       })}
       {[0,1,2,3].map(i => {
         const a = Math.PI / 4 + (i / 4) * Math.PI * 2;
         return <line key={`d-${i}`}
-          x1={cx + Math.cos(a) * midR}  y1={cy + Math.sin(a) * midR}
-          x2={cx + Math.cos(a) * spokeR} y2={cy + Math.sin(a) * spokeR}
+          x1={cx + svgCos(a) * midR}  y1={cy + svgSin(a) * midR}
+          x2={cx + svgCos(a) * spokeR} y2={cy + svgSin(a) * spokeR}
           stroke="currentColor" strokeWidth="0.6" />;
       })}
       <circle cx={cx} cy={cy} r="2.5" fill="currentColor" />
@@ -126,7 +131,7 @@ function Sigil({ cx, cy, r }: { cx: number; cy: number; r: number }) {
     const t = i / steps;
     const a = t * Math.PI * 2 * turns;
     const rad = r * t * 0.95;
-    d += (i === 0 ? 'M' : 'L') + ` ${(cx + Math.cos(a) * rad).toFixed(1)} ${(cy + Math.sin(a) * rad).toFixed(1)} `;
+    d += (i === 0 ? 'M' : 'L') + ` ${(cx + svgCos(a) * rad).toFixed(1)} ${(cy + svgSin(a) * rad).toFixed(1)} `;
   }
   return (
     <g>
@@ -175,8 +180,8 @@ function Binding({ cx, cy, r }: { cx: number; cy: number; r: number }) {
       {Array.from({ length: N }, (_, i) => {
         const a = (i / N) * Math.PI * 2;
         return <line key={i}
-          x1={cx + Math.cos(a) * inner} y1={cy + Math.sin(a) * inner}
-          x2={cx + Math.cos(a) * r}    y2={cy + Math.sin(a) * r}
+          x1={cx + svgCos(a) * inner} y1={cy + svgSin(a) * inner}
+          x2={cx + svgCos(a) * r}    y2={cy + svgSin(a) * r}
           stroke="currentColor" strokeWidth="0.5" />;
       })}
       <circle cx={cx} cy={cy} r={r * 0.62} fill="none" stroke="currentColor" strokeWidth="0.4" strokeDasharray="3 2" />
@@ -228,10 +233,11 @@ function Orrery({ cx, cy, r }: { cx: number; cy: number; r: number }) {
 
 // ── Inner shape selector ──────────────────────────────────────────
 
-type Variant = 'casting' | 'bloom' | 'lattice' | 'wheel' | 'sigil' | 'summoning' | 'binding' | 'lens' | 'orrery';
+type Variant = 'blank' | 'casting' | 'bloom' | 'lattice' | 'wheel' | 'sigil' | 'summoning' | 'binding' | 'lens' | 'orrery';
 
 function InnerShape({ variant, cx, cy, r }: { variant: Variant; cx: number; cy: number; r: number }) {
   switch (variant) {
+    case 'blank':     return null;
     case 'casting':   return <CastingSpokes cx={cx} cy={cy} r={r} />;
     case 'bloom':     return <Bloom cx={cx} cy={cy} r={r} />;
     case 'lattice':   return <Lattice cx={cx} cy={cy} r={r} />;
@@ -252,7 +258,7 @@ function CardinalMarks({ cx, cy, r }: { cx: number; cy: number; r: number }) {
     <>
       {[0, 1, 2, 3].map((i) => {
         const a = (i / 4) * Math.PI * 2 - Math.PI / 2;
-        const cos = Math.cos(a), sin = Math.sin(a);
+        const cos = svgCos(a), sin = svgSin(a);
         const px = cx + cos * (r * 1.16), py = cy + sin * (r * 1.16);
         return (
           <g key={i} opacity="0.55">
@@ -279,7 +285,7 @@ function GlyphRing({ cx, cy, r }: { cx: number; cy: number; r: number }) {
   const marks: React.ReactElement[] = [];
   for (let i = 0; i < count; i++) {
     const a = (i / count) * Math.PI * 2 - Math.PI / 2;
-    const cos = Math.cos(a), sin = Math.sin(a);
+    const cos = svgCos(a), sin = svgSin(a);
     const mod = i % 4;
     if (mod === 0) {
       // short radial tick spanning the band
@@ -345,9 +351,9 @@ function OrbitNodes({ cx, cy, r }: { cx: number; cy: number; r: number }) {
 function TickBrackets({ cx, cy, r }: { cx: number; cy: number; r: number }) {
   const br = r * 1.07, len = r * 0.1;
   const corner = (a: number) => {
-    const px = cx + Math.cos(a) * br, py = cy + Math.sin(a) * br;
-    const tx = Math.cos(a + Math.PI / 2), ty = Math.sin(a + Math.PI / 2);
-    const rx = Math.cos(a), ry = Math.sin(a);
+    const px = cx + svgCos(a) * br, py = cy + svgSin(a) * br;
+    const tx = svgCos(a + Math.PI / 2), ty = svgSin(a + Math.PI / 2);
+    const rx = svgCos(a), ry = svgSin(a);
     return `M ${px - tx * len} ${py - ty * len} L ${px} ${py} L ${px - rx * len} ${py - ry * len}`;
   };
   return (
@@ -366,9 +372,9 @@ function CircuitTrace({ cx, cy, r }: { cx: number; cy: number; r: number }) {
     <g opacity="0.55">
       {[0.2, 0.85, 1.55].map((frac, i) => {
         const a = frac * Math.PI * 2;
-        const x1 = cx + Math.cos(a) * (r * 0.7), y1 = cy + Math.sin(a) * (r * 0.7);
-        const x2 = cx + Math.cos(a) * r, y2 = cy + Math.sin(a) * r;
-        const tx = x2 + Math.cos(a + Math.PI / 2) * (r * 0.18), ty = y2 + Math.sin(a + Math.PI / 2) * (r * 0.18);
+        const x1 = cx + svgCos(a) * (r * 0.7), y1 = cy + svgSin(a) * (r * 0.7);
+        const x2 = cx + svgCos(a) * r, y2 = cy + svgSin(a) * r;
+        const tx = x2 + svgCos(a + Math.PI / 2) * (r * 0.18), ty = y2 + svgSin(a + Math.PI / 2) * (r * 0.18);
         return (
           <g key={i}>
             <path d={`M ${x1} ${y1} L ${x2} ${y2} L ${tx} ${ty}`} fill="none" stroke="currentColor" strokeWidth="0.7" />
@@ -494,16 +500,16 @@ export default function MagicCircle({
       {/* Outer rings (rotating) */}
       <g style={outerAnim}>
         <circle cx={c} cy={c} r={outerR} stroke="currentColor" strokeWidth="0.7" opacity="0.6" />
-        <circle cx={c} cy={c} r={outerR * 0.96} stroke="currentColor" strokeWidth="0.3" opacity="0.35" strokeDasharray="2 4" />
+        {variant !== 'blank' && <circle cx={c} cy={c} r={outerR * 0.96} stroke="currentColor" strokeWidth="0.3" opacity="0.35" strokeDasharray="2 4" />}
         {/* 12 tick marks */}
-        {Array.from({ length: 12 }, (_, i) => {
+        {variant !== 'blank' && Array.from({ length: 12 }, (_, i) => {
           const a = (i / 12) * Math.PI * 2;
           const isMajor = i % 3 === 0;
           const r1 = outerR * (isMajor ? 0.90 : 0.93);
           return (
             <line key={i}
-              x1={c + Math.cos(a) * r1} y1={c + Math.sin(a) * r1}
-              x2={c + Math.cos(a) * outerR} y2={c + Math.sin(a) * outerR}
+              x1={c + svgCos(a) * r1} y1={c + svgSin(a) * r1}
+              x2={c + svgCos(a) * outerR} y2={c + svgSin(a) * outerR}
               stroke="currentColor" strokeWidth={isMajor ? 0.9 : 0.5} opacity="0.7"
             />
           );

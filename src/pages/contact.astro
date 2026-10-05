@@ -21,10 +21,11 @@ import ContactPage from '../components/contact/ContactPage';
     display: flex; flex-direction: column; align-items: center;
     padding: 16px 32px 0;
   }
-  .cm-apparatus { position: relative; width: min(100%, 680px); aspect-ratio: 1; }
+  .cm-apparatus { position: relative; width: min(100%, 680px); aspect-ratio: 1; animation: cmApparatusIn var(--motion-reveal) var(--ease-settle) 120ms backwards; }
+  @keyframes cmApparatusIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
   .cm-connections { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
-  .cm-flow { stroke: var(--vermilion); stroke-width: 1.5; stroke-dasharray: 2 6; animation: cmFlow 500ms linear infinite; }
-  @keyframes cmFlow { to { stroke-dashoffset: -16; } }
+  .cm-flow { stroke: var(--vermilion); stroke-width: 1.2; stroke-dasharray: 1; stroke-dashoffset: 0; animation: cmConnect 420ms var(--ease-settle) var(--line-delay) backwards; opacity: 0.7; }
+  @keyframes cmConnect { from { stroke-dashoffset: 1; opacity: 0; } to { stroke-dashoffset: 0; opacity: 0.7; } }
   .cm-circle { position: absolute; inset: 22.5%; pointer-events: none; }
   .cm-core {
     position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
@@ -49,11 +50,16 @@ import ContactPage from '../components/contact/ContactPage';
     text-align: center; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   }
   .cm-sigil-disc {
+    position: relative;
     display: flex; align-items: center; justify-content: center; width: 56px; height: 56px;
     flex-shrink: 0; border: 1.5px solid var(--ink); border-radius: 50%; background: var(--paper);
     font: 600 18px/1 var(--font-mono);
-    transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, transform 200ms ease;
+    transition: background-color var(--motion-feedback) ease, border-color var(--motion-feedback) ease, color var(--motion-feedback) ease, transform 220ms var(--ease-settle);
+    animation: cmNodePlace 480ms var(--ease-settle) var(--node-delay) backwards;
   }
+  @keyframes cmNodePlace { from { opacity: 0; transform: translateY(-8px) scale(0.92); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .cm-sigil-disc::after { content: ''; position: absolute; inset: -6px; border: 1px solid var(--vermilion); border-radius: 50%; opacity: 0; transform: scale(1.16); transition: opacity 220ms ease, transform 360ms var(--ease-settle); }
+  .is-active .cm-sigil-disc::after { opacity: 0.45; transform: scale(1); }
   .cm-glyph { font: 26px/1 Georgia, serif; }
   .is-active .cm-sigil-disc { background: var(--vermilion); border-color: var(--vermilion); color: var(--paper); transform: scale(1.08); }
   .cm-sigil-label { margin-top: 9px; font: 600 11px/1.4 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
@@ -61,12 +67,6 @@ import ContactPage from '../components/contact/ContactPage';
   .cm-label-short { display: none; }
   .cm-channel-status { width: min(100%, 520px); min-height: 108px; padding-top: 12px; text-align: center; }
   .cm-channel-status p { margin: 0; overflow-wrap: anywhere; font: 13px/1.7 var(--font-mono); color: #555; }
-  .cm-cancel, .cm-open-channel {
-    display: inline-flex; min-height: 44px; align-items: center; justify-content: center;
-    margin-top: 8px; padding: 8px 16px; border: 1px solid var(--ink);
-    background: var(--paper); color: var(--ink); font: 12px/1.5 var(--font-mono); cursor: pointer;
-  }
-  .cm-open-channel { text-underline-offset: 4px; }
   .cm-apparatus[data-paused="true"] * { animation-play-state: paused !important; }
   @media (max-width: 819px), (max-height: 500px) and (orientation: landscape) {
     .cm-header { padding: 104px 24px 8px; }

@@ -129,6 +129,16 @@ export function sortWorks(works: Work[]): (Work & { n: string })[] {
     .map((w, i) => ({ ...w, n: toRoman(i + 1) }));
 }
 
+/** Shuffle the presentation, keeping each work's archival number attached. */
+export function shuffleWorks(works: ReturnType<typeof sortWorks>, random = Math.random): ReturnType<typeof sortWorks> {
+  const shuffled = [...works];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // THE INVENTORY
 // ══════════════════════════════════════════════════════════════════════════════

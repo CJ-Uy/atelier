@@ -4,7 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import WorksPage from '../WorksPage';
 import { WORKS } from '../works.data';
 
-vi.mock('../../shared/MagicCircle', () => ({ default: () => React.createElement('svg') }));
+vi.mock('../../shared/MagicCircle', () => ({ default: (props: { variant: string; overlays?: string[]; origin?: boolean }) => React.createElement('svg', {
+  'data-variant': props.variant, 'data-overlays': props.overlays?.join(','), 'data-origin': String(!!props.origin),
+}) }));
 
 describe('Works panels', () => {
   let container: HTMLDivElement;
@@ -88,5 +90,22 @@ describe('Works panels', () => {
     act(() => reset.click());
     expect(container.querySelectorAll('.wp-panel')).toHaveLength(WORKS.length);
     expect(container.querySelector('.wp-attributes [aria-pressed="true"]')).toBeNull();
+  });
+
+  it('builds the search sigil from selected filters and resets it to a blank circle', () => {
+    act(() => root.render(React.createElement(WorksPage)));
+    const sigil = () => container.querySelector('.wp-search-sigil svg')!;
+    expect(sigil().getAttribute('data-variant')).toBe('blank');
+    const category = [...container.querySelectorAll<HTMLButtonElement>('.wp-categories button')].find(button => button.textContent?.includes('Research'))!;
+    act(() => category.click());
+    expect(sigil().getAttribute('data-variant')).not.toBe('blank');
+    const award = container.querySelector<HTMLButtonElement>('.wp-attributes button')!;
+    act(() => award.click());
+    expect(sigil().getAttribute('data-overlays')).toBe('seal');
+    act(() => container.querySelector<HTMLButtonElement>('.wp-reset')!.click());
+    expect(sigil().getAttribute('data-variant')).toBe('blank');
+    expect(sigil().getAttribute('data-overlays')).toBe('');
+    expect(container.querySelectorAll('.wp-panel')).toHaveLength(WORKS.length);
+    expect(container.textContent).not.toContain('How to read a circle');
   });
 });

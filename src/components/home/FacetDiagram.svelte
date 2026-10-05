@@ -12,6 +12,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { SPELL_GEO } from '../../lib/grid/GridStates';
+  import { facetReveal } from './facetMotion';
 
   const INK = '#0a0a0a';
   const VERM = '#dc3522';
@@ -29,13 +30,15 @@
   let variant = $state<string>('face');
   let progress = $state(0);
   let fade = $state(1);
+  let reduced = $state(false);
+  let hidden = $state(false);
 
   const cx = $derived(w / 2);
   const cy = $derived(h / 2);
   const scale = $derived(Math.min(w, h) * 0.48);
-  // settle: 1 at rest (a circle is fully formed), 0 mid-morph
-  const settle = $derived(1 - 4 * progress * (1 - progress));
-  const op = $derived(Math.max(0, Math.min(1, settle)) * fade);
+  const ink = $derived(reduced ? 1 : facetReveal(progress, 0.05, 0.6));
+  const labels = $derived(reduced ? 1 : facetReveal(progress, 0.3, 0.9));
+  const op = $derived(ink * fade);
 
   // normalized grid units [-1,1] → screen px, sharing the grid engine's transform
   const P = (gx: number, gy: number): [number, number] => [cx + gx * scale, cy - gy * scale];
@@ -43,6 +46,13 @@
   const uid = Math.random().toString(36).slice(2, 8);
 
   onMount(() => {
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updateMotion = () => { reduced = motion.matches; };
+    const updateVisibility = () => { hidden = document.hidden; };
+    updateMotion();
+    updateVisibility();
+    motion.addEventListener('change', updateMotion);
+    document.addEventListener('visibilitychange', updateVisibility);
     const measure = () => {
       const cv = document.getElementById('grid-canvas');
       w = (cv && cv.clientWidth) || window.innerWidth;
@@ -64,6 +74,8 @@
       clearTimeout(t);
       window.removeEventListener('resize', measure);
       window.removeEventListener('atelier:grid-progress', onProg);
+      motion.removeEventListener('change', updateMotion);
+      document.removeEventListener('visibilitychange', updateVisibility);
     };
   });
 
@@ -227,7 +239,8 @@
   }
 </script>
 
-<svg class="facet-diagram" width={w} height={h} style={`opacity:${op}`} aria-hidden="true">
+<svg class="facet-diagram" class:paused={hidden || ink < 1} width={w} height={h}
+  style={`opacity:${op}; --ink-offset:${1 - ink}; --label-reveal:${labels}`} aria-hidden="true">
   <!-- rotating inscription band, shared by all spells -->
   {#if inscription}
     <g class="spin" style={`transform-origin:${cx}px ${cy}px; --dur:${inscription.speed}s`}>
@@ -246,7 +259,7 @@
       <circle cx={d.x - scale * 0.003} cy={d.y - scale * 0.003} r={scale * 0.003} fill={INK2} opacity="0.5" />
     {/each}
     <circle cx={hub[0]} cy={hub[1]} r={scale * 0.016} fill={accent ? VERM : INK} />
-    <circle cx={hub[0]} cy={hub[1]} r={scale * 0.032} fill="none" stroke={accent ? VERM : INK} stroke-width="1.2" />
+    <circle class="ink-stroke" pathLength="1" cx={hub[0]} cy={hub[1]} r={scale * 0.032} fill="none" stroke={accent ? VERM : INK} stroke-width="1.2" />
 
   {:else if variant === 'astrolabe'}
     {@const G = SPELL_GEO.astrolabe}
@@ -282,8 +295,8 @@
     </g>
     <!-- measured-angle arc + readout -->
     {@const arcPath = `M ${a0[0]} ${a0[1]} A ${arcR * scale} ${arcR * scale} 0 0 0 ${a1[0]} ${a1[1]}`}
-    <path d={arcPath} fill="none" stroke={PAPER} stroke-width="4" stroke-opacity="0.7" />
-    <path d={arcPath} fill="none" stroke={accent ? VERM : INK} stroke-width="1.6" />
+    <path class="ink-stroke" pathLength="1" d={arcPath} fill="none" stroke={PAPER} stroke-width="4" stroke-opacity="0.7" />
+    <path class="ink-stroke" pathLength="1" d={arcPath} fill="none" stroke={accent ? VERM : INK} stroke-width="1.6" />
     <rect x={rd[0] - scale * 0.05} y={rd[1] - scale * 0.022} width={scale * 0.10} height={scale * 0.044} fill={PAPER} opacity="0.92" />
     <text x={rd[0]} y={rd[1]} text-anchor="middle" dominant-baseline="central" font-family={MONO} font-size={scale * 0.03} font-weight="700" fill={accent ? VERM : INK}>{measureDeg}°</text>
     <!-- bold sighting arm (alidade) -->
@@ -362,8 +375,8 @@
     {@const fs = scale * 0.020}
     {@const o = P(0, 0)}
     {@const peak = wavePeak()}
-    <circle cx={o[0]} cy={o[1]} r={G.inner * scale} fill="none" stroke={INK} stroke-width="0.8" opacity="0.7" />
-    <circle cx={o[0]} cy={o[1]} r={G.inner * scale * 0.62} fill="none" stroke={INK} stroke-width="0.45" opacity="0.45" />
+    <circle class="ink-stroke" pathLength="1" cx={o[0]} cy={o[1]} r={G.inner * scale} fill="none" stroke={INK} stroke-width="0.8" opacity="0.7" />
+    <circle class="ink-stroke" pathLength="1" cx={o[0]} cy={o[1]} r={G.inner * scale * 0.62} fill="none" stroke={INK} stroke-width="0.45" opacity="0.45" />
     <circle cx={o[0]} cy={o[1]} r={scale * 0.012} fill={INK} />
     {#if accent}<circle cx={peak.x} cy={peak.y} r={scale * 0.013} fill={VERM} />{/if}
     {#each WAVE_STAMPS as st}
@@ -419,7 +432,7 @@
     {@const s1 = [top[0] + Math.cos(ang1) * r, top[1] + Math.sin(ang1) * r]}
     {@const amx = top[0]}
     {@const amy = top[1] + r * 1.5}
-    <path d={`M ${s0[0]} ${s0[1]} A ${r} ${r} 0 0 1 ${s1[0]} ${s1[1]}`} fill="none" stroke={INK2} stroke-width="1.2" />
+    <path class="ink-stroke" pathLength="1" d={`M ${s0[0]} ${s0[1]} A ${r} ${r} 0 0 1 ${s1[0]} ${s1[1]}`} fill="none" stroke={INK2} stroke-width="1.2" />
     <rect x={amx - scale * 0.04} y={amy - scale * 0.016} width={scale * 0.08} height={scale * 0.032} fill={PAPER} opacity="0.9" />
     <text x={amx} y={amy} text-anchor="middle" dominant-baseline="central" font-family={MONO} font-size={fs} font-weight="600" fill={INK2}>120°</text>
     <!-- centre-mark on the near-vertical edge -->
@@ -454,8 +467,8 @@
 
 <!-- ── reusable bits ──────────────────────────────────────────── -->
 {#snippet halo(d: string, stroke: string, width: number, opacity: number, haloW: number)}
-  <path d={d} fill="none" stroke={PAPER} stroke-width={width + haloW} stroke-opacity="0.72" stroke-linecap="round" />
-  <path d={d} fill="none" stroke={stroke} stroke-width={width} stroke-opacity={opacity} stroke-linecap="round" />
+  <path class="ink-stroke" pathLength="1" d={d} fill="none" stroke={PAPER} stroke-width={width + haloW} stroke-opacity="0.72" stroke-linecap="round" />
+  <path class="ink-stroke" pathLength="1" d={d} fill="none" stroke={stroke} stroke-width={width} stroke-opacity={opacity} stroke-linecap="round" />
 {/snippet}
 
 {#snippet cross(x: number, y: number, s: number, wd: number, color: string, opacity: number)}
@@ -469,8 +482,8 @@
   {@const d = dimLine(ax, ay, bx, by, side)}
   <line x1={ax} y1={ay} x2={d.a2x + d.nx * d.ah * 0.6} y2={d.a2y + d.ny * d.ah * 0.6} stroke={INK2} stroke-width="0.6" opacity="0.6" />
   <line x1={bx} y1={by} x2={d.b2x + d.nx * d.ah * 0.6} y2={d.b2y + d.ny * d.ah * 0.6} stroke={INK2} stroke-width="0.6" opacity="0.6" />
-  <line x1={d.a2x} y1={d.a2y} x2={d.b2x} y2={d.b2y} stroke={PAPER} stroke-width="3.4" stroke-opacity="0.7" />
-  <line x1={d.a2x} y1={d.a2y} x2={d.b2x} y2={d.b2y} stroke={INK2} stroke-width="1.3" />
+  <line class="ink-stroke" pathLength="1" x1={d.a2x} y1={d.a2y} x2={d.b2x} y2={d.b2y} stroke={PAPER} stroke-width="3.4" stroke-opacity="0.7" />
+  <line class="ink-stroke" pathLength="1" x1={d.a2x} y1={d.a2y} x2={d.b2x} y2={d.b2y} stroke={INK2} stroke-width="1.3" />
   <path d={d.arrowA} fill={INK2} />
   <path d={d.arrowB} fill={INK2} />
   <rect x={d.mx - scale * 0.05} y={d.my - scale * 0.018} width={scale * 0.10} height={scale * 0.036} fill={PAPER} opacity="0.9" />
@@ -484,13 +497,15 @@
     z-index: 1;
     pointer-events: none;
     color: #0a0a0a;
-    transition: opacity 140ms linear;
   }
+  .facet-diagram :global(text) { fill-opacity: var(--label-reveal); }
+  .ink-stroke { stroke-dasharray: 1; stroke-dashoffset: var(--ink-offset); }
   /* rotating layers — duration set per-spell via the --dur custom property so
      the keyframe stays scoped (inline `animation` would escape Svelte's rename). */
   .spin {
     animation: fdRotate var(--dur, 240s) linear infinite;
   }
+  .paused .spin { animation-play-state: paused; }
   @keyframes fdRotate {
     from { transform: rotate(0deg); }
     to   { transform: rotate(360deg); }

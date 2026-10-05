@@ -1,6 +1,6 @@
 // src/components/works/__tests__/works.data.test.ts
 import { describe, it, expect } from 'vitest';
-import { WORKS, CATEGORIES, CAT_BASE, resolveCircle, isAccent, isFeatured, sortWorks, type Work } from '../works.data';
+import { WORKS, CATEGORIES, CAT_BASE, resolveCircle, isAccent, isFeatured, sortWorks, shuffleWorks, type Work } from '../works.data';
 
 const make = (over: Partial<Work>): Work => ({
   slug: 's', title: 'T', year: '2025', cat: 'web', weight: 'strong', era: 'college',
@@ -85,4 +85,14 @@ describe('inventory integrity', () => {
       expect(w.blurb.length).toBeGreaterThan(0);
     });
   });
+});
+
+it('shuffling preserves every project, its opus number, and the source order', () => {
+  const original = sortWorks(WORKS);
+  const before = original.map((work) => work.slug);
+  const shuffled = shuffleWorks(original, () => 0);
+  expect(shuffled.map((work) => work.slug)).not.toEqual(before);
+  expect(original.map((work) => work.slug)).toEqual(before);
+  expect(new Set(shuffled)).toEqual(new Set(original));
+  expect(shuffled.find((work) => work.slug === original[0].slug)?.n).toBe(original[0].n);
 });

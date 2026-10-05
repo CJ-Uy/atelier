@@ -12,20 +12,19 @@ sketchbook that knows how to behave.
 
 The site has one running metaphor: **a graph paper grid that becomes other things**.
 
-As you scroll, the grid transforms — into a spider web (developer), into an
-astrolabe (researcher), into a planisphere (dreamer), into a polar waveform
+As you scroll, the portrait grid transforms — into a spider web (developer), into
+a Venn diagram (researcher), into a planisphere (dreamer), into a polar waveform
 (music), into a halftone rosette (digital media), into a banig weave (Waray),
 into a blueprint (builder). Each transform mirrors an identity facet. The grid
 is the single throughline; everything else is layered on top of it, reverently.
 
 This means:
-- **The grid is sacred.** It is always visible, always animated, always the
-  base layer. UI never competes with it — UI floats *over* it.
-- **Transformation is the verb.** Static elements are suspect. If something
-  doesn't morph, fade, or shift on interaction or scroll, ask whether it
-  earns its place.
-- **The reveal is slow.** No element appears all at once. Stagger entries.
-  Let the eye catch up.
+- **The grid is the base layer.** UI floats *over* it. Decorative rendering
+  pauses when hidden and yields to scroll input.
+- **Transformation is the verb.** Motion reveals structure, identity, or an
+  interaction's result. Settled content stays quiet.
+- **The reveal has an order.** Draw the geometry, reveal the identity, then
+  place the paper details. Let the eye catch up.
 
 ---
 
@@ -79,9 +78,10 @@ Each page uses the framework best suited to its interaction model:
 |---------|-----------|-----------------------------------------------------------------------------|
 | Home    | **Svelte** | Scroll-driven animation, fine-grained reactive state, minimal runtime overhead for 60fps grid morphing |
 | Works   | **React**  | Complex state: category filters, per-card hover + IntersectionObserver, modal overlay |
-| Contact | **Vue**    | Declarative template for sigil node positioning, computed charge state, clean two-way binding |
+| Contact | **React**  | Native contact links with hover and keyboard connections between sigils |
+| Notes   | **Vue / Astro** | Reactive collection filters and static content pages |
 
-All three are mounted as Astro islands (`client:only`) inside the same Astro shell.
+Interactive components hydrate as Astro islands inside the shared shell.
 
 ---
 
@@ -91,9 +91,9 @@ Eight identity facets scroll in sequence. Each maps to a grid state + sticker se
 
 | ID | Descriptor     | Grid State   | Tagline            |
 |----|----------------|--------------|--------------------|
-| 0  | Charles        | graphPaper   | PORTFOLIO / 00     |
+| 0  | Charles        | face         | PORTFOLIO / 00     |
 | 1  | developer      | web          | WORLD WIDE WEB / 01|
-| 2  | researcher     | astrolabe    | ASTROLABE / 02     |
+| 2  | researcher     | venn         | BETWEEN FIELDS / 02|
 | 3  | big dreamer    | planisphere  | PLANISPHERE / 03   |
 | 4  | music          | waveform     | WAVEFORM / 04      |
 | 5  | digital media  | rosette      | HALFTONE ROSETTE / 05 |
@@ -125,17 +125,27 @@ stickers, applied carefully.
 
 ## 06 · Motion
 
-> *Snappy and energetic, never frantic.*
+> *Editorial and precise, with a few dramatic moments. A thoughtful builder
+> revealing how things take shape.*
 
-- **Easings:** `cubic-bezier(0.4, 0, 0.2, 1)` for ordinary transitions.
-  `cubic-bezier(0.5, 0, 0.2, 1.4)` (slight overshoot) for entries.
-- **Durations:** 200–350ms for state changes, 400–600ms for hero entries,
-  ≤120ms for hover.
-- **Scroll snap:** custom JS-driven snap at 350ms ease-out-cubic.
-- **Idle wobble:** every grid point has a sine-driven 0.2% positional wobble.
-  Subtle. The page should always feel slightly alive.
-- **No parallax for parallax's sake.** Motion serves the metaphor of
-  transformation; if it doesn't, kill it.
+Shared tokens live in `src/styles/global.css`: 120ms feedback, 600ms reveal,
+520ms expansion. `--ease-settle` is `cubic-bezier(.16, 1, .3, 1)`;
+`--ease-transform` is `cubic-bezier(.65, 0, .35, 1)`.
+
+- **Home:** scroll progress directly controls a reversible sequence. Geometry
+  settles first, the identity follows, then marginalia. At the midpoint between
+  facets, labels clear so the transforming grid can speak. Scrubbing backwards
+  reverses the same sequence; no delayed section-switch timers.
+- **Works:** panel outlines draw before their contents print onto the paper.
+  The selected sigil travels into an expanding project sheet using native view
+  transitions, with a short CSS entrance when that API is unavailable.
+- **Search:** begin with a blank ring. Discipline adds the base geometry;
+  Awarded adds a seal, Early Web adds an origin mark, Live strengthens the ring,
+  and text search adds cardinal marks. Clearing filters returns to the ring.
+- **Contact:** the apparatus settles into place. Hover or keyboard focus draws
+  connections to a channel. Activation opens the native link immediately.
+- **Reduced motion:** content remains readable, project sheets open directly,
+  and decorative motion stops. Hidden documents pause continuous work.
 
 ---
 
@@ -147,9 +157,11 @@ a grid vertex `(c, r)` to `(x, y, alpha)` in normalized `[-1, 1]` space.
 ### Grimoire states (active)
 | State       | Description                                           |
 |-------------|-------------------------------------------------------|
+| face        | Portrait developed on the 56 × 40 grid                 |
 | graphPaper  | Uniform grid — the blank page                         |
 | web         | Spider web: off-center hub, radial spokes, irregular frame, anchor threads |
 | astrolabe   | Measurement rings + 24 index lines                    |
+| venn        | Overlapping fields — CS, science, and humanities       |
 | planisphere | Celestial sphere: 12-spoke graticule + 3 horizon rings |
 | waveform    | Polar vinyl waveform: 132 radial bars, amplitude-modulated |
 | rosette     | Halftone rosette: 36 spokes + 8 concentric rings      |
@@ -168,16 +180,17 @@ a grid vertex `(c, r)` to `(x, y, alpha)` in normalized `[-1, 1]` space.
 
 Grimoire-styled project index. Key elements:
 
-- **Header**: "The Grimoire" / "OPUS · WORKS" slug
-- **Category chips**: All · Web & Interface · Research · Sound · Tools · Systems
-- **Cards**: `border: 1.6px solid var(--ink)`, `box-shadow: 0 2px 0 var(--ink)`, corner `+` crosshairs, halftone wash overlay
-- **Featured card**: spans 2 columns, row layout (circle left, text right)
-- **Circle**: SVG magic circle variant per project, spins up on hover (`rotateSpeed` drops from 92s → 16s period)
-- **Hover**: card lifts `translateY(-5px)`, circle scales 1.04x
-- **Modal**: click to open project detail (casting notes, plates, coven)
-
-### Magic circle variants
-`summoning`, `hexagram`, `wheel`, `eye`, `pentagram`, `binding`, `casting`, `sigil`
+- **Header:** "Things I've conjured".
+- **Arrangement:** a fresh shuffle on each visit, with a small Shuffle panels
+  control. Wide, tall, standard, and compact scenes alternate across a 12-column
+  page. Project numbers stay stable; DOM and keyboard order follow the panels.
+- **Search:** the sigil beside the field builds from active criteria. Category
+  and attribute controls expose their selected state without a separate legend.
+- **Panels:** ink frames, halftone scenes, and layered project sigils. Hover and
+  focus straighten the sigil and move the reading arrow.
+- **Project sheet:** casting notes, plates, coven, and apparatus appear in a native
+  dialog. Escape closes it; focus returns to the selected project.
+- **Shuffle:** changes the arrangement while preserving the active search.
 
 ---
 
@@ -189,7 +202,11 @@ placed as sigil nodes on the perimeter.
 - **Circle variant**: `summoning` (pentagon + 5 satellite nodes)
 - **Ring text**: `· VOCA · SCRIBE · INVOCO · RESPONDEO · COLLOQVIVM · SOCIETAS · ADSVM`
 - **Channels** (clockwise from top): Email · GitHub · LinkedIn · Phone · CV · Facebook
-- **Hover (charging)**: disc fills vermilion, circle spin accelerates 4.2×, dotted charge-lines from satellite nodes to sigil, monogram label changes to "channelling"
+- **Hover / focus (charging)**: disc fills vermilion, circle spin accelerates 4.2×,
+  connections draw from satellite nodes to the sigil, and the monogram label
+  changes to "channelling". Escape clears the connection.
+- **Activation:** touch, mouse, keyboard, and modified clicks retain native link
+  behavior. The decorative gesture never delays the destination.
 - **Center monogram**: "CJ-Uy" in Instrument Serif, vermilion ring border while charging
 
 ---
@@ -198,13 +215,14 @@ placed as sigil nodes on the perimeter.
 
 The first thing a visitor lands on must be **interactive within 2 seconds**.
 
-- **Section 0 (graphPaper):** the cursor distorts the grid like a magnetic
-  field. Points within ~22% of the viewport's smaller dimension pull toward
-  the cursor with a bell-curve falloff and brighten.
+- **Section 0 (face):** the opening portrait is drawn on the same 56 × 40 grid
+  used by the identity transformations.
 - **Sections 1–7:** scroll-driven. The grid morphs continuously between states.
   Section indicators on the right show position with expanding lines + labels.
-- **Works page:** hover to lift card + spin up circle. Click to open modal.
-- **Contact:** hover sigil to charge the circle.
+- **Works page:** filter to build the search sigil, shuffle the panels, and open
+  a project sheet from its sigil.
+- **Contact:** hover or focus a sigil to connect the circle; activate to open
+  the channel immediately.
 
 ---
 
@@ -231,7 +249,7 @@ Things this site explicitly does not have:
 - Testimonials carousel
 - Skill bars / language proficiency percentages
 - Auto-playing music or video
-- Cursor trails (the cursor distortion *is* the cursor effect)
+- Cursor trails
 - More than one accent color (vermilion only)
 - Dark mode (the paper/ink palette is its own thing)
 
