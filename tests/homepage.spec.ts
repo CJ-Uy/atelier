@@ -54,13 +54,29 @@ test.describe('Homepage', () => {
     await expect(page.locator('.descriptor')).toContainText('Charles');
     await page.evaluate(() => {
       const change = (index: number) => window.dispatchEvent(
-        new CustomEvent('atelier:section-change', { detail: { index } }),
+        new CustomEvent('atelier:grid-progress', { detail: { index, progress: 0, fade: 1 } }),
       );
       change(1);
       setTimeout(() => change(0), 80);
     });
     await page.waitForTimeout(500);
     await expect(page.locator('.descriptor')).toContainText('Charles');
+  });
+
+  test('ink, identity and paper follow one reversible scroll gesture', async ({ page }) => {
+    await expect(page.locator('.descriptor')).toHaveText('Charles');
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent('atelier:grid-progress', {
+      detail: { index: 1, stateName: 'web', progress: 0.5, fade: 1 },
+    })));
+    await expect(page.locator('.descriptor')).toHaveText('developer');
+    await expect(page.locator('.descriptor')).toHaveCSS('opacity', '0');
+    await expect(page.locator('.facet-diagram')).toHaveCSS('opacity', '0');
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent('atelier:grid-progress', {
+      detail: { index: 0, stateName: 'face', progress: 0, fade: 1 },
+    })));
+    await expect(page.locator('.descriptor')).toHaveText('Charles');
+    await expect(page.locator('.descriptor')).toHaveCSS('opacity', '1');
+    expect(await page.locator('.sticker-field').evaluate(el => el.getAnimations({ subtree: true }).length)).toBe(0);
   });
 
   test('scroll container has 8 section children', async ({ page }) => {

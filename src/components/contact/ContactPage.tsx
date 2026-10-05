@@ -11,26 +11,18 @@ const CHANNELS = [
 ] as const;
 
 type Channel = typeof CHANNELS[number];
-const CHARGE_MS = 1500;
 
 export default function ContactPage() {
   const [hovered, setHovered] = useState<Channel | null>(null);
-  const [pending, setPending] = useState<Channel | null>(null);
-  const [ready, setReady] = useState<Channel | null>(null);
-  const [message, setMessage] = useState('');
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [focused, setFocused] = useState<Channel | null>(null);
   const stage = useRef<HTMLDivElement>(null);
   const circle = useRef<HTMLDivElement>(null);
   const lines = useRef<(SVGLineElement | null)[]>([]);
-  const active = pending ?? hovered;
+  const active = hovered ?? focused;
 
   function cancel() {
-    if (timer.current !== null) clearTimeout(timer.current);
-    timer.current = null;
-    setPending(null);
     setHovered(null);
-    setReady(null);
-    setMessage('');
+    setFocused(null);
   }
 
   useEffect(() => {
@@ -43,7 +35,6 @@ export default function ContactPage() {
     document.addEventListener('visibilitychange', onVisibility);
     onVisibility();
     return () => {
-      if (timer.current !== null) clearTimeout(timer.current);
       document.removeEventListener('keydown', onKey);
       document.removeEventListener('visibilitychange', onVisibility);
     };
@@ -64,7 +55,7 @@ export default function ContactPage() {
     let frame = 0;
     let visible = false;
     const draw = () => {
-      if (!visible || document.hidden || motion.matches || !target) return;
+      if (!visible || document.hidden || !target) return;
       const bounds = board.getBoundingClientRect();
       const end = target.getBoundingClientRect();
       const scale = 680 / bounds.width;
@@ -79,13 +70,13 @@ export default function ContactPage() {
         line.setAttribute('x2', String(tx));
         line.setAttribute('y2', String(ty));
       });
-      frame = requestAnimationFrame(draw);
+      if (!motion.matches) frame = requestAnimationFrame(draw);
     };
     const update = () => {
       cancelAnimationFrame(frame);
       board.dataset.paused = String(!visible || document.hidden);
       animations.forEach((animation) => { animation.playbackRate = motion.matches ? 1 : 4.2; });
-      if (visible && !document.hidden && !motion.matches) frame = requestAnimationFrame(draw);
+      if (visible && !document.hidden) draw();
     };
     const observer = new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting;
@@ -93,54 +84,17 @@ export default function ContactPage() {
     });
     observer.observe(wrap);
     motion.addEventListener('change', update);
+    document.addEventListener('visibilitychange', update);
     update();
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
       motion.removeEventListener('change', update);
+      document.removeEventListener('visibilitychange', update);
       board.dataset.paused = String(document.hidden);
       animations.forEach((animation) => { animation.playbackRate = 1; });
     };
   }, [active]);
-
-  function summon(event: React.MouseEvent<HTMLAnchorElement>, channel: Channel) {
-    // Preserve keyboard activation, modified clicks and native reduced-motion links.
-    const touch = (event.nativeEvent as PointerEvent).pointerType === 'touch'
-      || window.matchMedia('(hover: none) and (pointer: coarse)').matches;
-    if (!touch || event.detail === 0 || event.button !== 0 || event.metaKey || event.ctrlKey
-      || event.shiftKey || event.altKey || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      cancel();
-      return;
-    }
-    event.preventDefault();
-    if (pending?.id === channel.id) return;
-    if (timer.current !== null) clearTimeout(timer.current);
-    setPending(channel);
-    setReady(null);
-    setMessage(`Channelling ${channel.label}…`);
-    timer.current = setTimeout(() => {
-      timer.current = null;
-      setPending(null);
-      setHovered(null);
-      if (channel.href.startsWith('https:')) {
-        // Some mobile browsers expire popup permission during the ritual.
-        // Keep a native link available when a delayed new tab is blocked.
-        const tab = window.open('about:blank', '_blank');
-        if (tab) {
-          tab.opener = null;
-          tab.location.replace(channel.href);
-          setMessage(`${channel.label} opened in a new tab.`);
-        } else {
-          setReady(channel);
-          setMessage('Channel ready. Tap below to continue.');
-        }
-      } else {
-        window.location.href = channel.href;
-        setReady(channel);
-        setMessage(`${channel.label} ready.`);
-      }
-    }, CHARGE_MS);
-  }
 
   return (
     <>
@@ -162,10 +116,10 @@ export default function ContactPage() {
       </header>
 
       <main className="cm-stage" aria-label="Contact channels">
-        <div ref={stage} className={`cm-apparatus${active ? ' is-charging' : ''}`} aria-busy={!!pending}>
+        <div ref={stage} className={`cm-apparatus${active ? ' is-charging' : ''}`}>
           <svg className="cm-connections" viewBox="0 0 680 680" aria-hidden="true">
             {active && Array.from({ length: 5 }, (_, i) => (
-              <line key={i} ref={(element) => { lines.current[i] = element; }}
+              <line key={active.id + i} pathLength="1" style={{ '--line-delay': `${i * 25}ms` } as React.CSSProperties} ref={(element) => { lines.current[i] = element; }}
                 x1="340" y1="340" x2="340" y2="340" className="cm-flow" />
             ))}
           </svg>
@@ -177,7 +131,7 @@ export default function ContactPage() {
             <span className="cm-monogram">CJ-Uy</span>
             <span className="cm-core-label">{active ? 'channelling' : 'summon'}</span>
           </div>
-          {CHANNELS.map((channel) => {
+          {CHANNELS.map((channel, index) => {
             const radians = channel.angle * Math.PI / 180;
             return (
               <a key={channel.id} data-channel={channel.id}
@@ -186,9 +140,8 @@ export default function ContactPage() {
                 rel="noopener noreferrer" aria-label={`${channel.label}: ${channel.handle}${channel.href.startsWith('https:') ? ' (opens in a new tab)' : ''}`}
                 onPointerEnter={(event) => { if (event.pointerType === 'mouse') setHovered(channel); }}
                 onPointerLeave={() => setHovered(null)}
-                onFocus={() => setHovered(channel)} onBlur={() => setHovered(null)}
-                onClick={(event) => summon(event, channel)}
-                style={{ left: `${50 + Math.cos(radians) * 39}%`, top: `${50 + Math.sin(radians) * 39}%` }}>
+                onFocus={() => setFocused(channel)} onBlur={() => setFocused(null)}
+                style={{ '--node-delay': `${index * 45}ms`, left: `${50 + Math.cos(radians) * 39}%`, top: `${50 + Math.sin(radians) * 39}%` } as React.CSSProperties}>
                 <span className={`cm-sigil-disc${channel.sigil.length === 1 ? ' cm-glyph' : ''}`}>{channel.sigil}</span>
                 <span className="cm-sigil-label">{channel.id === 'cv' ? <><span className="cm-label-full">Curriculum Vitae</span><span className="cm-label-short">CV</span></> : channel.label}</span>
                 <span className="cm-sigil-handle">{channel.handle}</span>
@@ -197,9 +150,7 @@ export default function ContactPage() {
           })}
         </div>
         <div className="cm-channel-status">
-          <p role="status" aria-live="polite" aria-atomic="true">{message || (active ? `${active.label} · ${active.handle}` : 'Six ways to get in touch.')}</p>
-          {pending && <button type="button" className="cm-cancel" onClick={cancel}>Cancel</button>}
-          {ready && <a className="cm-open-channel" href={ready.href} target={ready.href.startsWith('https:') ? '_blank' : undefined} rel="noopener noreferrer">Open {ready.label} ↗</a>}
+          <p role="status" aria-live="polite" aria-atomic="true">{active ? `${active.label} · ${active.handle}` : 'Six ways to get in touch.'}</p>
         </div>
       </main>
       <footer className="cm-foot"><span /><span>RESPONDS WITHIN A MOON&apos;S TURN · TYPICALLY ~48H</span><span /></footer>

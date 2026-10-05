@@ -1,47 +1,52 @@
 <!-- src/components/home/HeroText.svelte
-     Nameplate + floating stickers for each identity facet.
+     Nameplate + placed paper marginalia for each identity facet.
      Typography: Instrument Serif (display) + IBM Plex Mono (UI). -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import { SECTIONS, type Section, type Sticker } from './sections';
+  import { facetReveal } from './facetMotion';
 
   let current: Section = $state(SECTIONS[0]);
-  let exiting = $state(false);
-  let animateIn = $state(false);
+  let progress = $state(0);
+  let reduced = $state(false);
   // First-load entrance: each nameplate line rises in sequence while the
   // portrait develops on the grid. Cleared after the ritual settles (or on
   // the first section change) so per-section transitions take over.
   let intro = $state(true);
+  const titleReveal = $derived(reduced ? 1 : facetReveal(progress, 0.2, 0.8));
+  const detailReveal = $derived(reduced ? 1 : facetReveal(progress, 0.35, 0.95));
+  const paperReveal = $derived(reduced ? 1 : facetReveal(progress, 0.5, 1));
+  const travel = $derived((progress < 0.5 ? -1 : 1) * (1 - titleReveal));
 
   onMount(() => {
-    // Trigger initial pop-in
-    let enterTimer = setTimeout(() => { animateIn = true; }, 80);
-    let transitionTimer: ReturnType<typeof setTimeout> | undefined;
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updateMotion = () => { reduced = motion.matches; };
+    updateMotion();
+    motion.addEventListener('change', updateMotion);
     const introTimer = setTimeout(() => { intro = false; }, 2600);
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const onSectionChange = (e: Event) => {
-      const { index } = (e as CustomEvent<{ index: number }>).detail;
+    const onProgress = (e: Event) => {
+      const { index, progress: p } = (e as CustomEvent<{ index: number; progress: number }>).detail;
       const next = SECTIONS[index];
-      if (!next || (next.id === current.id && !exiting)) return;
-      intro = false;
-      clearTimeout(introTimer);
-      clearTimeout(transitionTimer);
-      clearTimeout(enterTimer);
-      exiting = true;
-      animateIn = false;
-      transitionTimer = setTimeout(() => {
-        current = next;
-        exiting = false;
-        enterTimer = setTimeout(() => { animateIn = true; }, reduceMotion ? 0 : 40);
-      }, reduceMotion ? 0 : 280);
+      if (!next) return;
+      if (index !== 0 || p > 0) {
+        intro = false;
+        clearTimeout(introTimer);
+      }
+      current = next;
+      progress = p;
     };
-    window.addEventListener('atelier:section-change', onSectionChange);
+    window.addEventListener('atelier:grid-progress', onProgress);
+    // Islands can hydrate after the initial orchestrator event.
+    const container = document.querySelector<HTMLElement>('.scroll-container');
+    const fraction = container?.clientHeight ? container.scrollTop / container.clientHeight : 0;
+    if (fraction > 0) onProgress(new CustomEvent('atelier:grid-progress', {
+      detail: { index: Math.min(Math.round(fraction), SECTIONS.length - 1), progress: fraction % 1 },
+    }));
     return () => {
       clearTimeout(introTimer);
-      clearTimeout(transitionTimer);
-      clearTimeout(enterTimer);
-      window.removeEventListener('atelier:section-change', onSectionChange);
+      motion.removeEventListener('change', updateMotion);
+      window.removeEventListener('atelier:grid-progress', onProgress);
     };
   });
 
@@ -53,7 +58,7 @@
       `--baseY: ${s.y}vh`,
       `--baseRot: ${s.rot}deg`,
       `font-size: ${s.size}px`,
-      `animation-delay: ${s.delay}s, ${s.delay + 0.3}s`,
+      `--place-delay: ${s.delay}s`,
     ].join('; ');
   }
 </script>
@@ -62,6 +67,7 @@
 <div
   class="nameplate"
   class:intro
+  style={`--title-reveal:${titleReveal}; --detail-reveal:${detailReveal}; --paper-reveal:${paperReveal}; --travel:${travel}`}
   aria-live="polite"
   aria-atomic="true"
 >
@@ -69,36 +75,35 @@
   <div class="nameplate-glow" aria-hidden="true"></div>
 
   <!-- Tagline slug -->
-  <div class="tagline" class:visible={animateIn && !exiting}>
+  <div class="tagline">
     <span class="tagline-rule"></span>
     ✦ {current.tagline}
     <span class="tagline-rule"></span>
   </div>
 
   <!-- Prefix (italic serif) -->
-  <p class="prefix" class:out={exiting}>{current.prefix}</p>
+  <p class="prefix">{current.prefix}</p>
 
   <!-- Descriptor (large serif) -->
   <div class="descriptor-wrap">
-    <h1 class="descriptor" class:slide-out={exiting} class:slide-in={!exiting && animateIn}>
+    <h1 class="descriptor">
       {current.descriptor}
     </h1>
   </div>
 
   <!-- Subtitle (mono) -->
-  <p class="subtitle" class:fade-out={exiting}>{current.subtitle}</p>
+  <p class="subtitle">{current.subtitle}</p>
 
   <!-- Mobile marginalia — the sticker field folds into an inline chip row -->
-  <div class="chip-row" class:visible={animateIn && !exiting} aria-hidden="true">
+  <div class="chip-row" aria-hidden="true">
     {#each current.stickers.filter((s) => s.type !== 'glyph') as s, i (current.id + '-chip-' + i)}
       <span class="chip chip-{s.type}" class:chip-accent={s.accent}>{s.text}</span>
     {/each}
   </div>
 </div>
 
-<!-- Floating stickers around the card -->
-{#if animateIn && !exiting}
-  <div class="sticker-field" aria-hidden="true">
+<!-- Paper details share the scroll clock; only the opening has a timed placement. -->
+  <div class="sticker-field" class:intro style={`--paper-reveal:${paperReveal}`} aria-hidden="true">
     {#each current.stickers as s, i (current.id + '-' + i)}
       <span
         class="sticker sticker-{s.type}"
@@ -107,7 +112,6 @@
       >{s.text}</span>
     {/each}
   </div>
-{/if}
 
 <style>
   /* ── Nameplate ─────────────────────────────────────────────── */
@@ -147,17 +151,16 @@
     letter-spacing: 0.3em;
     color: var(--ink);
     text-transform: uppercase;
-    opacity: 0;
-    transition: opacity 250ms ease;
+    opacity: calc(var(--detail-reveal) * 0.5);
     white-space: nowrap;
   }
-  .tagline.visible { opacity: 0.5; }
 
   .tagline-rule {
     width: 16px;
     height: 1px;
     background: var(--ink);
     opacity: 0.6;
+    transform: scaleX(var(--detail-reveal));
   }
 
   /* ── Prefix ────────────────────────────────────────────────── */
@@ -167,11 +170,8 @@
     font-style: italic;
     color: #6a6a68;
     margin: 14px 0 0;
-    opacity: 1;
-    /* staggered re-entry: prefix settles just after the descriptor lands */
-    transition: opacity 220ms ease 60ms;
+    opacity: var(--title-reveal);
   }
-  .prefix.out { opacity: 0; transition-delay: 0ms; }
 
   /* ── Descriptor ────────────────────────────────────────────── */
   .descriptor-wrap { overflow: hidden; }
@@ -186,24 +186,8 @@
     margin: 2px 0 0;
     white-space: nowrap;
     display: block;
-    transform: translateY(0);
-    opacity: 1;
-    transition:
-      transform 320ms cubic-bezier(0.5,0,0.2,1.2),
-      opacity 280ms ease;
-  }
-
-  .descriptor.slide-out {
-    transform: translateY(-120%);
-    opacity: 0;
-  }
-
-  @keyframes slideIn {
-    from { transform: translateY(120%); opacity: 0; }
-    to   { transform: translateY(0);    opacity: 1; }
-  }
-  .descriptor.slide-in {
-    animation: slideIn 350ms cubic-bezier(0.2,0,0,1) forwards;
+    transform: translateY(calc(var(--travel) * 24px));
+    opacity: var(--title-reveal);
   }
 
   /* ── Subtitle ──────────────────────────────────────────────── */
@@ -215,11 +199,9 @@
     max-width: 42ch;
     letter-spacing: 0.01em;
     line-height: 1.6;
-    opacity: 0.92;
-    transform: translateY(0);
-    transition: opacity 250ms ease 90ms, transform 250ms ease 90ms;
+    opacity: calc(var(--detail-reveal) * 0.92);
+    transform: translateY(calc((1 - var(--detail-reveal)) * 8px));
   }
-  .subtitle.fade-out { opacity: 0; transform: translateY(6px); transition-delay: 0ms; }
 
   /* ── First-load entrance — lines rise while the portrait develops ── */
   .nameplate.intro .tagline,
@@ -227,7 +209,7 @@
   .nameplate.intro .descriptor,
   .nameplate.intro .subtitle,
   .nameplate.intro .chip-row {
-    animation: heroRise 640ms cubic-bezier(0.2, 0, 0, 1) both;
+    animation: heroRise var(--motion-reveal) var(--ease-settle) backwards;
   }
   .nameplate.intro .tagline    { --rise-o: 0.5;  animation-delay: 0.55s; }
   .nameplate.intro .prefix     { --rise-o: 1;    animation-delay: 0.7s; }
@@ -255,31 +237,25 @@
   .sticker {
     position: absolute;
     white-space: nowrap;
-    animation:
-      stickerPop 0.55s cubic-bezier(0.5,0,0.2,1.4) both,
-      stickerFloat 4s ease-in-out infinite;
+    opacity: var(--paper-reveal);
+    transform: translate(var(--baseX), var(--baseY))
+      translateY(calc((1 - var(--paper-reveal)) * -12px))
+      rotate(calc(var(--baseRot) - (1 - var(--paper-reveal)) * 3deg))
+      scale(calc(0.96 + var(--paper-reveal) * 0.04));
   }
-
-  @keyframes stickerPop {
-    0%   { opacity: 0; transform: translate(var(--baseX), var(--baseY)) rotate(var(--baseRot)) scale(0.4); }
-    60%  { opacity: 1; transform: translate(var(--baseX), var(--baseY)) rotate(calc(var(--baseRot) - 6deg)) scale(1.12); }
-    100% { opacity: 1; transform: translate(var(--baseX), var(--baseY)) rotate(var(--baseRot)) scale(1); }
+  .sticker-field.intro .sticker {
+    animation: stickerPlace var(--motion-reveal) var(--ease-settle) var(--place-delay) backwards;
   }
-
-  @keyframes stickerFloat {
-    0%, 100% { transform: translate(var(--baseX), var(--baseY)) rotate(var(--baseRot)) translateY(0); }
-    50%       { transform: translate(var(--baseX), var(--baseY)) rotate(calc(var(--baseRot) + 2deg)) translateY(-6px); }
-  }
-
-  :global(html[data-render-quality='economy']) .sticker {
-    animation: stickerPop 0.4s cubic-bezier(0.5,0,0.2,1.2) both;
+  @keyframes stickerPlace {
+    from { opacity: 0; transform: translate(var(--baseX), var(--baseY)) translateY(-14px) rotate(calc(var(--baseRot) - 4deg)) scale(0.96); }
+    to { opacity: 1; transform: translate(var(--baseX), var(--baseY)) rotate(var(--baseRot)) scale(1); }
   }
 
   /* ── Glyph sticker ─────────────────────────────────────────── */
   .sticker-glyph {
     font-family: 'Instrument Serif', Georgia, serif;
     color: var(--ink);
-    opacity: 0.55;
+    opacity: calc(var(--paper-reveal) * 0.55);
   }
 
   /* ── Stamp sticker ─────────────────────────────────────────── */
@@ -344,10 +320,8 @@
       flex-wrap: wrap;
       gap: 8px;
       margin-top: 16px;
-      opacity: 0;
-      transition: opacity 250ms ease 120ms;
+      opacity: var(--paper-reveal);
     }
-    .chip-row.visible { opacity: 1; }
 
     .chip {
       font-size: 9px;

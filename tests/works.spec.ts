@@ -3,17 +3,18 @@ import { test, expect } from '@playwright/test';
 test.beforeEach(async ({ page }) => {
   await page.goto('/works');
   await page.locator('astro-island[component-url*="WorksPage"]:not([ssr])').waitFor();
+  await expect(page.locator('.wp-grid')).toHaveAttribute('data-arranged', 'true');
 });
 
 test('mobile Works header and controls fit without overlap', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.getByRole('button', { name: 'How to read a circle' })).toBeVisible();
+  await expect(page.getByRole('img', { name: /Search sigil/ })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const mark = await page.locator('.ph-circlemark').boundingBox();
   const copy = await page.locator('.ph-sub').boundingBox();
   expect(mark!.y + mark!.height).toBeLessThanOrEqual(copy!.y);
   const search = await page.getByRole('searchbox').boundingBox();
-  const key = await page.getByRole('button', { name: 'How to read a circle' }).boundingBox();
+  const key = await page.getByRole('img', { name: /Search sigil/ }).boundingBox();
   expect(search!.x + search!.width).toBeLessThanOrEqual(390);
   expect(key!.x + key!.width).toBeLessThanOrEqual(390);
 });
@@ -37,8 +38,8 @@ test('Works filters, search and empty state recover the collection', async ({ pa
   await expect(page.getByRole('searchbox')).toHaveValue('');
 });
 
-test('project and circle key dialogs lock scrolling and restore keyboard focus', async ({ page }) => {
-  for (const opener of [page.getByRole('button', { name: 'Atelier', exact: true }), page.getByRole('button', { name: 'How to read a circle' })]) {
+test('project sheets lock scrolling and return the selected sigil and keyboard focus', async ({ page }) => {
+  for (const opener of [page.getByRole('button', { name: 'Atelier', exact: true })]) {
     await opener.focus();
     await page.keyboard.press('Enter');
     const dialog = page.getByRole('dialog');
@@ -58,6 +59,53 @@ test('project and circle key dialogs lock scrolling and restore keyboard focus',
   await panel.getByRole('button').focus();
   await page.keyboard.press('Tab');
   await expect(panel.locator('.wp-panel-copy')).toHaveCSS('clip-path', 'none', { timeout: 150 });
+});
+
+test('the search sigil builds with filters and shuffling keeps the current search', async ({ page }) => {
+  const sigil = page.getByRole('img', { name: /Search sigil/ });
+  await expect(sigil).toHaveAttribute('aria-label', /blank circle/);
+  await expect(sigil.locator('svg circle')).toHaveCount(1);
+  await expect(page.getByText('How to read a circle')).toHaveCount(0);
+  const original = await page.locator('.wp-panel').evaluateAll(panels => panels.map(panel => panel.getAttribute('data-work')));
+  await page.getByRole('button', { name: 'Shuffle panels' }).click();
+  const shuffled = await page.locator('.wp-panel').evaluateAll(panels => panels.map(panel => panel.getAttribute('data-work')));
+  expect(shuffled).not.toEqual(original);
+  expect([...shuffled].sort()).toEqual([...original].sort());
+  await page.getByRole('button', { name: /Interface & Web/ }).click();
+  await expect(sigil).toHaveAttribute('aria-label', /Interface & Web/);
+  await page.getByRole('searchbox').fill('Atelier');
+  await expect(sigil).toHaveAttribute('aria-label', /Search: Atelier/);
+  await page.getByRole('button', { name: 'Shuffle panels' }).click();
+  await expect(page.getByRole('searchbox')).toHaveValue('Atelier');
+  await expect(page.locator('.wp-panel')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Clear filters' }).click();
+  await expect(sigil).toHaveAttribute('aria-label', /blank circle/);
+  await expect(page.locator('.wp-panel')).toHaveCount(68);
+});
+
+test('the selected panel and sigil complete native open and close transitions', async ({ page }) => {
+  test.skip(!await page.evaluate(() => Boolean(document.startViewTransition)), 'View transitions unavailable');
+  await page.evaluate(() => {
+    const start = document.startViewTransition.bind(document);
+    document.startViewTransition = (update) => {
+      document.documentElement.dataset.transition = 'pending';
+      const view = start(update);
+      void view.ready.then(
+        () => { document.documentElement.dataset.transition = 'ready'; },
+        (error) => { document.documentElement.dataset.transition = String(error); },
+      );
+      return view;
+    };
+  });
+  const panel = page.locator('.wp-panel').first();
+  await panel.getByRole('button').click();
+  await expect(page.locator('html')).toHaveAttribute('data-transition', 'ready');
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-transition', 'ready');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect.poll(() => panel.evaluate(el => el.style.viewTransitionName)).toBe('');
+  await expect.poll(() => panel.locator('.wp-panel-circle').evaluate(el => (el as HTMLElement).style.viewTransitionName)).toBe('');
 });
 
 test('panel content starts after its ink frame and reduced motion stays still', async ({ page }) => {
